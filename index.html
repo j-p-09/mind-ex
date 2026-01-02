@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINDEX - E-Dnevnik</title>
+    <style>
+        /* OSNOVNI STIL - WINDOWS RETRO LOOK */
+        :root {
+            --win-gray: #d4d0c8;
+            --win-dark: #808080;
+            --win-light: #ffffff;
+            --win-text: #000000;
+            --win-blue: #0a246a;
+        }
+
+        body {
+            font-family: 'Tahoma', 'Segoe UI', sans-serif;
+            background-color: var(--win-gray);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* UTILITY CLASSES */
+        .hidden { display: none !important; }
+        .bold { font-weight: bold; }
+        .win-border {
+            border: 2px solid;
+            border-color: var(--win-light) var(--win-dark) var(--win-dark) var(--win-light);
+        }
+        .win-btn {
+            background: var(--win-gray);
+            border: 2px solid;
+            border-color: var(--win-light) var(--win-dark) var(--win-dark) var(--win-light);
+            padding: 4px 10px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .win-btn:active {
+            border-color: var(--win-dark) var(--win-light) var(--win-light) var(--win-dark);
+        }
+
+        /* LOGIN PAGE */
+        #login-page {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            background: white;
+        }
+        
+        .layout-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* SIDEBAR STYLING */
+        .sidebar {
+            width: 260px; /* Malo širše za gumbe */
+            background: white;
+            border-right: 2px solid black;
+            display: flex;
+            flex-direction: column;
+            padding-top: 20px;
+            align-items: center; 
+        }
+
+        .sidebar-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            margin-bottom: 15px;
+            /* Fiksna velikost za gumb 16:9, prilagojeno širini menija */
+            width: 230px; 
+            height: auto; 
+            display: block;
+        }
+        
+        .sidebar-btn img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border: 1px solid #ccc; /* Tanek okvirček okoli gumba */
+        }
+        
+        /* Efekt klika na sliko */
+        .sidebar-btn img:active {
+            transform: translate(1px, 1px);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-header {
+            height: 80px;
+            background: #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #999;
+            font-size: 18px;
+        }
+
+        .app-title {
+            font-size: 48px;
+            font-weight: 400;
+            font-family: 'Arial', sans-serif;
+            letter-spacing: 2px;
+        }
+
+        .time-info { text-align: right; font-weight: bold; }
+        .session-info { text-align: left; font-weight: bold; }
+
+        .content-body {
+            padding: 20px;
+            overflow-y: auto;
+            background: white;
+            height: 100%;
+        }
+
+        /* Login Specifics */
+        .login-box {
+            background: #c0c0c0;
+            padding: 30px;
+            width: 400px;
+            margin-top: 20px;
+            border: 2px solid #808080;
+        }
+
+        .login-input {
+            width: 90%;
+            padding: 5px;
+            margin-bottom: 15px;
+            border: 2px solid #808080;
+            border-style: inset;
+        }
+
+        .last-login-box {
+            background: #dcdcdc;
+            padding: 10px;
+            margin-top: 20px;
+            width: 400px;
+            border: 1px solid #999;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .info-bar {
+            background: #e0e0e0;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ccc;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        /* Logout gumb ikona v glavi */
+        .logout-icon-btn {
+            cursor: pointer;
+            /* Nastavljeno na cca 4cm vizualno na zaslonu, prilagojeno da ne razbije headerja */
+            height: 60px; 
+            width: auto;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+        .logout-icon-btn:hover {
+            opacity: 0.8;
+        }
+
+        /* REDOVALNICA TABELA */
+        .gradebook-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border: 2px solid black;
+        }
+        .gradebook-table th, .gradebook-table td {
+            border: 1px solid black;
+            padding: 5px;
+            text-align: center;
+            vertical-align: middle;
+            height: 30px;
+        }
+        .gradebook-table th { background: #eee; }
+        .grade-cell { cursor: pointer; min-width: 50px; }
+        .grade-cell:hover { background-color: #ffffcc; }
+        
+        .grade-pisno { color: red; font-weight: bold; }
+        .grade-ustno { color: black; font-weight: bold; }
+        .grade-izdelek { color: blue; font-weight: bold; }
+        .grade-correction { font-size: 0.7em; vertical-align: sub; margin-right: 3px; }
+        
+        .icon-x { color: red; font-weight: bold; font-size: 1.2em; }
+        .icon-check { color: green; font-weight: bold; font-size: 1.2em; }
+
+        .grade-type-btn { margin: 10px 5px 10px 0; font-size: 14px; padding: 5px 15px; }
+        .btn-pisno { color: red; font-weight: bold; }
+        .btn-ustno { color: black; font-weight: bold; }
+        .btn-izdelek { color: blue; font-weight: bold; }
+        .selected-type { background-color: #a0a0a0; border-style: inset; }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .win-window {
+            background: var(--win-gray);
+            border: 2px solid;
+            border-color: var(--win-light) var(--win-dark) var(--win-dark) var(--win-light);
+            padding: 2px; width: 400px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+        }
+        .win-header {
+            background: var(--win-blue); color: white; padding: 2px 5px; font-weight: bold;
+            display: flex; justify-content: space-between;
+        }
+        .win-close {
+            background: var(--win-gray); color: black; border: 1px solid white;
+            font-size: 12px; padding: 0 4px; cursor: pointer;
+        }
+        .win-body { padding: 20px; }
+        .win-body label { display: block; margin-bottom: 5px; }
+        .win-body input, .win-body select { width: 100%; margin-bottom: 15px; }
+        .bulk-list-item { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .bulk-list-item input { width: 50px; margin-bottom: 0; }
+
+    </style>
+</head>
+<body>
+
+    <div id="login-page">
+        <div class="sidebar">
+            <button class="sidebar-btn">
+                <img src="redovalnica_sivo.png" 
+                     onmouseover="this.src='redovalnica_barve.png'" 
+                     onmouseout="this.src='redovalnica_sivo.png'" 
+                     alt="REDOVALNICA">
+            </button>
+            <button class="sidebar-btn">
+                <img src="profil_sivo.png" 
+                     onmouseover="this.src='profil_barve.png'" 
+                     onmouseout="this.src='profil_sivo.png'" 
+                     alt="PROFIL">
+            </button>
+            <button class="sidebar-btn">
+                <img src="podatki_sivo.png" 
+                     onmouseover="this.src='podatki_barve.png'" 
+                     onmouseout="this.src='podatki_sivo.png'" 
+                     alt="PODATKI">
+            </button>
+            <button class="sidebar-btn">
+                <img src="odjava_sivo.png" 
+                     onmouseover="this.src='odjava_barve.png'" 
+                     onmouseout="this.src='odjava_sivo.png'" 
+                     alt="ODJAVA">
+            </button>
+            <button class="sidebar-btn">
+                <img src="domov_sivo.png" 
+                     onmouseover="this.src='domov_barve.png'" 
+                     onmouseout="this.src='domov_sivo.png'" 
+                     alt="DOMOV">
+            </button>
+        </div>
+        <div class="main-content">
+            <div class="top-header">
+                <div></div> 
+                <div class="app-title">MINDEX</div>
+                <div></div> 
+            </div>
+            <div class="content-body">
+                <h2>Podatki:</h2>
+                <div style="background: #dcdcdc; padding: 10px; margin-bottom: 20px; width: 500px;">
+                    Številka licence: <span class="bold">avtomatsko vnese</span><br>
+                    IP naslov naprave: <span class="bold">avtomatsko vnese</span>
+                </div>
+
+                <h2>Prijava v sistem:</h2>
+                <div class="login-box">
+                    <input type="text" id="login-username" class="login-input" placeholder="Uporabniško ime"><br>
+                    <input type="password" id="login-password" class="login-input" placeholder="Geslo"><br>
+                    <div style="text-align: center;">
+                        <button class="win-btn bold" onclick="handleLogin()">POTRDI</button>
+                    </div>
+                </div>
+
+                <h2>Zadnja prijava kot:</h2>
+                <div class="last-login-box">
+                    <div>
+                        Uporabnik: <span id="last-login-user" class="bold">/</span><br>
+                        Datum in čas: <span id="last-login-time" class="bold">/</span>
+                    </div>
+                    <button class="win-btn bold" onclick="fillLastLogin()">Uporabi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard-page" class="hidden layout-container">
+        <div class="sidebar">
+            <button class="sidebar-btn" onclick="showPage('redovalnica')">
+                <img src="redovalnica_sivo.png" 
+                     onmouseover="this.src='redovalnica_barve.png'" 
+                     onmouseout="this.src='redovalnica_sivo.png'" 
+                     alt="REDOVALNICA">
+            </button>
+            <button class="sidebar-btn" onclick="showProfile()">
+                <img src="profil_sivo.png" 
+                     onmouseover="this.src='profil_barve.png'" 
+                     onmouseout="this.src='profil_sivo.png'" 
+                     alt="PROFIL">
+            </button>
+            <button class="sidebar-btn" onclick="checkAdminAndShowData()">
+                <img src="podatki_sivo.png" 
+                     onmouseover="this.src='podatki_barve.png'" 
+                     onmouseout="this.src='podatki_sivo.png'" 
+                     alt="PODATKI">
+            </button>
+            <button class="sidebar-btn" onclick="handleLogout()">
+                <img src="odjava_sivo.png" 
+                     onmouseover="this.src='odjava_barve.png'" 
+                     onmouseout="this.src='odjava_sivo.png'" 
+                     alt="ODJAVA">
+            </button>
+            <button class="sidebar-btn" onclick="showPage('home')">
+                <img src="domov_sivo.png" 
+                     onmouseover="this.src='domov_barve.png'" 
+                     onmouseout="this.src='domov_sivo.png'" 
+                     alt="DOMOV">
+            </button>
+        </div>
+
+        <div class="main-content">
+            <div class="top-header">
+                <div class="session-info">
+                    Seja poteče čez:<br>
+                    <span id="session-timer" class="bold">00 : 00 : 00</span>
+                </div>
+                <div class="app-title">MINDEX</div>
+                <div class="time-info">
+                    Ura je:<br>
+                    <span id="clock" class="bold">00 : 00 : 00</span>
+                </div>
+            </div>
+
+            <div class="info-bar">
+                <div>
+                    Pozdravljeni, <br>
+                    <span id="teacher-name-display" style="text-transform: uppercase;">IME IN PRIIMEK UČITELJA</span>
+                </div>
+                <img src="odjava_ikona_barvno.png" class="logout-icon-btn" onclick="handleLogout()" alt="Odjava">
+            </div>
+
+            <div id="content-area" class="content-body">
+                <div id="view-home" class="view-section">
+                    <div style="text-align: center; margin-top: 50px;">
+                        <img src="redovalnica_barve.png" style="height: 60px; margin: 10px;"> REDOVALNICA<br>
+                        <img src="podatki_barve.png" style="height: 60px; margin: 10px;"> PODATKI<br>
+                        <img src="profil_barve.png" style="height: 60px; margin: 10px;"> PROFIL
+                    </div>
+                </div>
+
+                <div id="view-redovalnica" class="view-section hidden">
+                    <h3>Redovalnica</h3>
+                    <div style="margin-bottom: 20px;">
+                        <label>Razred:</label>
+                        <select id="sel-class" onchange="renderGradebook()"></select>
+                        <label style="margin-left: 20px;">Predmet:</label>
+                        <select id="sel-subject" onchange="renderGradebook()"></select>
+                    </div>
+
+                    <table class="gradebook-table">
+                        <thead>
+                            <tr>
+                                <th width="20%">Učenec</th>
+                                <th width="25%">1. Ocenjevalno obdobje</th>
+                                <th width="5%">Graja</th>
+                                <th width="25%">2. Ocenjevalno obdobje</th>
+                                <th width="5%">Graja</th>
+                                <th width="10%">Končna</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gradebook-body">
+                            </tbody>
+                    </table>
+
+                    <div style="margin-top: 10px;">
+                        Izberi način vnosa:
+                        <button class="win-btn btn-pisno grade-type-btn" onclick="setGradeType('PISNO')">PISNO</button>
+                        <button class="win-btn btn-ustno grade-type-btn" onclick="setGradeType('USTNO')">USTNO</button>
+                        <button class="win-btn btn-izdelek grade-type-btn" onclick="setGradeType('IZDELEK')">IZDELEK</button>
+                    </div>
+                    
+                    <hr>
+                    <button class="win-btn" onclick="openBulkEntry()">MNOŽIČNO VPIŠI</button>
+                </div>
+
+                <div id="view-podatki" class="view-section hidden">
+                    <h3>Administracija podatkov</h3>
+                    <div class="win-border" style="padding: 10px; margin-bottom: 10px;">
+                        <h4>SEZNAM UČITELJEV</h4>
+                        <ul id="list-teachers"></ul>
+                        <button class="win-btn" onclick="addTeacher()">Dodaj učitelja</button>
+                    </div>
+                    <div class="win-border" style="padding: 10px; margin-bottom: 10px;">
+                        <h4>SEZNAM RAZREDOV</h4>
+                        <ul id="list-classes"></ul>
+                        <button class="win-btn" onclick="addClass()">Dodaj razred</button>
+                    </div>
+                    <div class="win-border" style="padding: 10px; margin-bottom: 10px;">
+                        <h4>SEZNAM PREDMETOV</h4>
+                        <ul id="list-subjects"></ul>
+                        <button class="win-btn" onclick="addSubject()">Dodaj predmet</button>
+                    </div>
+                    <button class="win-btn" style="background: #ffcccc;" onclick="resetAllData()">PONASTAVI VSE (Reset)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-container"></div>
+
+<script>
+/**
+ * MINDEX APLIKACIJA - LOGIKA
+ */
+
+// --- PODATKOVNA BAZA & STATE ---
+const DEFAULT_ADMIN = { id: 1, name: 'Administrator', username: 'ADMIN', password: 'ADMIN', role: 'admin' };
+let db = {
+    users: [DEFAULT_ADMIN],
+    classes: [], 
+    subjects: [], 
+    grades: [], 
+    warnings: [], 
+    lastLogin: { user: '', time: '' }
+};
+
+let currentState = {
+    user: null,
+    selectedGradeType: 'USTNO', 
+    selectedClassId: null,
+    selectedSubjectId: null,
+    sessionInterval: null,
+    sessionTime: 15 * 60 
+};
+
+// --- INIT ---
+function init() {
+    const saved = localStorage.getItem('mindex_db');
+    if (saved) {
+        db = JSON.parse(saved);
+    } else {
+        saveDB();
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+    
+    if(db.lastLogin.user) {
+        document.getElementById('last-login-user').innerText = db.lastLogin.user;
+        document.getElementById('last-login-time').innerText = db.lastLogin.time;
+    }
+}
+
+function saveDB() {
+    localStorage.setItem('mindex_db', JSON.stringify(db));
+}
+
+// --- CLOCK & TIMERS ---
+function updateClock() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('sl-SI');
+    const clockEl = document.getElementById('clock');
+    if (clockEl) clockEl.innerText = timeString;
+}
+
+function startSessionTimer() {
+    currentState.sessionTime = 15 * 60; 
+    if (currentState.sessionInterval) clearInterval(currentState.sessionInterval);
+    
+    currentState.sessionInterval = setInterval(() => {
+        currentState.sessionTime--;
+        if (currentState.sessionTime <= 0) {
+            handleLogout();
+            alert("Seja je potekla!");
+        } else {
+            const h = Math.floor(currentState.sessionTime / 3600);
+            const m = Math.floor((currentState.sessionTime % 3600) / 60);
+            const s = currentState.sessionTime % 60;
+            document.getElementById('session-timer').innerText = 
+                `${h.toString().padStart(2,'0')} : ${m.toString().padStart(2,'0')} : ${s.toString().padStart(2,'0')}`;
+        }
+    }, 1000);
+}
+
+// --- LOGIN / LOGOUT ---
+function handleLogin() {
+    const u = document.getElementById('login-username').value;
+    const p = document.getElementById('login-password').value;
+    
+    const user = db.users.find(x => x.username === u && x.password === p);
+    
+    if (user) {
+        currentState.user = user;
+        db.lastLogin = { user: u, time: new Date().toLocaleString('sl-SI') };
+        saveDB();
+        
+        document.getElementById('login-page').classList.add('hidden');
+        document.getElementById('dashboard-page').classList.remove('hidden');
+        document.getElementById('teacher-name-display').innerText = user.name;
+        
+        startSessionTimer();
+        showPage('home');
+    } else {
+        alert("Napačno uporabniško ime ali geslo!");
+    }
+}
+
+function handleLogout() {
+    currentState.user = null;
+    clearInterval(currentState.sessionInterval);
+    
+    document.getElementById('dashboard-page').classList.add('hidden');
+    document.getElementById('login-page').classList.remove('hidden');
+    
+    document.getElementById('last-login-user').innerText = db.lastLogin.user;
+    document.getElementById('last-login-time').innerText = db.lastLogin.time;
+    document.getElementById('login-username').value = "";
+    document.getElementById('login-password').value = "";
+}
+
+function fillLastLogin() {
+    if(db.lastLogin.user) {
+        document.getElementById('login-username').value = db.lastLogin.user;
+    }
+}
+
+// --- NAVIGATION ---
+function showPage(pageId) {
+    document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+    
+    if (pageId === 'home') document.getElementById('view-home').classList.remove('hidden');
+    if (pageId === 'redovalnica') {
+        document.getElementById('view-redovalnica').classList.remove('hidden');
+        loadRedovalnicaDropdowns();
+    }
+    if (pageId === 'podatki') {
+        document.getElementById('view-podatki').classList.remove('hidden');
+        renderAdminLists();
+    }
+}
+
+// --- PROFIL ---
+function showProfile() {
+    if (!currentState.user) return;
+    const u = currentState.user;
+    const content = `
+        <p>Ime in priimek: <span class="bold">${u.name}</span></p>
+        <p>Uporabniško ime: <span class="bold">${u.username}</span></p>
+        <p>Geslo: <span class="bold"><input type="text" value="${u.password}" onchange="updatePassword(this.value)" style="width:100px"></span></p>
+        <p>Zadnja prijava: <span class="bold">${db.lastLogin.time}</span></p>
+        <p>Številka licence: <span class="bold">SI-882190</span></p>
+        <p>Čas seje: <span class="bold" id="profile-timer">Tekoc...</span></p>
+    `;
+    openModal("Profil", content);
+}
+
+function updatePassword(newPass) {
+    currentState.user.password = newPass;
+    const idx = db.users.findIndex(u => u.id === currentState.user.id);
+    if(idx !== -1) db.users[idx].password = newPass;
+    saveDB();
+}
+
+// --- PODATKI (ADMIN) ---
+function checkAdminAndShowData() {
+    const pwd = prompt("Vpiši ADMIN geslo:");
+    if (pwd === "ADMIN") {
+        showPage('podatki');
+    } else {
+        alert("Napačno geslo!");
+    }
+}
+
+function renderAdminLists() {
+    const tList = document.getElementById('list-teachers');
+    tList.innerHTML = db.users.map(u => 
+        `<li>${u.name} (${u.username}) <button onclick="deleteUser(${u.id})">X</button></li>`
+    ).join('');
+
+    const cList = document.getElementById('list-classes');
+    cList.innerHTML = db.classes.map(c => 
+        `<li>${c.name} <button onclick="manageClass(${c.id})">Uredi</button> <button onclick="deleteClass(${c.id})">X</button></li>`
+    ).join('');
+
+    const sList = document.getElementById('list-subjects');
+    sList.innerHTML = db.subjects.map(s => 
+        `<li>${s.name} <button onclick="deleteSubject(${s.id})">X</button></li>`
+    ).join('');
+}
+
+function addTeacher() {
+    const name = prompt("Ime in priimek učitelja:");
+    if(!name) return;
+    const username = prompt("Uporabniško ime:");
+    const password = prompt("Geslo:");
+    db.users.push({ id: Date.now(), name, username, password, role: 'teacher' });
+    saveDB();
+    renderAdminLists();
+}
+
+function deleteUser(id) {
+    if(confirm("Izbrišem uporabnika?")) {
+        db.users = db.users.filter(u => u.id !== id);
+        saveDB();
+        renderAdminLists();
+    }
+}
+
+function addClass() {
+    const name = prompt("Ime razreda (npr. 1.A):");
+    if(!name) return;
+    db.classes.push({ id: Date.now(), name, students: [] });
+    saveDB();
+    renderAdminLists();
+}
+
+function deleteClass(id) {
+    if(confirm("Izbrišem razred?")) {
+        db.classes = db.classes.filter(c => c.id !== id);
+        saveDB();
+        renderAdminLists();
+    }
+}
+
+function addSubject() {
+    const name = prompt("Ime predmeta:");
+    if(!name) return;
+    db.subjects.push({ id: Date.now(), name });
+    saveDB();
+    renderAdminLists();
+}
+
+function deleteSubject(id) {
+    if(confirm("Izbrišem predmet?")) {
+        db.subjects = db.subjects.filter(s => s.id !== id);
+        saveDB();
+        renderAdminLists();
+    }
+}
+
+function manageClass(classId) {
+    const cls = db.classes.find(c => c.id === classId);
+    let html = `<h4>Urejanje razreda: ${cls.name}</h4><ul id="modal-student-list">`;
+    cls.students.forEach(s => {
+        html += `<li><span onclick="showStudentDetails(${classId}, ${s.id})" style="cursor:pointer; text-decoration:underline;">${s.name}</span> <button onclick="removeStudent(${classId}, ${s.id})">X</button></li>`;
+    });
+    html += `</ul><button class="win-btn" onclick="addStudentToClass(${classId})">Dodaj učenca</button> 
+             <button class="win-btn" onclick="resetClassGrades(${classId})">Ponastavi ocene razreda</button>`;
+    openModal("Urejanje razreda", html);
+}
+
+function addStudentToClass(classId) {
+    const name = prompt("Ime in priimek učenca:");
+    if(!name) return;
+    const cls = db.classes.find(c => c.id === classId);
+    const cleanName = name.toLowerCase().replace(/\s/g, '');
+    const newStudent = {
+        id: Date.now(),
+        name: name,
+        username: cleanName,
+        password: cleanName,
+        access: true
+    };
+    cls.students.push(newStudent);
+    saveDB();
+    manageClass(classId);
+}
+
+function removeStudent(classId, studentId) {
+    const cls = db.classes.find(c => c.id === classId);
+    cls.students = cls.students.filter(s => s.id !== studentId);
+    saveDB();
+    manageClass(classId);
+}
+
+function showStudentDetails(classId, studentId) {
+    const cls = db.classes.find(c => c.id === classId);
+    const s = cls.students.find(x => x.id === studentId);
+    const subjectList = db.subjects.map(sub => sub.name).join(", ");
+    
+    alert(`Ime in priimek: ${s.name}
+Vpisan v razred: ${cls.name}
+Pri predmetih: ${subjectList}
+Uporabniško ime: ${s.username}
+Geslo: ${s.password}
+Dostopnost: ${s.access ? 'Omogočena' : 'Neomogočena'}`);
+}
+
+function resetClassGrades(classId) {
+    if(confirm("Res želiš izbrisati vse ocene vsem učencem tega razreda?")) {
+        const cls = db.classes.find(c => c.id === classId);
+        const studentIds = cls.students.map(s => s.id);
+        db.grades = db.grades.filter(g => !studentIds.includes(g.studentId));
+        db.warnings = db.warnings.filter(w => !studentIds.includes(w.studentId));
+        saveDB();
+        alert("Ocene izbrisane.");
+    }
+}
+
+function resetAllData() {
+    if(confirm("POZOR! To bo izbrisalo VSE podatke in vrnilo na tovarniške nastavitve. Nadaljujem?")) {
+        localStorage.removeItem('mindex_db');
+        location.reload();
+    }
+}
+
+// --- REDOVALNICA LOGIKA ---
+
+function loadRedovalnicaDropdowns() {
+    const cSel = document.getElementById('sel-class');
+    const sSel = document.getElementById('sel-subject');
+    
+    cSel.innerHTML = '<option value="">Izberi razred</option>' + db.classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    sSel.innerHTML = '<option value="">Izberi predmet</option>' + db.subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+}
+
+function setGradeType(type) {
+    currentState.selectedGradeType = type;
+    document.querySelectorAll('.grade-type-btn').forEach(b => b.classList.remove('selected-type'));
+    document.querySelector(`.btn-${type.toLowerCase()}`).classList.add('selected-type');
+}
+
+function renderGradebook() {
+    const classId = parseInt(document.getElementById('sel-class').value);
+    const subjectId = parseInt(document.getElementById('sel-subject').value);
+    const tbody = document.getElementById('gradebook-body');
+    tbody.innerHTML = '';
+
+    if (!classId || !subjectId) return;
+    
+    currentState.selectedClassId = classId;
+    currentState.selectedSubjectId = subjectId;
+
+    const cls = db.classes.find(c => c.id === classId);
+    
+    cls.students.forEach(student => {
+        const tr = document.createElement('tr');
+        
+        const tdName = `<td>${student.name}</td>`;
+        const tdP1 = createGradeCell(student.id, subjectId, 1);
+        const tdW1 = createWarningCell(student.id, subjectId, 1);
+        const tdP2 = createGradeCell(student.id, subjectId, 2);
+        const tdW2 = createWarningCell(student.id, subjectId, 2);
+        const tdFinal = createFinalGradeCell(student.id, subjectId);
+
+        tr.innerHTML = tdName + tdP1 + tdW1 + tdP2 + tdW2 + tdFinal;
+        tbody.appendChild(tr);
+    });
+}
+
+function createGradeCell(studentId, subjectId, period) {
+    const grades = db.grades.filter(g => g.studentId === studentId && g.subjectId === subjectId && g.period === period && !g.isFinal);
+    let htmlContent = '';
+    grades.forEach(g => {
+        let styleClass = '';
+        if (g.type === 'PISNO') styleClass = 'grade-pisno';
+        if (g.type === 'USTNO') styleClass = 'grade-ustno';
+        if (g.type === 'IZDELEK') styleClass = 'grade-izdelek';
+
+        let display = '';
+        if (g.correction) {
+            display = `<span class="${styleClass}"><span class="grade-correction">${g.value}</span>${g.correction}</span>`;
+        } else {
+            display = `<span class="${styleClass}">${g.value}</span>`;
+        }
+        htmlContent += `<span onclick="editGrade(${g.id}); event.stopPropagation();" style="margin-right:5px;">${display}</span>`;
+    });
+    return `<td class="grade-cell" onclick="addNewGrade(${studentId}, ${subjectId}, ${period})">${htmlContent}</td>`;
+}
+
+function createFinalGradeCell(studentId, subjectId) {
+    const finalGrade = db.grades.find(g => g.studentId === studentId && g.subjectId === subjectId && g.isFinal);
+    let content = '';
+    if (finalGrade) {
+        content = `<span onclick="editFinalGrade(${finalGrade.id}); event.stopPropagation();">${finalGrade.value}</span>`;
+    }
+    return `<td class="grade-cell" onclick="addFinalGrade(${studentId}, ${subjectId})">${content}</td>`;
+}
+
+function createWarningCell(studentId, subjectId, period) {
+    const warning = db.warnings.find(w => w.studentId === studentId && w.subjectId === subjectId && w.period === period);
+    let content = '';
+    if (warning) {
+        if (warning.type === 'x') content = '<span class="icon-x">X</span>';
+        if (warning.type === 'check') content = '<span class="icon-check">✓</span>';
+    }
+    return `<td class="grade-cell" onclick="handleWarning(${studentId}, ${subjectId}, ${period})">${content}</td>`;
+}
+
+// --- VNOS OCEN ---
+function addNewGrade(studentId, subjectId, period) {
+    const html = `
+        <label>Vpiši pridobljeno oceno:</label>
+        <input type="text" id="new-grade-val" style="width: 50px;" autofocus>
+        <div style="text-align: right; margin-top: 10px;">
+            <button class="win-btn" onclick="saveNewGrade(${studentId}, ${subjectId}, ${period})">Potrdi</button>
+        </div>
+    `;
+    openModal("Vnos ocene", html);
+    document.getElementById('new-grade-val').addEventListener("keyup", function(event) {
+        if (event.key === "Enter") saveNewGrade(studentId, subjectId, period);
+    });
+}
+
+function saveNewGrade(studentId, subjectId, period) {
+    const val = document.getElementById('new-grade-val').value;
+    if (val) {
+        db.grades.push({
+            id: Date.now(), studentId, subjectId, period,
+            type: currentState.selectedGradeType,
+            value: val, correction: null, isFinal: false
+        });
+        saveDB();
+        renderGradebook();
+        closeModal();
+    }
+}
+
+function editGrade(gradeId) {
+    const grade = db.grades.find(g => g.id === gradeId);
+    if (!grade) return;
+    const html = `
+        <label>Vpisana ocena:</label>
+        <input type="text" id="edit-grade-val" value="${grade.value}" style="width: 50px;">
+        <label>Popravljeno z:</label>
+        <input type="text" id="edit-grade-corr" value="${grade.correction || ''}" style="width: 50px;">
+        <div style="text-align: right; margin-top: 10px;">
+            <button class="win-btn" onclick="updateGrade(${gradeId})">Potrdi</button>
+        </div>
+    `;
+    openModal("Urejanje ocene", html);
+}
+
+function updateGrade(gradeId) {
+    const val = document.getElementById('edit-grade-val').value;
+    const corr = document.getElementById('edit-grade-corr').value;
+    const idx = db.grades.findIndex(g => g.id === gradeId);
+    if (idx > -1) {
+        if (!val) db.grades.splice(idx, 1);
+        else {
+            db.grades[idx].value = val;
+            db.grades[idx].correction = corr ? corr : null;
+        }
+        saveDB();
+        renderGradebook();
+        closeModal();
+    }
+}
+
+function addFinalGrade(studentId, subjectId) {
+    const existing = db.grades.find(g => g.studentId === studentId && g.subjectId === subjectId && g.isFinal);
+    if(existing) return; 
+    const html = `
+        <label>Končna ocena:</label>
+        <input type="text" id="final-grade-val" style="width: 50px;">
+        <button class="win-btn" onclick="saveFinalGrade(${studentId}, ${subjectId})">Potrdi</button>
+    `;
+    openModal("Končna ocena", html);
+}
+
+function saveFinalGrade(studentId, subjectId) {
+    const val = document.getElementById('final-grade-val').value;
+    if(val) {
+        db.grades = db.grades.filter(g => !(g.studentId === studentId && g.subjectId === subjectId && g.isFinal));
+        db.grades.push({ id: Date.now(), studentId, subjectId, isFinal: true, value: val, type: 'FINAL' });
+        saveDB();
+        renderGradebook();
+        closeModal();
+    }
+}
+
+function editFinalGrade(gradeId) {
+    const grade = db.grades.find(g => g.id === gradeId);
+    const html = `
+        <label>Končna ocena:</label>
+        <input type="text" id="final-grade-edit" value="${grade.value}" style="width: 50px;">
+        <button class="win-btn" onclick="updateFinalGrade(${gradeId})">Potrdi</button>
+    `;
+    openModal("Urejanje končne ocene", html);
+}
+
+function updateFinalGrade(gradeId) {
+    const val = document.getElementById('final-grade-edit').value;
+    const idx = db.grades.findIndex(g => g.id === gradeId);
+    if (idx > -1) {
+        if(!val) db.grades.splice(idx, 1);
+        else db.grades[idx].value = val;
+        saveDB();
+        renderGradebook();
+        closeModal();
+    }
+}
+
+// --- GRAJE ---
+function handleWarning(studentId, subjectId, period) {
+    const cls = db.classes.find(c => c.id === currentState.selectedClassId);
+    const student = cls.students.find(s => s.id === studentId);
+    const existing = db.warnings.find(w => w.studentId === studentId && w.subjectId === subjectId && w.period === period);
+
+    if (!existing) {
+        const html = `
+            <p>Želite ${student.name}, predmet za ${period}. ocenjevalno obdobje vpisati <span class="icon-x">X</span>?</p>
+            <div style="text-align: center;">
+                <button class="win-btn" onclick="setWarning(${studentId}, ${subjectId}, ${period}, 'x')">Potrdi</button>
+                <button class="win-btn" onclick="closeModal()">Prekliči</button>
+            </div>
+        `;
+        openModal("Vpis graje", html);
+    } else if (existing.type === 'x') {
+        const html = `
+            <p>Želite ${student.name} v ${period}. ocenjevalnem obdobju izbrisati grajo ali jo spremeniti v <span class="icon-check">✓</span>?</p>
+            <div style="text-align: center;">
+                <button class="win-btn" onclick="closeModal()">Zapri</button>
+                <button class="win-btn" onclick="setWarning(${studentId}, ${subjectId}, ${period}, 'check')">Popravi (Kljukica)</button>
+                <button class="win-btn" onclick="deleteWarning(${studentId}, ${subjectId}, ${period})">Izbriši</button>
+            </div>
+        `;
+        openModal("Urejanje graje", html);
+    }
+}
+
+function setWarning(studentId, subjectId, period, type) {
+    deleteWarning(studentId, subjectId, period);
+    db.warnings.push({ studentId, subjectId, period, type });
+    saveDB();
+    renderGradebook();
+    closeModal();
+}
+
+function deleteWarning(studentId, subjectId, period) {
+    db.warnings = db.warnings.filter(w => !(w.studentId === studentId && w.subjectId === subjectId && w.period === period));
+    saveDB();
+    renderGradebook();
+    closeModal();
+}
+
+// --- MNOŽIČNI VPIS ---
+function openBulkEntry() {
+    if (!currentState.selectedClassId || !currentState.selectedSubjectId) {
+        alert("Najprej izberi razred in predmet!");
+        return;
+    }
+    const cls = db.classes.find(c => c.id === currentState.selectedClassId);
+    let studentRows = cls.students.map(s => `
+        <div class="bulk-list-item">
+            <span>${s.name}</span>
+            <input type="text" class="bulk-grade-input" data-sid="${s.id}">
+        </div>
+    `).join('');
+
+    const html = `
+        <label>Tip ocene:</label>
+        <select id="bulk-type">
+            <option value="USTNO">USTNO</option>
+            <option value="PISNO">PISNO</option>
+            <option value="IZDELEK">IZDELEK</option>
+        </select>
+        <label>Polletje:</label>
+        <select id="bulk-period">
+            <option value="1">1. ocenjevalno obdobje</option>
+            <option value="2">2. ocenjevalno obdobje</option>
+        </select>
+        <hr>
+        <div style="max-height: 200px; overflow-y: scroll; border: 1px solid #999; padding: 5px;">
+            ${studentRows}
+        </div>
+        <div style="text-align: right; margin-top: 10px;">
+            <button class="win-btn" onclick="saveBulkEntry()">Shrani</button>
+        </div>
+    `;
+    openModal("Množični vpis", html);
+}
+
+function saveBulkEntry() {
+    const type = document.getElementById('bulk-type').value;
+    const period = parseInt(document.getElementById('bulk-period').value);
+    const inputs = document.querySelectorAll('.bulk-grade-input');
+    const subjectId = currentState.selectedSubjectId;
+
+    inputs.forEach(inp => {
+        const val = inp.value.trim();
+        const studentId = parseInt(inp.getAttribute('data-sid'));
+        if (val) {
+             db.grades.push({
+                id: Date.now() + Math.random(), 
+                studentId, subjectId, period,
+                type: type,
+                value: val, correction: null, isFinal: false
+            });
+        }
+    });
+    saveDB();
+    renderGradebook();
+    closeModal();
+}
+
+// --- MODAL UTILS ---
+function openModal(title, contentHtml) {
+    const container = document.getElementById('modal-container');
+    container.innerHTML = `
+        <div class="modal-overlay">
+            <div class="win-window">
+                <div class="win-header">
+                    <span>${title}</span>
+                    <span class="win-close" onclick="closeModal()">X</span>
+                </div>
+                <div class="win-body">
+                    ${contentHtml}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function closeModal() {
+    document.getElementById('modal-container').innerHTML = '';
+}
+
+// Zagon
+init();
+
+</script>
+</body>
+</html>
