@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html lang="sl">
-<head>
-    <meta charset="UTF-8">
+<html lang="sl"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MINDEX - E-Dnevnik</title>
     <style>
@@ -127,9 +126,8 @@
         .grade-izdelek { color: blue; font-weight: bold; }
         .grade-correction { font-size: 0.7em; vertical-align: sub; margin-right: 3px; }
         
-        .icon-x { color: red; font-weight: bold; font-size: 1.2em; }
-        .icon-check { color: green; font-weight: bold; font-size: 1.2em; }
-        
+        .icon-img { height: 24px; width: auto; vertical-align: middle; } /* Stil za sličice graj */
+
         .grade-type-btn { margin: 10px 5px; font-size: 13px; padding: 3px 10px; }
         .selected-type { background-color: #a0a0a0; border-style: inset; }
 
@@ -185,7 +183,7 @@
 </head>
 <body>
 
-    <div id="login-page">
+    <div id="login-page" class="hidden">
         <div class="sidebar">
             <button class="sidebar-btn"><img src="redovalnica_sivo.png" onmouseover="this.src='redovalnica_barve.png'" onmouseout="this.src='redovalnica_sivo.png'"></button>
             <button class="sidebar-btn"><img src="profil_sivo.png" onmouseover="this.src='profil_barve.png'" onmouseout="this.src='profil_sivo.png'"></button>
@@ -216,8 +214,8 @@
                 <h2>Zadnja prijava kot:</h2>
                 <div class="last-login-box">
                     <div style="font-size: 13px;">
-                        Uporabnik: <span id="last-login-user" class="bold">/</span><br>
-                        Datum: <span id="last-login-time" class="bold">/</span>
+                        Uporabnik: <span id="last-login-user" class="bold"></span><br>
+                        Datum: <span id="last-login-time" class="bold"></span>
                     </div>
                     <button class="win-btn bold" onclick="fillLastLogin()">Uporabi</button>
                 </div>
@@ -225,7 +223,7 @@
         </div>
     </div>
 
-    <div id="dashboard-page" class="hidden layout-container">
+    <div id="dashboard-page" class="layout-container hidden">
         <div class="sidebar">
             <button class="sidebar-btn" onclick="showPage('redovalnica')"><img src="redovalnica_sivo.png" onmouseover="this.src='redovalnica_barve.png'" onmouseout="this.src='redovalnica_sivo.png'"></button>
             <button class="sidebar-btn" onclick="showProfile()"><img src="profil_sivo.png" onmouseover="this.src='profil_barve.png'" onmouseout="this.src='profil_sivo.png'"></button>
@@ -238,25 +236,25 @@
             <div class="top-header">
                 <div class="session-info">
                     Seja poteče čez:<br>
-                    <span id="session-timer" class="bold">00 : 00 : 00</span>
+                    <span id="session-timer" class="bold"></span>
                 </div>
                 <div class="app-title">MINDEX</div>
                 <div class="time-info">
                     Ura je:<br>
-                    <span id="clock" class="bold">00 : 00 : 00</span>
+                    <span id="clock" class="bold"></span>
                 </div>
             </div>
 
             <div class="info-bar">
                 <div>
                     Pozdravljeni, <br>
-                    <span id="teacher-name-display" style="text-transform: uppercase;">IME</span>
+                    <span id="teacher-name-display" style="text-transform: uppercase;"></span>
                 </div>
                 <img src="odjava_ikona_barvno.png" class="logout-icon-btn" onclick="handleLogout()" alt="Odjava">
             </div>
 
             <div id="content-area" class="content-body">
-                <div id="view-home" class="view-section">
+                <div id="view-home" class="view-section hidden">
                     <div style="text-align: center; margin-top: 50px;">
                         <img src="redovalnica_barve.png" style="height: 50px; margin: 10px;"> REDOVALNICA<br>
                         <img src="podatki_barve.png" style="height: 50px; margin: 10px;"> PODATKI<br>
@@ -264,13 +262,13 @@
                     </div>
                 </div>
 
-                <div id="view-redovalnica" class="view-section hidden">
+                <div id="view-redovalnica" class="view-section">
                     <h3>Redovalnica</h3>
                     <div style="margin-bottom: 20px;">
                         <label>Razred:</label>
-                        <select id="sel-class" onchange="renderGradebook()" style="padding: 3px;"></select>
+                        <select id="sel-class" onchange="renderGradebook()" style="padding: 3px;"><option value="">Izberi razred</option></select>
                         <label style="margin-left: 20px;">Predmet:</label>
-                        <select id="sel-subject" onchange="renderGradebook()" style="padding: 3px;"></select>
+                        <select id="sel-subject" onchange="renderGradebook()" style="padding: 3px;"><option value="">Izberi predmet</option></select>
                     </div>
 
                     <table class="gradebook-table">
@@ -278,13 +276,14 @@
                             <tr>
                                 <th width="20%">Učenec</th>
                                 <th width="25%">1. Ocenjevalno obdobje</th>
-                                <th width="5%">Graja</th>
+                                <th width="5%"><img src="graja.png" alt="Graja" style="height:20px;"></th>
                                 <th width="25%">2. Ocenjevalno obdobje</th>
-                                <th width="5%">Graja</th>
+                                <th width="5%"><img src="graja.png" alt="Graja" style="height:20px;"></th>
                                 <th width="10%">Končna</th>
                             </tr>
                         </thead>
-                        <tbody id="gradebook-body"></tbody>
+                        <tbody id="gradebook-body">
+                            </tbody>
                     </table>
 
                     <div style="margin-top: 10px;">
@@ -329,7 +328,6 @@
  */
 
 // --- PODATKOVNA BAZA ---
-// Dodan sessionTimeout (v minutah)
 const DEFAULT_ADMIN = { id: 1, name: 'Administrator', username: 'ADMIN', password: 'ADMIN', role: 'admin', sessionTimeout: 30 };
 let db = {
     users: [DEFAULT_ADMIN],
@@ -349,9 +347,7 @@ let currentState = {
     sessionTime: 0 
 };
 
-// --- MODALNI SISTEM (Novo!) ---
-// Ta sistem nadomesti alert, confirm, prompt in prikaže tvoj dizajn okna.
-
+// --- MODALNI SISTEM ---
 function closeModal() {
     document.getElementById('modal-container').innerHTML = '';
 }
@@ -359,14 +355,11 @@ function closeModal() {
 function showModal(title, htmlContent, buttons = []) {
     const container = document.getElementById('modal-container');
     
-    // Zgeneriraj gumbe
     let btnsHtml = '';
     if (buttons.length === 0) {
-        // Default OK gumb, če ni definiranih
         buttons = [{ label: 'V redu', onClick: closeModal }];
     }
     
-    // Ustvarimo gumb in mu dodelimo ID, da kasneje nanj vežemo event
     buttons.forEach((btn, index) => {
         btnsHtml += `<button class="win-btn" id="modal-btn-${index}">${btn.label}</button>`;
     });
@@ -388,18 +381,15 @@ function showModal(title, htmlContent, buttons = []) {
         </div>
     `;
 
-    // Bind events
     document.getElementById('modal-x-close').onclick = closeModal;
     buttons.forEach((btn, index) => {
         document.getElementById(`modal-btn-${index}`).onclick = function() {
             if (btn.onClick) btn.onClick();
-            // Zapri samo če funkcija ne vrne eksplicitno false (za validacijo)
             if (btn.shouldClose !== false) closeModal();
         };
     });
 }
 
-// Wrapperji za nadomestitev sistemskih oken
 function customAlert(message) {
     showModal("Obvestilo", `<p>${message}</p>`, [{label: 'V redu', onClick: closeModal}]);
 }
@@ -452,7 +442,6 @@ function updateClock() {
 }
 
 function startSessionTimer() {
-    // Preberi čas seje iz uporabnika, default 15 min
     const minutes = currentState.user.sessionTimeout || 15;
     currentState.sessionTime = minutes * 60;
     
@@ -462,7 +451,14 @@ function startSessionTimer() {
         currentState.sessionTime--;
         if (currentState.sessionTime <= 0) {
             handleLogout();
-            customAlert("Seja je potekla! Prosimo, prijavite se ponovno.");
+            // SPREMEMBA: Prilagojeno modalno okno za potek seje
+            const html = `
+                <div style="display:flex; align-items:center; justify-content:center;">
+                    <img src="odjava_ikona_barvno.png" style="height:50px; width:auto; margin-right:15px;">
+                    <span>Seja je potekla, potrebna je ponovna prijava.</span>
+                </div>
+            `;
+            showModal("Obvestilo", html, [{label: 'V redu', onClick: closeModal}]);
         } else {
             const h = Math.floor(currentState.sessionTime / 3600);
             const m = Math.floor((currentState.sessionTime % 3600) / 60);
@@ -572,7 +568,7 @@ function checkAdminAndShowData() {
                     customAlert("Napačno geslo!");
                 }
             },
-            shouldClose: false // Ne zapri avtomatsko, ročno zapremo ob uspehu
+            shouldClose: false
         },
         { label: 'Prekliči', onClick: closeModal }
     ]);
@@ -601,11 +597,7 @@ function renderAdminLists() {
     ).join('');
 }
 
-// UREJANJE UČITELJA (Novo)
-function addTeacher() {
-    // Odpremo isto okno kot za edit, le prazno
-    openTeacherModal();
-}
+function addTeacher() { openTeacherModal(); }
 
 function editTeacher(id) {
     const user = db.users.find(u => u.id === id);
@@ -619,13 +611,10 @@ function openTeacherModal(user = null) {
     const html = `
         <label>Ime in priimek:</label>
         <input type="text" id="t-name" value="${isEdit ? user.name : ''}">
-        
         <label>Uporabniško ime:</label>
         <input type="text" id="t-user" value="${isEdit ? user.username : ''}">
-        
         <label>Geslo:</label>
         <input type="text" id="t-pass" value="${isEdit ? user.password : ''}">
-        
         <label>Čas seje (min):</label>
         <input type="number" id="t-time" value="${isEdit ? (user.sessionTimeout || 15) : '15'}">
     `;
@@ -715,9 +704,6 @@ function deleteSubject(id) {
 function manageClass(classId) {
     const cls = db.classes.find(c => c.id === classId);
     
-    // Ker rabimo dinamičen HTML v modalu, bomo tu uporabili malce drugačen pristop,
-    // da se seznam osvežuje brez zapiranja okna.
-    
     function renderClassModalContent() {
         let html = `<ul class="admin-list" style="max-height: 200px;">`;
         cls.students.forEach(s => {
@@ -734,12 +720,6 @@ function manageClass(classId) {
         { 
             label: 'Dodaj učenca', 
             onClick: () => {
-                // Začasno skrijemo modal, vprašamo in spet pokažemo. 
-                // Ker customPrompt odpre nov modal, moramo paziti na stack. 
-                // Enostavneje: input kar v promptu.
-                const name = prompt("Ime učenca:"); // Tukaj uporabim native prompt samo zato, da ne zaprem glavnega modala
-                // Ampak ti hočeš VSE custom. OK. 
-                // Rešitev: Zaprem modal urejanja, odprem prompt, ob potrditvi spet odprem modal urejanja.
                 closeModal();
                 setTimeout(() => {
                     customPrompt("Ime in priimek učenca:", (sName) => {
@@ -750,7 +730,7 @@ function manageClass(classId) {
                             });
                             saveDB();
                         }
-                        manageClass(classId); // Re-open
+                        manageClass(classId);
                     });
                 }, 100);
             },
@@ -766,7 +746,7 @@ function manageClass(classId) {
                         db.grades = db.grades.filter(g => !studentIds.includes(g.studentId));
                         db.warnings = db.warnings.filter(w => !studentIds.includes(w.studentId));
                         saveDB();
-                        manageClass(classId); // Re-open
+                        manageClass(classId);
                     });
                 }, 100);
             },
@@ -775,8 +755,6 @@ function manageClass(classId) {
         { label: 'Zapri', onClick: closeModal }
     ]);
     
-    // Hack: Da lahko kličemo removeStudent iz HTML stringa, mora biti globalna ali pa handlana drugače.
-    // Najbolje, da removeStudent ponovno odpre modal.
     window.removeStudent = function(cId, sId) {
         const c = db.classes.find(x => x.id === cId);
         c.students = c.students.filter(x => x.id !== sId);
@@ -798,7 +776,6 @@ function manageClass(classId) {
             <p>Geslo: <span class="bold">${s.password}</span></p>
             <p>Dostopnost: <span class="bold">${s.access ? 'DA' : 'NE'}</span></p>
         `;
-        // Zapremo manager, odpremo info. Ko zapremo info, bi bilo lepo spet odpreti manager, a ni nujno.
         closeModal();
         setTimeout(() => {
             showModal("Podatki o učencu", info, [
@@ -845,7 +822,6 @@ function renderGradebook() {
         const tr = document.createElement('tr');
         const tdName = `<td>${student.name}</td>`;
         
-        // Funkcije za HTML stringe
         const getGradesHtml = (period) => {
             const grades = db.grades.filter(g => g.studentId === student.id && g.subjectId === subjectId && g.period === period && !g.isFinal);
             let h = '';
@@ -857,10 +833,11 @@ function renderGradebook() {
             return h;
         };
         
+        // SPREMEMBA: Uporaba slik za prikaz v tabeli (nok.png ali ok.png)
         const getWarnHtml = (period) => {
             const w = db.warnings.find(x => x.studentId === student.id && x.subjectId === subjectId && x.period === period);
             if(!w) return '';
-            return w.type === 'x' ? '<span class="icon-x">X</span>' : '<span class="icon-check">✓</span>';
+            return w.type === 'x' ? '<img src="nok.png" class="icon-img" alt="X">' : '<img src="ok.png" class="icon-img" alt="OK">';
         };
 
         const getFinalHtml = () => {
@@ -903,7 +880,6 @@ function addNewGrade(studentId, subjectId, period) {
         { label: 'Prekliči', onClick: closeModal }
     ]);
     
-    // Enter key support inside modal
     setTimeout(() => {
         document.getElementById('new-grade-val').addEventListener("keyup", (e) => {
             if(e.key === "Enter") document.getElementById('modal-btn-0').click();
@@ -938,23 +914,27 @@ function editGrade(gradeId) {
     ]);
 }
 
+// SPREMEMBA: Nova logika za graje
 function handleWarning(studentId, subjectId, period) {
     const cls = db.classes.find(c => c.id === currentState.selectedClassId);
     const student = cls.students.find(s => s.id === studentId);
     const existing = db.warnings.find(w => w.studentId === studentId && w.subjectId === subjectId && w.period === period);
 
     if (!existing) {
-        customConfirm(`Želite učencu ${student.name} vpisati grajo (X)?`, () => {
+        // Vnos nove graje
+        const msg = `Želite učencu <span class="bold">${student.name}</span> zabeležiti grajo <img src="nok.png" style="height:20px; vertical-align:middle;">?`;
+        customConfirm(msg, () => {
             db.warnings.push({ studentId, subjectId, period, type: 'x' });
             saveDB();
             renderGradebook();
             closeModal();
         });
-    } else if (existing.type === 'x') {
-        const html = `<p>Urejanje graje za: ${student.name}</p>`;
-        showModal("Graja", html, [
+    } else {
+        // Urejanje obstoječe (tudi če je že 'ok')
+        const html = `<p>Želite učencu <span class="bold">${student.name}</span> zabeležiti naknadno opravljene obveznosti <img src="ok.png" style="height:20px; vertical-align:middle;"> ali grajo izbrisati?</p>`;
+        showModal("Urejanje", html, [
             { 
-                label: 'Spremeni v ✓', 
+                label: 'Spremeni', // Prej "Spremeni v ✓"
                 onClick: () => { 
                     existing.type = 'check'; 
                     saveDB(); renderGradebook(); closeModal(); 
@@ -1054,5 +1034,6 @@ function openBulkEntry() {
 
 init();
 </script>
-</body>
-</html>
+
+
+</body></html>
