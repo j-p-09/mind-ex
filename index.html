@@ -11,6 +11,7 @@
             --win-light: #ffffff;
             --win-text: #000000;
             --win-blue: #0a246a;
+            --split-gray: #b0b0b0; /* Temnejša siva za spodnji del celice */
         }
 
         body {
@@ -45,9 +46,9 @@
         /* Layout */
         .layout-container { display: flex; width: 100%; height: 100%; }
         
-        /* STRANSKI MENI - ZMANJŠAN */
+        /* STRANSKI MENI */
         .sidebar {
-            width: 180px; /* Prej 260px */
+            width: 180px;
             background: white;
             border-right: 2px solid black;
             display: flex;
@@ -62,7 +63,6 @@
             cursor: pointer;
             padding: 0;
             margin-bottom: 10px;
-            /* Fiksna velikost za gumb 16:9, sedaj manjši */
             width: 150px; 
             height: auto; 
             display: block;
@@ -116,17 +116,60 @@
 
         /* Gradebook Table */
         .gradebook-table { width: 100%; border-collapse: collapse; margin-top: 20px; border: 2px solid black; }
-        .gradebook-table th, .gradebook-table td { border: 1px solid black; padding: 5px; text-align: center; vertical-align: middle; height: 30px; }
-        .gradebook-table th { background: #eee; }
-        .grade-cell { cursor: pointer; min-width: 50px; }
+        /* Odstranjen padding na td, da split-view deluje pravilno. Padding dodamo v notranje div-e */
+        .gradebook-table th { border: 1px solid black; padding: 5px; text-align: center; vertical-align: middle; height: 30px; background: #eee; }
+        .gradebook-table td { border: 1px solid black; text-align: center; vertical-align: middle; height: 40px; padding: 0; }
+        
+        .grade-cell { cursor: pointer; min-width: 50px; height: 100%; position: relative; }
         .grade-cell:hover { background-color: #ffffcc; }
         
+        /* NOVO: Split View Styles */
+        .split-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 46px; /* Da je celica dovolj visoka */
+            width: 100%;
+        }
+        .split-top {
+            flex: 1;
+            background-color: white;
+            border-bottom: 1px dotted #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 2px;
+        }
+        .split-bottom {
+            flex: 1;
+            background-color: var(--split-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 2px;
+        }
+        /* Če ni split view, uporabimo to za poravnavo */
+        .single-view {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            height: 100%;
+            width: 100%;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+
+        /* Grade Styles */
+        .grade-span { margin: 0 3px; position: relative; display: inline-block; }
         .grade-pisno { color: red; font-weight: bold; }
         .grade-ustno { color: black; font-weight: bold; }
         .grade-izdelek { color: blue; font-weight: bold; }
         .grade-correction { font-size: 0.7em; vertical-align: sub; margin-right: 3px; }
         
-        .icon-img { height: 24px; width: auto; vertical-align: middle; } /* Stil za sličice graj */
+        .icon-img { height: 24px; width: auto; vertical-align: middle; }
 
         .grade-type-btn { margin: 10px 5px; font-size: 13px; padding: 3px 10px; }
         .selected-type { background-color: #a0a0a0; border-style: inset; }
@@ -267,8 +310,15 @@
                     <div style="margin-bottom: 20px;">
                         <label>Razred:</label>
                         <select id="sel-class" onchange="renderGradebook()" style="padding: 3px;"><option value="">Izberi razred</option></select>
+                        
                         <label style="margin-left: 20px;">Predmet:</label>
                         <select id="sel-subject" onchange="renderGradebook()" style="padding: 3px;"><option value="">Izberi predmet</option></select>
+
+                        <label style="margin-left: 20px;">Pogled:</label>
+                        <select id="sel-view" onchange="renderGradebook()" style="padding: 3px;">
+                            <option value="TEACHERS" selected>UČITELJI</option>
+                            <option value="STUDENTS">UČENCI</option>
+                        </select>
                     </div>
 
                     <table class="gradebook-table">
@@ -324,10 +374,9 @@
 
 <script>
 /**
- * MINDEX APLIKACIJA - SPREMENJENA LOGIKA (Custom Modals & Admin Editing)
+ * MINDEX APLIKACIJA - SPREMENJENA LOGIKA (Split View + Tooltips + Authors)
  */
 
-// --- PODATKOVNA BAZA ---
 const DEFAULT_ADMIN = { id: 1, name: 'Administrator', username: 'ADMIN', password: 'ADMIN', role: 'admin', sessionTimeout: 30 };
 let db = {
     users: [DEFAULT_ADMIN],
@@ -451,7 +500,6 @@ function startSessionTimer() {
         currentState.sessionTime--;
         if (currentState.sessionTime <= 0) {
             handleLogout();
-            // SPREMEMBA: Prilagojeno modalno okno za potek seje
             const html = `
                 <div style="display:flex; align-items:center; justify-content:center;">
                     <img src="odjava_ikona_barvno.png" style="height:50px; width:auto; margin-right:15px;">
@@ -807,11 +855,17 @@ function setGradeType(type) {
     document.querySelector(`.btn-${type.toLowerCase()}`).classList.add('selected-type');
 }
 
+/**
+ * GLAVNA FUNKCIJA ZA PRIKAZ OCEN
+ * Vključuje logiko za deljen pogled (Split View) in Tooltipe
+ */
 function renderGradebook() {
     const classId = parseInt(document.getElementById('sel-class').value);
     const subjectId = parseInt(document.getElementById('sel-subject').value);
+    const viewMode = document.getElementById('sel-view').value; // 'TEACHERS' ali 'STUDENTS'
     const tbody = document.getElementById('gradebook-body');
     tbody.innerHTML = '';
+    
     if (!classId || !subjectId) return;
     
     currentState.selectedClassId = classId;
@@ -822,18 +876,47 @@ function renderGradebook() {
         const tr = document.createElement('tr');
         const tdName = `<td>${student.name}</td>`;
         
-        const getGradesHtml = (period) => {
-            const grades = db.grades.filter(g => g.studentId === student.id && g.subjectId === subjectId && g.period === period && !g.isFinal);
+        // Funkcija za generiranje HTML-ja posameznih ocen
+        const generateGradesHtml = (gradeList) => {
             let h = '';
-            grades.forEach(g => {
+            gradeList.forEach(g => {
                 let cls = g.type === 'PISNO' ? 'grade-pisno' : (g.type === 'IZDELEK' ? 'grade-izdelek' : 'grade-ustno');
                 let val = g.correction ? `<span class="${cls}"><span class="grade-correction">${g.value}</span>${g.correction}</span>` : `<span class="${cls}">${g.value}</span>`;
-                h += `<span onclick="editGrade(${g.id}); event.stopPropagation();" style="margin-right:5px;">${val}</span>`;
+                
+                // TOOLTIP: Kdo in kdaj
+                const tooltip = `Vpisal: ${g.authorName || 'Neznano'}\nDatum: ${g.date || 'Neznano'}`;
+                
+                h += `<span class="grade-span" title="${tooltip}" onclick="editGrade(${g.id}); event.stopPropagation();">${val}</span>`;
             });
             return h;
         };
+
+        const renderCellContent = (period) => {
+            const allGrades = db.grades.filter(g => g.studentId === student.id && g.subjectId === subjectId && g.period === period && !g.isFinal);
+            
+            if (viewMode === 'STUDENTS') {
+                // Enostaven pogled (vse skupaj)
+                return `<div class="single-view" onclick="addNewGrade(${student.id}, ${subjectId}, ${period})">
+                            ${generateGradesHtml(allGrades)}
+                        </div>`;
+            } else {
+                // Pogled UČITELJI: Razdeli na MOJE in OSTALE
+                const myGrades = allGrades.filter(g => g.authorId === currentState.user.id);
+                // Ocene drugih ali stare ocene brez ID-ja
+                const otherGrades = allGrades.filter(g => g.authorId !== currentState.user.id);
+
+                return `<div class="split-container">
+                            <div class="split-top" onclick="addNewGrade(${student.id}, ${subjectId}, ${period})">
+                                ${generateGradesHtml(myGrades)}
+                            </div>
+                            <div class="split-bottom" onclick="addNewGrade(${student.id}, ${subjectId}, ${period})">
+                                ${generateGradesHtml(otherGrades)}
+                            </div>
+                        </div>`;
+            }
+        };
         
-        // SPREMEMBA: Uporaba slik za prikaz v tabeli (nok.png ali ok.png)
+        // Graje in končne ocene ostanejo enake
         const getWarnHtml = (period) => {
             const w = db.warnings.find(x => x.studentId === student.id && x.subjectId === subjectId && x.period === period);
             if(!w) return '';
@@ -843,14 +926,15 @@ function renderGradebook() {
         const getFinalHtml = () => {
             const g = db.grades.find(x => x.studentId === student.id && x.subjectId === subjectId && x.isFinal);
             if(!g) return '';
-            return `<span onclick="editFinalGrade(${g.id}); event.stopPropagation();">${g.value}</span>`;
+            const tooltip = `Vpisal: ${g.authorName || 'Neznano'}\nDatum: ${g.date || 'Neznano'}`;
+            return `<span title="${tooltip}" onclick="editFinalGrade(${g.id}); event.stopPropagation();">${g.value}</span>`;
         };
 
         tr.innerHTML = `
             ${tdName}
-            <td class="grade-cell" onclick="addNewGrade(${student.id}, ${subjectId}, 1)">${getGradesHtml(1)}</td>
+            <td class="grade-cell">${renderCellContent(1)}</td>
             <td class="grade-cell" onclick="handleWarning(${student.id}, ${subjectId}, 1)">${getWarnHtml(1)}</td>
-            <td class="grade-cell" onclick="addNewGrade(${student.id}, ${subjectId}, 2)">${getGradesHtml(2)}</td>
+            <td class="grade-cell">${renderCellContent(2)}</td>
             <td class="grade-cell" onclick="handleWarning(${student.id}, ${subjectId}, 2)">${getWarnHtml(2)}</td>
             <td class="grade-cell" onclick="addFinalGrade(${student.id}, ${subjectId})">${getFinalHtml()}</td>
         `;
@@ -869,7 +953,20 @@ function addNewGrade(studentId, subjectId, period) {
             onClick: () => {
                 const val = document.getElementById('new-grade-val').value;
                 if(val) {
-                    db.grades.push({ id: Date.now(), studentId, subjectId, period, type: currentState.selectedGradeType, value: val, correction: null, isFinal: false });
+                    db.grades.push({ 
+                        id: Date.now(), 
+                        studentId, 
+                        subjectId, 
+                        period, 
+                        type: currentState.selectedGradeType, 
+                        value: val, 
+                        correction: null, 
+                        isFinal: false,
+                        // DODANO: Podatki o avtorju
+                        authorId: currentState.user.id,
+                        authorName: currentState.user.name,
+                        date: new Date().toLocaleDateString('sl-SI')
+                    });
                     saveDB();
                     renderGradebook();
                     closeModal();
@@ -889,7 +986,11 @@ function addNewGrade(studentId, subjectId, period) {
 
 function editGrade(gradeId) {
     const grade = db.grades.find(g => g.id === gradeId);
+    // Info o oceni v oknu za urejanje
+    const info = `<div style="font-size:11px; margin-bottom:10px; color:#555;">Vpisal: ${grade.authorName || '?'}, dne: ${grade.date || '?'}</div>`;
+
     const html = `
+        ${info}
         <label>Ocena:</label><input type="text" id="eg-val" value="${grade.value}" style="width:50px">
         <label>Popravek:</label><input type="text" id="eg-corr" value="${grade.correction || ''}" style="width:50px">
     `;
@@ -914,14 +1015,12 @@ function editGrade(gradeId) {
     ]);
 }
 
-// SPREMEMBA: Nova logika za graje
 function handleWarning(studentId, subjectId, period) {
     const cls = db.classes.find(c => c.id === currentState.selectedClassId);
     const student = cls.students.find(s => s.id === studentId);
     const existing = db.warnings.find(w => w.studentId === studentId && w.subjectId === subjectId && w.period === period);
 
     if (!existing) {
-        // Vnos nove graje
         const msg = `Želite učencu <span class="bold">${student.name}</span> zabeležiti grajo <img src="nok.png" style="height:20px; vertical-align:middle;">?`;
         customConfirm(msg, () => {
             db.warnings.push({ studentId, subjectId, period, type: 'x' });
@@ -930,11 +1029,10 @@ function handleWarning(studentId, subjectId, period) {
             closeModal();
         });
     } else {
-        // Urejanje obstoječe (tudi če je že 'ok')
         const html = `<p>Želite učencu <span class="bold">${student.name}</span> zabeležiti naknadno opravljene obveznosti <img src="ok.png" style="height:20px; vertical-align:middle;"> ali grajo izbrisati?</p>`;
         showModal("Urejanje", html, [
             { 
-                label: 'Spremeni', // Prej "Spremeni v ✓"
+                label: 'Spremeni', 
                 onClick: () => { 
                     existing.type = 'check'; 
                     saveDB(); renderGradebook(); closeModal(); 
@@ -963,7 +1061,17 @@ function addFinalGrade(studentId, subjectId) {
             onClick: () => {
                 const val = document.getElementById('final-val').value;
                 if(val) {
-                    db.grades.push({ id: Date.now(), studentId, subjectId, isFinal: true, value: val, type: 'FINAL' });
+                    db.grades.push({ 
+                        id: Date.now(), 
+                        studentId, 
+                        subjectId, 
+                        isFinal: true, 
+                        value: val, 
+                        type: 'FINAL',
+                        authorId: currentState.user.id,
+                        authorName: currentState.user.name,
+                        date: new Date().toLocaleDateString('sl-SI')
+                    });
                     saveDB(); renderGradebook(); closeModal();
                 }
             },
@@ -1017,11 +1125,24 @@ function openBulkEntry() {
             onClick: () => {
                 const type = document.getElementById('bulk-type').value;
                 const per = parseInt(document.getElementById('bulk-per').value);
+                const now = new Date().toLocaleDateString('sl-SI');
                 document.querySelectorAll('.bulk-inp').forEach(inp => {
                     const val = inp.value.trim();
                     const sid = parseInt(inp.getAttribute('data-sid'));
                     if(val) {
-                        db.grades.push({ id: Date.now() + Math.random(), studentId: sid, subjectId: currentState.selectedSubjectId, period: per, type, value: val, correction: null, isFinal: false });
+                        db.grades.push({ 
+                            id: Date.now() + Math.random(), 
+                            studentId: sid, 
+                            subjectId: currentState.selectedSubjectId, 
+                            period: per, 
+                            type, 
+                            value: val, 
+                            correction: null, 
+                            isFinal: false,
+                            authorId: currentState.user.id,
+                            authorName: currentState.user.name,
+                            date: now
+                        });
                     }
                 });
                 saveDB(); renderGradebook(); closeModal();
