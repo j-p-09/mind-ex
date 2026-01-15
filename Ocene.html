@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINDEX - OCENA</title>
+    <style>
+        /* --- STIL (WINDOWS RETRO - Enak kot prej) --- */
+        :root {
+            --win-gray: #d4d0c8;
+            --win-dark: #808080;
+            --win-light: #ffffff;
+            --win-text: #000000;
+            --win-blue: #0a246a;
+            --win-highlight: #FFFFCC; /* Pastelno rumena za "na meji" */
+        }
+
+        body {
+            font-family: 'Tahoma', 'Segoe UI', sans-serif;
+            background-color: var(--win-gray);
+            margin: 0; padding: 0;
+            height: 100vh; overflow: hidden;
+            user-select: none;
+        }
+
+        .hidden { display: none !important; }
+        .bold { font-weight: bold; }
+        .w-100 { width: 100%; }
+
+        /* Gumbi */
+        .win-btn {
+            background: var(--win-gray);
+            border: 2px solid;
+            border-color: var(--win-light) var(--win-dark) var(--win-dark) var(--win-light);
+            padding: 4px 12px;
+            cursor: pointer;
+            font-family: inherit;
+            min-width: 70px;
+            margin: 2px;
+        }
+        .win-btn:active {
+            border-color: var(--win-dark) var(--win-light) var(--win-light) var(--win-dark);
+            transform: translate(1px, 1px);
+        }
+        .win-btn.danger { color: red; }
+
+        /* Layout */
+        .layout-container { display: flex; width: 100%; height: 100%; }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 180px;
+            background: white;
+            border-right: 2px solid black;
+            display: flex;
+            flex-direction: column;
+            padding-top: 20px;
+            align-items: center; 
+        }
+        .sidebar-btn {
+            width: 160px;
+            text-align: left;
+            margin-bottom: 5px;
+            padding: 8px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; }
+
+        /* Header */
+        .top-header {
+            height: 60px;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid #999;
+        }
+        .app-title { font-size: 32px; font-family: 'Arial', sans-serif; letter-spacing: 2px; }
+
+        .content-body { padding: 20px; overflow-y: auto; background: white; height: 100%; }
+
+        /* Tables */
+        .data-table { width: 100%; border-collapse: collapse; border: 2px solid black; margin-top: 10px; }
+        .data-table th { background: #eee; border: 1px solid black; padding: 5px; }
+        .data-table td { border: 1px solid black; padding: 5px; text-align: center; vertical-align: middle; }
+        
+        .row-warning { background-color: var(--win-highlight); }
+        .clickable-row:hover { cursor: pointer; text-decoration: underline; background-color: #e0e0ff; }
+
+        /* Inputs */
+        .score-input { width: 60px; text-align: center; padding: 2px; }
+        
+        /* Modal System */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex; justify-content: center; align-items: center; z-index: 2000;
+        }
+        .win-window {
+            background: var(--win-gray);
+            border: 2px solid;
+            border-color: var(--win-light) var(--win-dark) var(--win-dark) var(--win-light);
+            padding: 3px;
+            width: 450px;
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column;
+        }
+        .win-header {
+            background: var(--win-blue); color: white; padding: 4px 6px;
+            font-weight: bold; font-size: 14px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .win-close { cursor: pointer; border: 1px outset white; padding: 0 4px; font-size: 12px; color: black; background: var(--win-gray); }
+        .win-body { padding: 15px; font-size: 14px; }
+        .win-footer { padding: 10px; text-align: right; border-top: 1px solid #999; display: flex; justify-content: flex-end; gap: 10px; }
+        
+        /* Kriteriji sliderji/inputi */
+        .criteria-row { display: flex; justify-content: space-between; margin-bottom: 5px; align-items: center; }
+        .criteria-row input { width: 50px; }
+
+        /* Pritožbe */
+        .appeal-status-odobreno { color: green; font-weight: bold; }
+        .appeal-status-zavrnjeno { color: red; font-weight: bold; }
+
+    </style>
+</head>
+<body>
+
+    <div class="layout-container">
+        <div class="sidebar">
+            <button class="win-btn sidebar-btn" onclick="showPage('vnos')">📝 VNOS DOSEŽKOV</button>
+            <button class="win-btn sidebar-btn" onclick="showPage('vpogled')">📊 VPOGLED OCEN</button>
+            <button class="win-btn sidebar-btn" onclick="showPage('pritozbe')">⚖️ PRITOŽBE</button>
+            <button class="win-btn sidebar-btn" onclick="showPage('kriteriji')">⚙️ KRITERIJI</button>
+        </div>
+
+        <div class="main-content">
+            <div class="top-header">
+                <div class="app-title">MINDEX - OCENA</div>
+            </div>
+
+            <div class="content-body">
+                
+                <div id="view-vnos" class="view-section">
+                    <h3>Vnos dosežkov</h3>
+                    <div style="margin-bottom: 15px; border: 1px solid #999; padding: 10px; background: #f0f0f0;">
+                        <label>Izberi razred:</label>
+                        <select id="vnos-razred-select" onchange="loadVnosTable()">
+                            <option value="">-- Izberi --</option>
+                        </select>
+                        <span style="margin-left: 20px;">
+                            <label>Možne točke:</label>
+                            <input type="number" id="max-points-input" value="100" style="width: 60px;" onchange="updateCalculations()">
+                        </span>
+                    </div>
+
+                    <div id="vnos-container" class="hidden">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th width="30%">Učenec</th>
+                                    <th width="15%">Dosežene točke</th>
+                                    <th width="15%">Možne točke</th>
+                                    <th width="15%">Odstotek</th>
+                                    <th width="25%">OCENA</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vnos-tbody"></tbody>
+                        </table>
+                        <br>
+                        <button class="win-btn danger" onclick="resetVnosData()">PONASTAVI PODATKE</button>
+                        <p style="font-size: 11px; color: gray;">* Podatki se shranjujejo samodejno.</p>
+                    </div>
+                </div>
+
+                <div id="view-vpogled" class="view-section hidden">
+                    <h3>Vpogled ocen (razvrščeno)</h3>
+                    <div style="margin-bottom: 15px;">
+                        <label>Izberi razred:</label>
+                        <select id="vpogled-razred-select" onchange="renderVpogledTable()">
+                            <option value="">-- Izberi --</option>
+                        </select>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Učenec</th>
+                                <th>Točke</th>
+                                <th>%</th>
+                                <th>Ocena</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vpogled-tbody"></tbody>
+                    </table>
+                    <div style="margin-top:10px; font-size:12px;">
+                        <span style="display:inline-block; width:15px; height:15px; background:var(--win-highlight); border:1px solid black; vertical-align:middle;"></span>
+                        = Učenec je manj kot 3% do višje ocene.
+                    </div>
+                </div>
+
+                <div id="view-pritozbe" class="view-section hidden">
+                    <h3>Seznam pritožb</h3>
+                    <div id="appeals-list">
+                        <p>Ni zabeleženih pritožb.</p>
+                    </div>
+                </div>
+
+                <div id="view-kriteriji" class="view-section hidden">
+                    <h3>Kriteriji ocenjevanja</h3>
+                    <p>Določi spodnjo mejo (v %) za posamezno oceno.</p>
+                    <div style="border: 2px inset white; padding: 20px; max-width: 300px; background: #e0e0e0;">
+                        <div class="criteria-row">
+                            <label class="bold">Ocena 2 (zadostno):</label>
+                            <span><input type="number" id="crit-2" value="50"> %</span>
+                        </div>
+                        <div class="criteria-row">
+                            <label class="bold">Ocena 3 (dobro):</label>
+                            <span><input type="number" id="crit-3" value="60"> %</span>
+                        </div>
+                        <div class="criteria-row">
+                            <label class="bold">Ocena 4 (prav dobro):</label>
+                            <span><input type="number" id="crit-4" value="75"> %</span>
+                        </div>
+                        <div class="criteria-row">
+                            <label class="bold">Ocena 5 (odlično):</label>
+                            <span><input type="number" id="crit-5" value="90"> %</span>
+                        </div>
+                        <hr>
+                        <div style="text-align: right;">
+                            <button class="win-btn" onclick="saveCriteria()">SHRANI</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-container"></div>
+
+<script>
+/**
+ * MINDEX - OCENA
+ * Logika za vnos dosežkov, izračun ocen in pritožbe.
+ */
+
+// --- PODATKOVNE BAZE ---
+// 1. Sinhronizacija z E-Dnevnikom (Read-Only)
+let mindex_main_db = { classes: [] };
+const savedMain = localStorage.getItem('mindex_db');
+if (savedMain) {
+    mindex_main_db = JSON.parse(savedMain);
+} else {
+    // Dummy podatki, če učitelj še ni uporabil glavne aplikacije
+    mindex_main_db.classes = [
+        { id: 1, name: 'A1 (Testni)', students: [{id:101, name:'Janez Novak'}, {id:102, name:'Maja Kos'}, {id:103, name:'Luka Zupan'}] }
+    ];
+}
+
+// 2. Lokalna baza za to aplikacijo (Read/Write)
+let app_db = {
+    scores: [], // { classId, studentId, points, maxPoints }
+    criteria: { 2: 50, 3: 60, 4: 75, 5: 90 },
+    appeals: [], // { id, studentId, studentName, date, comment, status, aiReason }
+    currentMaxPoints: 100
+};
+
+// Nalaganje app_db
+const savedApp = localStorage.getItem('mindex_ocena_db');
+if (savedApp) {
+    app_db = JSON.parse(savedApp);
+    document.getElementById('max-points-input').value = app_db.currentMaxPoints || 100;
+} else {
+    saveAppDB();
+}
+
+// Nalaganje kriterijev v inpute
+document.getElementById('crit-2').value = app_db.criteria[2];
+document.getElementById('crit-3').value = app_db.criteria[3];
+document.getElementById('crit-4').value = app_db.criteria[4];
+document.getElementById('crit-5').value = app_db.criteria[5];
+
+function saveAppDB() {
+    localStorage.setItem('mindex_ocena_db', JSON.stringify(app_db));
+}
+
+// --- NAVIGACIJA ---
+function showPage(pageId) {
+    document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+    document.getElementById('view-' + pageId).classList.remove('hidden');
+    
+    if (pageId === 'vnos') populateClassSelect('vnos-razred-select');
+    if (pageId === 'vpogled') populateClassSelect('vpogled-razred-select');
+    if (pageId === 'pritozbe') renderAppealsList();
+}
+
+function populateClassSelect(elementId) {
+    const sel = document.getElementById(elementId);
+    if (sel.options.length > 1) return; // Že napolnjeno
+    mindex_main_db.classes.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.innerText = c.name;
+        sel.appendChild(opt);
+    });
+}
+
+// --- MODALNI SISTEM (Kopiran in prilagojen) ---
+function closeModal() { document.getElementById('modal-container').innerHTML = ''; }
+
+function showModal(title, htmlContent, buttons = []) {
+    const container = document.getElementById('modal-container');
+    let btnsHtml = buttons.length === 0 ? `<button class="win-btn" onclick="closeModal()">Zapri</button>` : '';
+    
+    buttons.forEach((btn, idx) => {
+        btnsHtml += `<button class="win-btn" id="modal-btn-${idx}">${btn.label}</button>`;
+    });
+
+    container.innerHTML = `
+        <div class="modal-overlay">
+            <div class="win-window">
+                <div class="win-header"><span>${title}</span><span class="win-close" onclick="closeModal()">X</span></div>
+                <div class="win-body">${htmlContent}</div>
+                <div class="win-footer">${btnsHtml}</div>
+            </div>
+        </div>
+    `;
+    
+    buttons.forEach((btn, idx) => {
+        document.getElementById(`modal-btn-${idx}`).onclick = function() {
+            if (btn.onClick) btn.onClick();
+            if (btn.shouldClose !== false) closeModal();
+        };
+    });
+}
+
+function customConfirm(msg, onConfirm) {
+    showModal("Potrditev", msg, [
+        { label: "DA", onClick: onConfirm },
+        { label: "NE", onClick: closeModal }
+    ]);
+}
+
+// --- LOGIKA OCENJEVANJA ---
+function calculateGrade(percentage) {
+    const c = app_db.criteria;
+    if (percentage >= c[5]) return 5;
+    if (percentage >= c[4]) return 4;
+    if (percentage >= c[3]) return 3;
+    if (percentage >= c[2]) return 2;
+    return 1;
+}
+
+// --- 1. VNOS DOSEŽKOV ---
+function loadVnosTable() {
+    const classId = document.getElementById('vnos-razred-select').value;
+    const container = document.getElementById('vnos-container');
+    const tbody = document.getElementById('vnos-tbody');
+    tbody.innerHTML = '';
+
+    if (!classId) {
+        container.classList.add('hidden');
+        return;
+    }
+    
+    container.classList.remove('hidden');
+    const cls = mindex_main_db.classes.find(c => c.id == classId);
+    
+    cls.students.forEach(s => {
+        // Poišči če obstaja shranjen score
+        const existing = app_db.scores.find(sc => sc.studentId === s.id && sc.classId == classId);
+        const pts = existing ? existing.points : '';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="text-align:left; padding-left:10px;">${s.name}</td>
+            <td><input type="number" class="score-input" data-sid="${s.id}" value="${pts}" oninput="updateCalculations()"></td>
+            <td class="cell-max">${document.getElementById('max-points-input').value}</td>
+            <td class="cell-proc bold">0%</td>
+            <td class="cell-grade bold" style="font-size:1.2em;">1</td>
+        `;
+        tbody.appendChild(tr);
+    });
+    updateCalculations(); // Preračunaj takoj ob nalaganju
+}
+
+function updateCalculations() {
+    const max = parseInt(document.getElementById('max-points-input').value) || 100;
+    app_db.currentMaxPoints = max;
+    
+    const classId = document.getElementById('vnos-razred-select').value;
+    const inputs = document.querySelectorAll('.score-input');
+    
+    // Posodobi vse celice "Možne točke"
+    document.querySelectorAll('.cell-max').forEach(el => el.innerText = max);
+
+    inputs.forEach(inp => {
+        const row = inp.closest('tr');
+        const sid = parseInt(inp.getAttribute('data-sid'));
+        const val = inp.value;
+        const pts = parseFloat(val) || 0;
+
+        // Izračun
+        let percent = 0;
+        if (val !== '') {
+            percent = Math.ceil((pts / max) * 100);
+        }
+        
+        const grade = (val !== '') ? calculateGrade(percent) : '-';
+
+        row.querySelector('.cell-proc').innerText = (val !== '') ? percent + '%' : '-';
+        row.querySelector('.cell-grade').innerText = grade;
+
+        // Shrani v DB (sproti)
+        if (val !== '') {
+            const existingIdx = app_db.scores.findIndex(sc => sc.studentId === sid && sc.classId == classId);
+            const scoreObj = { classId: classId, studentId: sid, points: pts, maxPoints: max, percent: percent, grade: grade };
+            
+            if (existingIdx > -1) app_db.scores[existingIdx] = scoreObj;
+            else app_db.scores.push(scoreObj);
+        }
+    });
+    saveAppDB();
+}
+
+function resetVnosData() {
+    customConfirm("Ali res želiš ponastaviti (izbrisati) vse vpisane točke za trenutni vnos?", () => {
+        // Izbrišemo scores samo za trenutni razred?
+        // Navodila pravijo "dokler ne pritisne, so shranjeni". Pritisne -> reset.
+        // Najbolje je resetirati celoten array scores, saj je to "Vnos dosežkov" za en test.
+        app_db.scores = [];
+        loadVnosTable(); // Refresh inputs to empty
+        saveAppDB();
+    });
+}
+
+// --- 2. VPOGLED OCEN ---
+function renderVpogledTable() {
+    const classId = document.getElementById('vpogled-razred-select').value;
+    const tbody = document.getElementById('vpogled-tbody');
+    tbody.innerHTML = '';
+    if (!classId) return;
+
+    const cls = mindex_main_db.classes.find(c => c.id == classId);
+    
+    // Zberemo podatke in jih sortiramo
+    let data = [];
+    cls.students.forEach(s => {
+        const score = app_db.scores.find(sc => sc.studentId === s.id && sc.classId == classId);
+        if (score) {
+            data.push({ ...score, name: s.name });
+        } else {
+            // Učenec brez točk
+            data.push({ classId, studentId: s.id, points: 0, maxPoints: 100, percent: 0, grade: 1, name: s.name, missing: true });
+        }
+    });
+
+    // Sortiranje: Najprej po oceni (desc), nato po procentih (desc)
+    data.sort((a, b) => {
+        if (b.grade !== a.grade) return b.grade - a.grade;
+        return b.percent - a.percent;
+    });
+
+    data.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.className = 'clickable-row';
+        
+        // Logika za rumeno barvo (3% do višje ocene)
+        // Če je ocena 5, ne more biti višja.
+        // Če je ocena 1, meja je criteria[2]. Če je 2, meja criteria[3]...
+        let isBorderline = false;
+        if (d.grade < 5) {
+            const nextThreshold = app_db.criteria[d.grade + 1];
+            const diff = nextThreshold - d.percent;
+            // 3% pod mejo pomeni: razlika je med 1 in 3 (vključno)
+            if (diff > 0 && diff <= 3) {
+                isBorderline = true;
+                tr.classList.add('row-warning');
+            }
+        }
+
+        tr.onclick = () => openStudentDetails(d, isBorderline);
+
+        tr.innerHTML = `
+            <td style="text-align:left;">${d.name}</td>
+            <td>${d.missing ? '-' : d.points + ' / ' + d.maxPoints}</td>
+            <td>${d.missing ? '-' : d.percent + '%'}</td>
+            <td class="bold">${d.missing ? '-' : d.grade}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function openStudentDetails(data, isBorderline) {
+    if (data.missing) {
+        showModal("Podrobnosti", "Ni podatkov za tega učenca.");
+        return;
+    }
+
+    const html = `
+        <p><span class="bold">Učenec:</span> ${data.name}</p>
+        <p><span class="bold">Točke:</span> ${data.points} / ${data.maxPoints}</p>
+        <p><span class="bold">Odstotek:</span> ${data.percent}%</p>
+        <p><span class="bold">Ocena:</span> ${data.grade}</p>
+        ${isBorderline ? '<p style="background:#FFFFCC; border:1px solid #999; padding:5px;">⚠️ Učenec je blizu višje ocene!</p>' : ''}
+        <hr>
+        <button class="win-btn w-100" onclick="openAppealForm(${data.studentId}, '${data.name}')">ODDAJ PRITOŽBO ⚖️</button>
+    `;
+    showModal("Podrobnosti o učencu", html);
+}
+
+function openAppealForm(sid, sname) {
+    closeModal(); // Zapri prejšnjega
+    const html = `
+        <label>Učenec: <span class="bold">${sname}</span></label>
+        <label>Razlog pritožbe (komentar):</label>
+        <textarea id="appeal-comment" style="width:95%; height:80px; border:2px inset white;"></textarea>
+    `;
+    showModal("Nova pritožba", html, [
+        {
+            label: "Pošlji",
+            onClick: () => submitAppeal(sid, sname),
+            shouldClose: false // Ročno zapremo
+        },
+        { label: "Prekliči", onClick: closeModal }
+    ]);
+}
+
+function submitAppeal(sid, sname) {
+    const comment = document.getElementById('appeal-comment').value;
+    if (!comment) { alert("Vpiši komentar!"); return; }
+
+    // Umetna inteligenca (Simulacija)
+    // 50/50 ali pa malo bolj naklonjeno
+    const approved = Math.random() > 0.4; // 60% šans za odobritev
+    const aiReasonsApprove = ["Argument je validen.", "Prišlo je do napake pri seštevanju.", "Dodatna razlaga opravičuje točke."];
+    const aiReasonsReject = ["Argument ni zadosten.", "Rešitev ni v skladu s ključem.", "Kriterij je bil jasen."];
+    
+    const reason = approved 
+        ? aiReasonsApprove[Math.floor(Math.random() * aiReasonsApprove.length)]
+        : aiReasonsReject[Math.floor(Math.random() * aiReasonsReject.length)];
+
+    const appeal = {
+        id: Date.now(),
+        studentId: sid,
+        studentName: sname,
+        date: new Date().toLocaleString(),
+        comment: comment,
+        status: approved ? "ODOBRENO" : "ZAVRNJENO",
+        aiReason: reason
+    };
+
+    app_db.appeals.push(appeal);
+    saveAppDB();
+    closeModal();
+    showModal("Uspeh", `<p>Pitožba oddana.</p><p>Status: <span class="${approved?'appeal-status-odobreno':'appeal-status-zavrnjeno'}">${appeal.status}</span></p>`);
+}
+
+// --- 3. PRITOŽBE (LIST) ---
+function renderAppealsList() {
+    const container = document.getElementById('appeals-list');
+    if (app_db.appeals.length === 0) {
+        container.innerHTML = "<p>Ni zabeleženih pritožb.</p>";
+        return;
+    }
+
+    let html = `<table class="data-table"><thead><tr><th>Datum</th><th>Učenec</th><th>Status</th><th>Podrobnosti</th></tr></thead><tbody>`;
+    
+    // Sortiraj novejše zgoraj
+    const sorted = [...app_db.appeals].reverse();
+
+    sorted.forEach(ap => {
+        const cls = ap.status === "ODOBRENO" ? 'appeal-status-odobreno' : 'appeal-status-zavrnjeno';
+        html += `
+            <tr>
+                <td>${ap.date}</td>
+                <td>${ap.studentName}</td>
+                <td class="${cls}">${ap.status}</td>
+                <td><button class="win-btn" onclick="viewAppealDetail(${ap.id})">Poglej</button></td>
+            </tr>
+        `;
+    });
+    html += "</tbody></table>";
+    container.innerHTML = html;
+}
+
+function viewAppealDetail(aid) {
+    const ap = app_db.appeals.find(a => a.id === aid);
+    const cls = ap.status === "ODOBRENO" ? 'appeal-status-odobreno' : 'appeal-status-zavrnjeno';
+    
+    const html = `
+        <p><span class="bold">Učenec:</span> ${ap.studentName}</p>
+        <p><span class="bold">Datum:</span> ${ap.date}</p>
+        <div style="background:white; border:1px solid #999; padding:5px; margin:5px 0;">
+            <span class="bold">Komentar učitelja:</span><br>
+            <i>"${ap.comment}"</i>
+        </div>
+        <hr>
+        <p>AI Odločitev: <span class="${cls}">${ap.status}</span></p>
+        <p>AI Obrazložitev: ${ap.aiReason}</p>
+    `;
+    showModal("Podrobnosti pritožbe", html);
+}
+
+// --- 4. KRITERIJI ---
+function saveCriteria() {
+    const c2 = parseInt(document.getElementById('crit-2').value);
+    const c3 = parseInt(document.getElementById('crit-3').value);
+    const c4 = parseInt(document.getElementById('crit-4').value);
+    const c5 = parseInt(document.getElementById('crit-5').value);
+
+    // Validacija
+    if (c2 < 0 || c3 <= c2 || c4 <= c3 || c5 <= c4 || c5 > 100) {
+        showModal("Napaka", "Kriteriji morajo biti naraščajoči in med 0-100.");
+        return;
+    }
+
+    app_db.criteria = { 2: c2, 3: c3, 4: c4, 5: c5 };
+    saveAppDB();
+    showModal("Info", "Kriteriji uspešno shranjeni.");
+}
+
+// Start
+showPage('vnos'); // Default page
+
+</script>
+</body>
+</html>
