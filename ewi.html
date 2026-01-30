@@ -5,23 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MINDEX - ewi</title>
     <style>
-        /* --- STILI (WINDOWS RETRO) --- */
+        /* --- STILI (WINDOWS RETRO / EWI SPECIFIC) --- */
         :root {
             --win-gray: #d4d0c8;
             --win-dark: #808080;
             --win-light: #ffffff;
             --win-text: #000000;
             --win-blue: #0a246a;
-            --entry-bg: #dcdcdc; /* Siva za pas za vpis */
+            --entry-bg: #cccccc; /* Svetlo siva za pas */
+            --input-bg: #ffffff;
             --pastel-green: #dff0d8;
             --pastel-red: #f2dede;
             --pastel-yellow: #fcf8e3;
-            --cell-green: #ccffcc; /* Za vpisano uro v urniku */
+            --cell-green: #ccffcc;
         }
 
         body {
             font-family: 'Tahoma', 'Segoe UI', sans-serif;
-            background-color: var(--win-gray);
+            background-color: white; /* Ozadje aplikacije je belo, razen headerja */
             margin: 0; padding: 0;
             height: 100vh; overflow: hidden;
             user-select: none;
@@ -30,130 +31,152 @@
         .hidden { display: none !important; }
         .bold { font-weight: bold; }
         .red-text { color: red; font-weight: bold; }
+        .black-text { color: black; font-weight: normal; }
         .flex { display: flex; }
         .center { align-items: center; justify-content: center; }
 
-        /* Gumbi */
+        /* Gumbi - Retro stil */
         .win-btn {
-            background: var(--win-gray);
+            background: #e0e0e0;
             border: 2px solid;
-            border-color: var(--win-light) var(--win-dark) var(--win-dark) var(--win-light);
-            padding: 2px 8px; cursor: pointer; font-family: inherit; font-size: 13px;
+            border-color: #fff #808080 #808080 #fff;
+            padding: 2px 10px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: bold;
+            color: black;
+            min-width: 80px; text-align: center;
         }
         .win-btn:active { border-style: inset; }
 
-        /* Layout */
+        /* HEADER */
         .top-header {
-            background: #999; height: 30px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px;
-            font-weight: bold; font-size: 18px; border-bottom: 2px solid #555;
+            background: #999; height: 35px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px;
+            font-weight: bold; font-size: 20px; border-bottom: 2px solid #555;
+            font-family: Arial, sans-serif;
         }
-        .header-btns { display: flex; gap: 10px; }
-        .header-btn { cursor: pointer; font-size: 16px; font-weight: normal; }
-        .header-btn:hover { text-decoration: underline; }
-        .close-btn { font-weight: bold; font-size: 20px; margin-left: 10px; cursor: pointer; }
+        .header-title { float: left; }
+        .header-controls { float: right; display: flex; gap: 15px; font-size: 16px; font-weight: normal; align-items: center; }
+        .header-link { cursor: pointer; color: black; text-decoration: none; }
+        .header-link:hover { text-decoration: underline; }
+        .close-x { font-weight: bold; font-size: 24px; cursor: pointer; margin-left: 10px; }
 
         .main-container { padding: 10px; height: calc(100vh - 40px); overflow-y: auto; display: flex; flex-direction: column; }
 
         /* NAVIGACIJA DATUMA */
-        .date-nav {
-            display: flex; align-items: center; justify-content: space-between;
-            background: #808080; color: white; border-radius: 15px;
-            padding: 5px 15px; width: 300px; margin-bottom: 20px; margin-top: 10px;
-            border: 2px solid black; font-weight: bold;
+        .date-nav-container { margin: 10px 0; display: flex; align-items: center; }
+        .date-nav-bar {
+            background: #808080; border: 2px solid black; border-radius: 15px;
+            color: white; font-weight: bold; display: flex; justify-content: space-between; align-items: center;
+            padding: 2px 10px; width: 300px; height: 25px;
         }
-        .nav-arrow { cursor: pointer; font-size: 20px; user-select: none; }
-        .date-display { cursor: pointer; }
-
+        .nav-arrow { cursor: pointer; font-size: 18px; color: white; background: none; border: none; font-weight: bold; }
+        
         /* URNIK TABELA */
-        .schedule-table { width: 100%; border-collapse: collapse; border: 2px solid black; background: white; }
-        .schedule-table th, .schedule-table td { border: 1px solid #555; text-align: center; height: 40px; width: 10%; vertical-align: middle; }
-        .schedule-table th { background: #ccc; font-weight: bold; }
-        .schedule-cell { cursor: pointer; position: relative; }
-        .schedule-cell:hover { background: #eee; }
-        .big-class-header { font-size: 32px; font-weight: bold; padding: 10px; border: 1px solid black; background: white; width: 50px; text-align: center; margin-right: 5px;}
+        .schedule-table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid black; }
+        .schedule-table th { background: #d0d0d0; border: 1px solid black; height: 25px; font-weight: bold; text-align: center; width: 11%; }
+        .schedule-table td { border: 1px solid black; height: 150px; vertical-align: top; position: relative; }
         
-        .filled-cell { background-color: var(--cell-green); font-size: 12px; display: flex; flex-direction: column; justify-content: center; height: 100%; }
-        
+        .sch-cell-content { width: 100%; height: 100%; cursor: pointer; position: relative; }
+        .sch-cell-filled { background-color: var(--cell-green); height: 100%; border: 2px solid black; box-sizing: border-box; padding: 5px; }
+        .sch-class-label { border-bottom: 1px solid black; margin-bottom: 5px; font-weight: bold; text-align: center; }
+        .sch-topic-text { font-size: 12px; }
+
         /* --- PAS ZA VPIS URE (ENTRY BELT) --- */
         #entry-belt {
-            background: var(--entry-bg); border: 2px solid black; padding: 5px; margin-bottom: 10px;
-            display: grid; 
-            grid-template-columns: 150px 1fr 1fr; /* Levo gumbi, sredina info, desno manjkajoči/reditelji */
-            grid-template-rows: auto auto auto;
-            gap: 5px;
+            background: var(--entry-bg); border: 2px solid black; padding: 0; margin-bottom: 15px;
+            display: grid;
+            /* Layout: Info vrstica zgoraj, potem spodaj levo gumbi, sredina manjkajoči, spodaj snov */
+            grid-template-rows: 30px auto auto; 
+            grid-template-columns: 120px 1fr;
         }
         
-        /* Polje 1: Info vrstica */
-        .eb-info-row { grid-column: 1 / -1; background: #ccc; border: 1px solid #999; padding: 3px; font-size: 14px; margin-bottom: 5px; display: flex; justify-content: space-between;}
+        /* Vrstica 1: Info (siva, polna širina) */
+        .eb-header {
+            grid-column: 1 / -1; background: #d0d0d0; border-bottom: 2px solid black; 
+            display: flex; align-items: center; justify-content: space-between; padding: 0 5px;
+            font-size: 14px;
+        }
         
-        /* Polje 3: Gumbi levo */
-        .eb-buttons { grid-column: 1; display: flex; flex-direction: column; gap: 5px; }
-        .eb-big-btn { height: 30px; font-weight: bold; }
+        /* Vrstica 2, Stolpec 1: Gumbi */
+        .eb-sidebar {
+            grid-row: 2; grid-column: 1;
+            padding: 5px; border-right: 2px solid black;
+            display: flex; flex-direction: column; gap: 5px; align-items: center;
+        }
+        
+        /* Vrstica 2, Stolpec 2: Manjkajoči */
+        .eb-missing-area {
+            grid-row: 2; grid-column: 2;
+            padding: 5px; position: relative;
+            background: #ccc; /* Temnejša siva kot header */
+        }
+        .missing-list-container {
+            margin-top: 15px; /* Prostor za labelo */
+            max-height: 80px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        .missing-label { position: absolute; top: 2px; left: 5px; font-size: 12px; font-weight: normal; color: black; }
+        
+        /* Vrstica 3: Zgodovina snovi */
+        .eb-history-area {
+            grid-column: 1 / -1;
+            border-top: 2px solid black;
+            padding: 5px;
+            display: flex; gap: 0; overflow-x: auto;
+            background: #ccc;
+        }
 
-        /* Polje 4: Manjkajoči (Sredina/Desno) */
-        .eb-missing-box { 
-            grid-column: 2 / 4; 
-            border: 1px solid #999; background: #e0e0e0; padding: 5px; 
-            display: flex; flex-wrap: wrap; align-content: flex-start; height: 80px; overflow-y: auto;
-            position: relative;
+        /* Elementi znotraj pasu */
+        .student-row {
+            display: flex; align-items: center; background: white; border: 1px solid #999; padding: 2px; width: fit-content; min-width: 250px;
         }
-        .missing-label { position: absolute; top: 2px; left: 2px; font-size: 12px; color: #555; }
-        .student-item { 
-            margin: 2px 10px; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 13px;
-            padding: 2px; border: 1px solid transparent;
-        }
-        .student-item:hover { border: 1px dotted #555; }
-        .student-active { color: red; font-weight: bold; }
-        .pencil-icon { cursor: pointer; font-size: 12px; color: #555; }
-        
-        /* Polje 2: Reditelji (V info vrstici desno) */
-        .reditelji-box { font-size: 13px; cursor: pointer; }
+        .student-name { width: 150px; cursor: pointer; padding-left: 5px; }
+        .student-hours { width: 80px; font-size: 11px; color: #555; }
+        .edit-icon { cursor: pointer; }
 
-        /* Polje 5: Snov (Spodaj) */
-        .eb-topic-row { grid-column: 1 / -1; display: flex; gap: 5px; margin-top: 5px; overflow-x: auto;}
-        .topic-prev { 
-            border: 1px solid black; background: #eee; min-width: 80px; height: 60px; font-size: 10px; padding: 2px; overflow: hidden;
+        .history-box {
+            border: 1px solid black; background: #e0e0e0; width: 80px; height: 60px; margin-right: -1px;
             display: flex; flex-direction: column;
         }
-        .topic-prev-header { border-bottom: 1px solid #ccc; margin-bottom: 2px; font-weight: bold; }
-        .topic-current { 
-            border: 2px solid black; background: white; flex-grow: 1; height: 60px; 
+        .hist-header { border-bottom: 1px solid black; font-size: 10px; text-align: center; background: #dcdcdc; }
+        .hist-body { font-size: 10px; padding: 2px; overflow: hidden; }
+        
+        .current-topic-box {
+            border: 2px solid black; background: white; width: 120px; height: 60px; margin-left: 5px;
             display: flex; flex-direction: column;
         }
-        .topic-input { width: 98%; border: none; outline: none; flex-grow: 1; font-family: inherit; padding: 5px; resize: none; }
-        
-        /* --- OPRAVIČI VIEW --- */
-        .view-controls { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
-        .legend-box { display: flex; gap: 15px; font-size: 12px; margin-bottom: 5px; background: #eee; padding: 5px; border: 1px dotted #999;}
-        
-        .absence-table-gen { border-collapse: collapse; width: 100%; border: 2px solid black; background: #dcdcdc; }
-        .absence-table-gen tr { border-bottom: 1px solid #999; }
-        .absence-table-gen td { padding: 4px; }
-        .absence-table-gen tr:hover { background-color: var(--pastel-yellow); }
-        .stat-col { width: 30px; text-align: center; font-weight: bold; }
-        .stat-green { color: green; }
-        .stat-red { color: red; }
-        .stat-black { color: black; }
+        .current-topic-header { text-align: center; font-size: 11px; border-bottom: 1px solid #ccc; background: #eee; }
+        .topic-input { border: none; flex-grow: 1; resize: none; font-family: inherit; font-size: 11px; padding: 2px; }
 
-        .absence-table-det { border-collapse: collapse; width: 100%; border: 2px solid black; background: white; font-size: 12px; }
-        .absence-table-det th, .absence-table-det td { border: 1px solid black; text-align: center; padding: 2px; }
-        .abs-cell { cursor: pointer; width: 30px; height: 30px; font-weight: bold;}
-        .abs-open { color: black; } /* ? */
-        .abs-excused { background-color: var(--pastel-green); color: black; } /* O */
-        .abs-unexcused { background-color: var(--pastel-red); color: black; } /* N */
-        .abs-note { background-color: var(--pastel-yellow); } /* Note present */
+        /* --- ABSENCE VIEW --- */
+        .abs-legend { background: #dcdcdc; border: 1px dotted black; padding: 5px; margin-bottom: 5px; font-size: 12px; display: flex; gap: 15px; }
+        .abs-stat-green { color: green; font-weight: bold; }
+        .abs-stat-red { color: red; font-weight: bold; }
+        .abs-stat-black { color: black; font-weight: bold; }
+        
+        .abs-gen-table { width: 100%; border-collapse: collapse; border: 2px solid black; background: #e0e0e0; }
+        .abs-gen-table tr { border-bottom: 1px solid #999; }
+        .abs-gen-table td { padding: 3px 10px; }
+        .abs-row-highlight:hover { background: #ffffcc; cursor: default; }
 
-        /* --- MODALS --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 2000; }
-        .win-window { background: var(--win-gray); border: 2px solid white; border-right-color: #555; border-bottom-color: #555; padding: 3px; width: 400px; display: flex; flex-direction: column; box-shadow: 4px 4px 10px rgba(0,0,0,0.5); }
-        .win-header { background: var(--win-blue); color: white; padding: 4px; font-weight: bold; display: flex; justify-content: space-between; }
-        .win-body { padding: 15px; }
-        .win-footer { padding: 10px; text-align: right; border-top: 1px solid #999; display: flex; justify-content: flex-end; gap: 10px; }
-        .win-input { width: 95%; margin-bottom: 10px; padding: 3px; }
+        .abs-det-table { width: 100%; border-collapse: collapse; border: 2px solid black; margin-bottom: 10px; background: white; font-size: 12px; }
+        .abs-det-table th { background: #ccc; border: 1px solid black; }
+        .abs-det-table td { border: 1px solid black; text-align: center; width: 30px; height: 20px; cursor: pointer; }
+        
+        .cell-O { background: var(--pastel-green); }
+        .cell-N { background: var(--pastel-red); }
+        .cell-Open { color: black; }
+        .cell-Note { background: var(--pastel-yellow); }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .win-modal { background: #d4d0c8; border: 2px solid white; border-right-color: #404040; border-bottom-color: #404040; padding: 3px; width: 400px; box-shadow: 5px 5px 10px rgba(0,0,0,0.5); }
+        .win-modal-header { background: var(--win-blue); color: white; padding: 2px 5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .win-modal-body { padding: 15px; }
+        .win-modal-footer { padding: 10px; text-align: right; border-top: 1px solid #808080; }
 
         /* Login */
-        #login-page { display: flex; width: 100%; height: 100%; background: white; justify-content: center; align-items: center; flex-direction: column; }
-        .login-box { background: #c0c0c0; padding: 20px; width: 300px; border: 2px solid #808080; text-align: center; }
+        #page-login { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: white; }
+        .login-frame { background: #c0c0c0; border: 2px solid #808080; padding: 20px; width: 300px; text-align: center; }
+        .login-inp { width: 90%; margin-bottom: 10px; padding: 3px; border: 2px inset white; }
 
     </style>
 </head>
@@ -161,63 +184,67 @@
 
     <div id="page-login">
         <h1 style="font-family: Arial; letter-spacing: 2px;">MINDEX - ewi</h1>
-        <div class="login-box">
-            <p>Prijava v sistem</p>
-            <input type="text" id="login-user" placeholder="Uporabniško ime" class="win-input"><br>
-            <input type="password" id="login-pass" placeholder="Geslo" class="win-input"><br>
-            <button class="win-btn bold" onclick="handleLogin()">POTRDI</button>
+        <div class="login-frame">
+            <p>Prijava v sistem:</p>
+            <input type="text" id="login-u" class="login-inp" placeholder="Uporabniško ime"><br>
+            <input type="password" id="login-p" class="login-inp" placeholder="Geslo"><br>
+            <button class="win-btn" onclick="tryLogin()">POTRDI</button>
+        </div>
+        <div id="last-login-info" class="hidden" style="margin-top:10px; border:1px solid gray; background:#eee; padding:5px; width:300px;">
+            Zadnja prijava: <span id="last-login-user" class="bold"></span>
         </div>
     </div>
 
     <div id="page-app" class="hidden">
         
         <div class="top-header">
-            <div>MINDEX - ewi</div>
-            <div class="flex center">
-                <div class="header-btns">
-                    <span class="header-btn" onclick="showView('ABSENCE')">Opraviči</span>
-                    <span class="header-btn" onclick="showView('HOME')">Domov</span>
-                    <span class="header-btn" onclick="openSettings()">Nastavitve</span>
-                </div>
-                <div class="close-btn" onclick="handleLogout()">X</div>
+            <div class="header-title">MINDEX - ewi</div>
+            <div class="header-controls">
+                <span class="header-link" onclick="setView('ABSENCE')">Opraviči</span>
+                <span class="header-link" onclick="setView('HOME')">Domov</span>
+                <span class="header-link" onclick="openSettings()">Nastavitve</span>
+                <span class="close-x" onclick="logout()">X</span>
             </div>
         </div>
 
         <div class="main-container">
 
             <div id="view-home">
-                <div class="flex" style="align-items: center;">
-                    <div class="big-class-header" id="home-class-icon">A1</div> <div class="date-nav">
-                        <span class="nav-arrow" onclick="changeDate(-1)">←</span>
-                        <span id="date-display" class="date-display" onclick="openDatePicker()">Datum</span>
-                        <span class="nav-arrow" onclick="changeDate(1)">→</span>
+                
+                <div class="date-nav-container">
+                    <div class="date-nav-bar">
+                        <button class="nav-arrow" onclick="changeDate(-1)">←</button>
+                        <span id="date-display" style="cursor: pointer;" onclick="pickDate()">Datum</span>
+                        <button class="nav-arrow" onclick="changeDate(1)">→</button>
                     </div>
                 </div>
 
                 <div id="entry-belt" class="hidden">
-                    <div class="eb-info-row">
-                        <span id="eb-info-text" class="bold">Vpis ure: 1. ura; A1; redna ura</span>
-                        <span class="reditelji-box" onclick="editReditelji()">
-                            ✎ <span class="bold">Reditelja:</span> <span id="eb-reditelji-names">Učenec 1; Učenec 2</span>
+                    <div class="eb-header">
+                        <span class="bold" id="eb-title">Vpis ure: 1. ura; A1; redna ura</span>
+                        <span style="cursor: pointer;" onclick="editReditelji()">
+                            ✎ <span class="bold">Reditelja:</span> <span id="eb-reditelji">Učenec 1; Učenec 2</span>
                         </span>
                     </div>
 
-                    <div class="eb-buttons">
-                        <button class="win-btn eb-big-btn" onclick="openStudentPicker()">DIJAKI</button>
-                        <button class="win-btn eb-big-btn" onclick="showPastHours()">URE</button>
-                        <button class="win-btn eb-big-btn" onclick="showInfo()">INFO</button>
+                    <div class="eb-sidebar">
+                        <button class="win-btn" onclick="openStudentPicker()">DIJAKI</button>
+                        <button class="win-btn" onclick="showPastHours()">URE</button>
+                        <button class="win-btn" onclick="showInfo()">INFO</button>
                     </div>
 
-                    <div class="eb-missing-box" id="eb-missing-list">
+                    <div class="eb-missing-area">
                         <span class="missing-label">Manjkajoči:</span>
-                        </div>
+                        <div class="missing-list-container" id="eb-missing-list">
+                            </div>
+                    </div>
 
-                    <div class="eb-topic-row" id="eb-history-row">
-                        <div class="topic-current">
-                            <div class="topic-prev-header" style="background:white; text-align:center; font-size: 11px;">Trenutna ura</div>
-                            <textarea id="eb-topic-input" class="topic-input" placeholder="Vpiši snov..."></textarea>
-                            <button class="win-btn" onclick="saveEntry()" style="align-self: flex-end; margin: 2px;">SHRANI URO</button>
+                    <div class="eb-history-area" id="eb-history-row">
+                        <div class="current-topic-box">
+                            <div class="current-topic-header" id="curr-topic-header">1. ura</div>
+                            <textarea id="topic-input" class="topic-input" placeholder="Vpiši snov..."></textarea>
                         </div>
+                        <button class="win-btn" style="height:30px; margin-top:15px; margin-left:5px;" onclick="saveEntry()">SHRANI URO</button>
                     </div>
                 </div>
 
@@ -235,664 +262,614 @@
             </div>
 
             <div id="view-absence" class="hidden">
-                <div class="date-nav" style="width: 350px;">
-                    <span class="nav-arrow" onclick="changeWeek(-1)">←</span>
-                    <span id="week-display" style="font-size:12px;">Teden</span>
-                    <span class="nav-arrow" onclick="changeWeek(1)">→</span>
-                </div>
-
-                <div class="view-controls">
-                    <button class="win-btn bold" onclick="selectClassForAbsence()">RAZRED</button>
-                    <span style="font-weight:bold; font-size: 14px;">Pogled: 
-                        <select id="abs-view-select" onchange="renderAbsenceView()" style="font-weight:bold;">
+                <div class="date-nav-container">
+                    <div class="date-nav-bar" style="width: 350px;">
+                        <button class="nav-arrow" onclick="changeWeek(-1)">←</button>
+                        <span id="week-display">Teden 1</span>
+                        <button class="nav-arrow" onclick="changeWeek(1)">→</button>
+                    </div>
+                    <button class="win-btn" style="margin-left: 10px; font-weight:bold;" onclick="selectClassAbsence()">RAZRED</button>
+                    <div style="margin-left: auto; font-weight: bold; font-size: 16px;">
+                        Pogled: 
+                        <select id="abs-view-select" onchange="renderAbsence()" style="font-weight:bold; font-size:16px; border:none; background:none;">
                             <option value="GENERAL">SPLOŠNO</option>
                             <option value="DETAILED">PODROBNO</option>
                         </select>
-                    </span>
-                </div>
-
-                <div style="font-weight:bold; margin-bottom: 5px; background: #ccc; padding: 2px; border:1px solid gray;">
-                    Odsotnosti - razred: <span id="abs-class-display">A1</span>
-                </div>
-
-                <div id="abs-gen-container">
-                    <div class="legend-box">
-                        <span class="stat-green">Zelena: Opravičeno</span>
-                        <span class="stat-red">Rdeča: Neopravičeno</span>
-                        <span class="stat-black">Črna: Odprto</span>
                     </div>
-                    <table class="absence-table-gen">
+                </div>
+
+                <div style="border: 1px solid black; background: #ccc; padding: 2px 5px; font-weight: bold; border-bottom: none;">
+                    Odsotnosti - razred: <span id="abs-class-label">A1</span>
+                </div>
+
+                <div id="abs-general-container">
+                    <div class="abs-legend">
+                        <span class="abs-stat-green">Zelena: Opravičeno</span>
+                        <span class="abs-stat-red">Rdeča: Neopravičeno</span>
+                        <span class="abs-stat-black">Črna: Odprto</span>
+                    </div>
+                    <table class="abs-gen-table">
                         <tbody id="abs-gen-body"></tbody>
                     </table>
                 </div>
 
-                <div id="abs-det-container" class="hidden">
-                    <div id="abs-det-tables"></div>
+                <div id="abs-detailed-container" class="hidden">
+                    <div id="abs-det-list"></div>
                 </div>
             </div>
 
         </div>
     </div>
 
-    <div id="modal-container"></div>
+    <div id="modal-wrapper" class="hidden modal-overlay"></div>
 
 <script>
 /**
- * MINDEX - ewi LOGIC
- * Uporablja 'mindex_db' iz localStorage za deljenje podatkov.
+ * MINDEX - ewi
+ * Logic for attendance and evidence.
+ * Requires localStorage 'mindex_db' from main app.
  */
 
-// --- STATE ---
-let db = { users: [], classes: [], subjects: [], entries: [], schedules: [] }; // entry: {id, date, period, classId, type, topic, absentees:[], teacherId}
+// --- GLOBAL STATE ---
+let db = { users:[], classes:[], subjects:[], entries:[] }; 
+// Entry structure: { id, date, period, classId, type, topic, absentees: [ {studentId, status:'?'|'O'|'N', note:''} ], teacherId }
+
 let state = {
     user: null,
     currentDate: new Date(),
-    currentWeekStart: new Date(), // Ponedeljek
-    view: 'HOME', // HOME, ABSENCE
-    selectedClassId: null, // Za absence view
+    currentWeekStart: new Date(),
+    view: 'HOME',
+    selectedClassId: null, // For absence view
     
-    // Entry Mode
-    activeEntry: null, // { period, classId, type, tempAbsentees, tempTopic, isNew }
+    // Entry Belt State
+    entryMode: false,
+    activeEntry: null, // Copy of entry being edited
+    activePeriod: 1
 };
 
 // --- INIT ---
 function init() {
-    loadDB();
-    // Preveri ali smo že prijavljeni (session simulacija) - zaenkrat vedno login
+    const stored = localStorage.getItem('mindex_db');
+    if(stored) {
+        db = JSON.parse(stored);
+        if(!db.entries) db.entries = [];
+        // Ensure classes have reditelji array
+        db.classes.forEach(c => { if(!c.reditelji) c.reditelji = []; });
+    } else {
+        alert("Baza podatkov ni najdena. Zaženi MINDEX glavno aplikacijo.");
+    }
+    
+    // Set week start to Monday
     const today = new Date();
-    // Nastavi začetek tedna na ponedeljek
-    const day = today.getDay();
-    const diff = today.getDate() - day + (day == 0 ? -6 : 1); 
+    const day = today.getDay(); 
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
     state.currentWeekStart = new Date(today.setDate(diff));
     
-    updateDateDisplay();
-}
-
-function loadDB() {
-    const saved = localStorage.getItem('mindex_db');
-    if (saved) {
-        db = JSON.parse(saved);
-        if(!db.entries) db.entries = []; // Dodamo novo tabelo če ne obstaja
-        if(!db.schedules) db.schedules = [];
-    } else {
-        alert("Podatkovna baza MINDEX ni najdena. Prosimo, najprej zaženite glavno MINDEX aplikacijo.");
-    }
-}
-
-function saveDB() {
-    localStorage.setItem('mindex_db', JSON.stringify(db));
+    updateDateUI();
 }
 
 // --- LOGIN ---
-function handleLogin() {
-    const u = document.getElementById('login-user').value;
-    const p = document.getElementById('login-pass').value;
-    const user = db.users.find(x => x.username === u && x.password === p && (x.role === 'admin' || x.role === 'teacher'));
+function tryLogin() {
+    const u = document.getElementById('login-u').value;
+    const p = document.getElementById('login-p').value;
+    const usr = db.users.find(x => x.username === u && x.password === p && (x.role === 'admin' || x.role === 'teacher'));
     
-    if (user) {
-        state.user = user;
+    if(usr) {
+        state.user = usr;
         document.getElementById('page-login').classList.add('hidden');
         document.getElementById('page-app').classList.remove('hidden');
-        // Default class select
-        if (db.classes.length > 0) state.selectedClassId = db.classes[0].id;
+        if(db.classes.length > 0) state.selectedClassId = db.classes[0].id;
         renderHome();
     } else {
-        alert("Napačni podatki ali nimate pravic (samo učitelji).");
+        alert("Napačni podatki.");
     }
 }
 
-function handleLogout() {
-    location.reload();
-}
+function logout() { location.reload(); }
 
 // --- NAVIGATION ---
-function showView(viewName) {
-    state.view = viewName;
+function setView(v) {
+    state.view = v;
     document.getElementById('view-home').classList.add('hidden');
     document.getElementById('view-absence').classList.add('hidden');
     
-    if (viewName === 'HOME') {
+    if(v === 'HOME') {
         document.getElementById('view-home').classList.remove('hidden');
         closeEntryBelt();
         renderHome();
-    } else if (viewName === 'ABSENCE') {
+    } else {
         document.getElementById('view-absence').classList.remove('hidden');
-        renderAbsenceView();
+        renderAbsence();
     }
 }
 
-// --- DATE LOGIC ---
-function changeDate(days) {
-    state.currentDate.setDate(state.currentDate.getDate() + days);
-    updateDateDisplay();
+function changeDate(d) {
+    state.currentDate.setDate(state.currentDate.getDate() + d);
+    updateDateUI();
     closeEntryBelt();
     renderHome();
 }
 
-function updateDateDisplay() {
+function changeWeek(w) {
+    state.currentWeekStart.setDate(state.currentWeekStart.getDate() + (w*7));
+    updateDateUI();
+    renderAbsence();
+}
+
+function updateDateUI() {
+    // Date
     const d = state.currentDate;
-    const str = d.toLocaleDateString('sl-SI', { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' });
-    document.getElementById('date-display').innerText = str.charAt(0).toUpperCase() + str.slice(1);
+    const dStr = d.toLocaleDateString('sl-SI', { weekday:'long', year:'numeric', month:'numeric', day:'numeric' });
+    document.getElementById('date-display').innerText = dStr.charAt(0).toUpperCase() + dStr.slice(1);
     
-    // Week display
-    const ws = new Date(state.currentWeekStart);
-    const we = new Date(state.currentWeekStart);
-    we.setDate(we.getDate() + 4); // Petek
-    document.getElementById('week-display').innerText = `Teden (${ws.toLocaleDateString()} - ${we.toLocaleDateString()})`;
+    // Week
+    const s = new Date(state.currentWeekStart);
+    const e = new Date(state.currentWeekStart);
+    e.setDate(e.getDate() + 4);
+    document.getElementById('week-display').innerText = `Teden (${s.toLocaleDateString()} - ${e.toLocaleDateString()})`;
 }
 
-function changeWeek(weeks) {
-    state.currentWeekStart.setDate(state.currentWeekStart.getDate() + (weeks * 7));
-    updateDateDisplay();
-    renderAbsenceView();
+function pickDate() {
+    const inp = prompt("Vpiši datum (d. m. llll):", state.currentDate.toLocaleDateString());
+    if(inp) {
+        const p = inp.split('. ');
+        if(p.length === 3) {
+            state.currentDate = new Date(p[2], p[1]-1, p[0]);
+            updateDateUI();
+            closeEntryBelt();
+            renderHome();
+        }
+    }
 }
 
-// --- HOME & SCHEDULE ---
+// --- HOME / URNIK ---
 function renderHome() {
     const row = document.getElementById('schedule-row');
     row.innerHTML = '';
+    const dStr = state.currentDate.toLocaleDateString();
     
-    // Check entries for this day/teacher
-    const dateStr = state.currentDate.toLocaleDateString();
-    
-    for (let i = 1; i <= 9; i++) {
-        const entry = db.entries.find(e => 
-            e.teacherId === state.user.id && 
-            e.date === dateStr && 
-            e.period === i
-        );
-        
+    for(let i=1; i<=9; i++) {
+        const ent = db.entries.find(e => e.date === dStr && e.period === i && e.teacherId === state.user.id);
         const td = document.createElement('td');
-        td.className = 'schedule-cell';
-        td.onclick = () => openEntryMode(i, entry);
         
-        if (entry) {
-            const cls = db.classes.find(c => c.id === entry.classId);
+        if(ent) {
+            const c = db.classes.find(x => x.id === ent.classId);
             td.innerHTML = `
-                <div class="filled-cell">
-                    <div style="font-weight:bold; border-bottom:1px solid #77aa77;">${cls ? cls.name : '?'}</div>
-                    <div style="font-size:10px; overflow:hidden;">${entry.topic || ''}</div>
+                <div class="sch-cell-content sch-cell-filled">
+                    <div class="sch-class-label">${c ? c.name : '?'}</div>
+                    <div class="sch-topic-text">${ent.topic}</div>
                 </div>
             `;
+        } else {
+            td.innerHTML = `<div class="sch-cell-content"></div>`;
         }
         
+        td.onclick = () => activateEntry(i, ent);
         row.appendChild(td);
     }
 }
 
-// --- ENTRY MODE (PAS ZA VPIS) ---
-function openEntryMode(period, existingEntry) {
-    // If no existing entry, ask for Class & Type first
-    if (!existingEntry) {
-        promptClassAndType(period, (classId, type) => {
-            initializeEntryBelt(period, classId, type, null);
-        });
+// --- ENTRY BELT LOGIC ---
+function activateEntry(period, existing) {
+    if(!existing) {
+        // Prompt for class/type
+        const opts = db.classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        const html = `
+            <label>Razred:</label><select id="new-cls" style="width:100%">${opts}</select><br><br>
+            <label>Tip:</label><select id="new-typ" style="width:100%">
+                <option value="REDNA URA">REDNA URA</option>
+                <option value="NADOMEŠČANJE">NADOMEŠČANJE</option>
+            </select>
+        `;
+        showModal("Nova ura", html, [
+            { label: 'Naprej', action: () => {
+                const cid = parseInt(document.getElementById('new-cls').value);
+                const typ = document.getElementById('new-typ').value;
+                closeModal();
+                initEntryBelt(period, cid, typ, null);
+            }}
+        ]);
     } else {
-        initializeEntryBelt(period, existingEntry.classId, existingEntry.type, existingEntry);
+        initEntryBelt(period, existing.classId, existing.type, existing);
     }
 }
 
-function promptClassAndType(period, callback) {
-    const classOpts = db.classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-    const html = `
-        <label>Razred:</label><select id="modal-class" class="win-input">${classOpts}</select>
-        <label>Tip ure:</label>
-        <select id="modal-type" class="win-input">
-            <option value="REDNA">REDNA URA</option>
-            <option value="NADOMEŠČANJE">NADOMEŠČANJE</option>
-        </select>
-    `;
-    showModal("Izbira ure", html, [{
-        label: 'Naprej',
-        onClick: () => {
-            const cid = parseInt(document.getElementById('modal-class').value);
-            const typ = document.getElementById('modal-type').value;
-            closeModal();
-            callback(cid, typ);
-        }
-    }]);
-}
-
-function initializeEntryBelt(period, classId, type, entry) {
+function initEntryBelt(period, classId, type, entry) {
     const cls = db.classes.find(c => c.id === classId);
-    if (!cls) return;
-
-    // Setup State
+    state.activePeriod = period;
+    
+    // Create temp entry object
     state.activeEntry = {
+        id: entry ? entry.id : Date.now(),
+        date: state.currentDate.toLocaleDateString(),
         period: period,
         classId: classId,
         type: type,
-        // Če entry obstaja, kopiraj podatke, sicer prazno
-        absentees: entry ? JSON.parse(JSON.stringify(entry.absentees)) : [],
         topic: entry ? entry.topic : '',
-        id: entry ? entry.id : null,
-        isNew: !entry
+        absentees: entry ? JSON.parse(JSON.stringify(entry.absentees)) : [], // Deep copy
+        teacherId: state.user.id
     };
-
-    // UI Updates
+    
+    // UI Update
     document.getElementById('entry-belt').classList.remove('hidden');
-    document.getElementById('home-class-icon').innerText = cls.name; // Big icon update
+    document.getElementById('eb-title').innerText = `Vpis ure: ${period}. ura; ${cls.name}; ${type}`;
+    document.getElementById('curr-topic-header').innerText = `${period}. ura`;
+    document.getElementById('topic-input').value = state.activeEntry.topic;
     
-    // Polje 1 Info
-    document.getElementById('eb-info-text').innerText = `Vpis ure: ${period}. ura; ${cls.name}; ${type}`;
-    
-    // Polje 2 Reditelji
-    updateRediteljiDisplay(classId);
-
-    // Polje 4 Manjkajoči
-    renderMissingBox();
-
-    // Polje 5 Snov
-    document.getElementById('eb-topic-input').value = state.activeEntry.topic;
-    renderHistory(classId);
+    updateRediteljiUI(cls);
+    renderMissingList();
+    renderHistory(cls.id);
 }
 
 function closeEntryBelt() {
     document.getElementById('entry-belt').classList.add('hidden');
     state.activeEntry = null;
-    document.getElementById('home-class-icon').innerText = "A1"; // Reset
 }
 
-// --- REDITELJI LOGIC ---
-function updateRediteljiDisplay(classId) {
-    const cls = db.classes.find(c => c.id === classId);
-    let names = "Ni določeno";
-    if (cls.reditelji && cls.reditelji.length > 0) {
+function updateRediteljiUI(cls) {
+    let txt = "Ni določeno";
+    if(cls.reditelji && cls.reditelji.length > 0) {
         const s1 = cls.students.find(s => s.id === cls.reditelji[0]);
         const s2 = cls.students.find(s => s.id === cls.reditelji[1]);
-        names = `${s1 ? s1.name : ''}; ${s2 ? s2.name : ''}`;
+        txt = `${s1?s1.name:''} ${s2?'; '+s2.name:''}`;
     }
-    document.getElementById('eb-reditelji-names').innerText = names;
+    document.getElementById('eb-reditelji').innerText = txt;
 }
 
 function editReditelji() {
-    if (!state.activeEntry) return;
+    if(!state.activeEntry) return;
     const cls = db.classes.find(c => c.id === state.activeEntry.classId);
-    const opts = cls.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    const opts = `<option value="">-</option>` + cls.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     
     const html = `
-        <label>Reditelj 1:</label><select id="red-1" class="win-input"><option value="">-</option>${opts}</select>
-        <label>Reditelj 2:</label><select id="red-2" class="win-input"><option value="">-</option>${opts}</select>
+        <label>Reditelj 1:</label><select id="r1" style="width:100%">${opts}</select><br>
+        <label>Reditelj 2:</label><select id="r2" style="width:100%">${opts}</select>
     `;
-    
     showModal("Določi reditelje", html, [{
-        label: 'Shrani',
-        onClick: () => {
-            const r1 = parseInt(document.getElementById('red-1').value);
-            const r2 = parseInt(document.getElementById('red-2').value);
+        label:'Shrani', action: () => {
+            const r1 = document.getElementById('r1').value;
+            const r2 = document.getElementById('r2').value;
             const idx = db.classes.findIndex(c => c.id === cls.id);
             db.classes[idx].reditelji = [];
-            if(r1) db.classes[idx].reditelji.push(r1);
-            if(r2) db.classes[idx].reditelji.push(r2);
-            saveDB();
-            updateRediteljiDisplay(cls.id);
+            if(r1) db.classes[idx].reditelji.push(parseInt(r1));
+            if(r2) db.classes[idx].reditelji.push(parseInt(r2));
+            localStorage.setItem('mindex_db', JSON.stringify(db));
+            updateRediteljiUI(db.classes[idx]);
             closeModal();
         }
     }]);
 }
 
-// --- MANJKAJOČI LOGIC ---
-function renderMissingBox() {
+// --- MANJKAJOČI LOGIC (Fix: Show all absent today) ---
+function renderMissingList() {
     const container = document.getElementById('eb-missing-list');
-    container.innerHTML = '<span class="missing-label">Manjkajoči:</span>';
+    container.innerHTML = '';
     
-    // Get all entries for THIS DAY and THIS CLASS to calculate hour numbers
-    const dateStr = state.currentDate.toLocaleDateString();
-    const dayEntries = db.entries.filter(e => e.date === dateStr && e.classId === state.activeEntry.classId);
+    const cls = db.classes.find(c => c.id === state.activeEntry.classId);
+    const todayStr = state.activeEntry.date;
     
-    // Combine current active absentees
-    state.activeEntry.absentees.forEach(abs => {
-        const cls = db.classes.find(c => c.id === state.activeEntry.classId);
-        const student = cls.students.find(s => s.id === abs.studentId);
+    // 1. Get all students who are absent TODAY in ANY period (saved entries)
+    const todayEntries = db.entries.filter(e => e.date === todayStr && e.classId === cls.id);
+    const studentsAbsentToday = new Set();
+    
+    todayEntries.forEach(e => {
+        e.absentees.forEach(a => studentsAbsentToday.add(a.studentId));
+    });
+    
+    // 2. Add students currently marked in active entry
+    state.activeEntry.absentees.forEach(a => studentsAbsentToday.add(a.studentId));
+    
+    // Render list
+    studentsAbsentToday.forEach(sid => {
+        const student = cls.students.find(s => s.id === sid);
         if(!student) return;
-
-        // Calculate hours missed today: find all entries where this student is absent + current period
-        let hoursMissed = [];
-        dayEntries.forEach(e => {
-            if (e.id === state.activeEntry.id) return; // Skip self (not saved yet)
-            if (e.absentees.some(a => a.studentId === abs.studentId)) {
-                hoursMissed.push(e.period);
+        
+        // Is absent in CURRENT active entry?
+        const isCurrentAbsent = state.activeEntry.absentees.some(a => a.studentId === sid);
+        
+        // Calculate hours missed
+        let hours = [];
+        todayEntries.forEach(e => {
+            // If checking saved entries, verify student is in absentees list. 
+            // BUT: if we are editing an existing entry, ignore its saved version to avoid duplication/confusion?
+            // Actually, simplest is: Check saved entries (excluding self if strictly saving new).
+            // Logic: Scan all saved entries. If saved entry ID != active ID, check list. 
+            if (e.id !== state.activeEntry.id) {
+                if(e.absentees.some(a => a.studentId === sid)) hours.push(e.period);
             }
         });
-        hoursMissed.push(state.activeEntry.period);
-        hoursMissed.sort((a,b)=>a-b);
-
+        if(isCurrentAbsent) hours.push(state.activeEntry.period);
+        hours.sort((a,b)=>a-b);
+        
+        // Determine style
+        const nameClass = isCurrentAbsent ? 'student-name red-text bold' : 'student-name black-text';
+        
         const div = document.createElement('div');
-        div.className = 'student-item';
+        div.className = 'student-row';
         div.innerHTML = `
-            <span class="red-text bold" onclick="removeAbsentee(${student.id})">${student.name}</span>
-            <span style="font-size:11px;">${hoursMissed.join('. ')}.</span>
-            <span class="pencil-icon" onclick="editNote(${student.id})">✎</span>
+            <div class="${nameClass}" onclick="toggleAbsent(${sid})">${student.name}</div>
+            <div class="student-hours">${hours.join('. ')}.</div>
+            <div class="edit-icon" onclick="editNote(${sid})">✎</div>
         `;
         container.appendChild(div);
     });
 }
 
 function openStudentPicker() {
+    if(!state.activeEntry) return;
     const cls = db.classes.find(c => c.id === state.activeEntry.classId);
-    // List students NOT already absent
-    const available = cls.students.filter(s => !state.activeEntry.absentees.some(a => a.studentId === s.id));
     
-    let html = '<div style="max-height:200px; overflow-y:auto;">';
-    available.forEach(s => {
-        html += `<div style="padding:3px; cursor:pointer; border-bottom:1px dotted #ccc;" onclick="addAbsentee(${s.id})">${s.name}</div>`;
+    // Simple list of all students
+    let html = '<div style="height:200px; overflow-y:auto;">';
+    cls.students.forEach(s => {
+        html += `<div onclick="toggleAbsent(${s.id}); closeModal();" style="cursor:pointer; padding:3px; border-bottom:1px dotted #ccc;">${s.name}</div>`;
     });
     html += '</div>';
-    
-    showModal("Izberi dijaka", html, [{label:'Zapri', onClick:closeModal}]);
+    showModal("Izberi dijaka", html, [{label:'Zapri', action:closeModal}]);
 }
 
-function addAbsentee(sid) {
-    state.activeEntry.absentees.push({ studentId: sid, status: '?', note: '' });
-    closeModal();
-    renderMissingBox();
-}
-
-function removeAbsentee(sid) {
-    state.activeEntry.absentees = state.activeEntry.absentees.filter(a => a.studentId !== sid);
-    renderMissingBox();
+function toggleAbsent(sid) {
+    const idx = state.activeEntry.absentees.findIndex(a => a.studentId === sid);
+    if(idx > -1) {
+        // Remove
+        state.activeEntry.absentees.splice(idx, 1);
+    } else {
+        // Add
+        state.activeEntry.absentees.push({ studentId: sid, status: '?', note: '' });
+    }
+    renderMissingList();
 }
 
 function editNote(sid) {
-    const abs = state.activeEntry.absentees.find(a => a.studentId === sid);
-    const html = `<label>Opomba:</label><input type="text" id="note-in" value="${abs.note || ''}" class="win-input">`;
-    showModal("Opomba za dijaka", html, [{
-        label: 'Shrani',
-        onClick: () => {
-            abs.note = document.getElementById('note-in').value;
-            closeModal();
-        }
-    }]);
+    // Note can only be edited if student is marked for current hour
+    let abs = state.activeEntry.absentees.find(a => a.studentId === sid);
+    if(!abs) {
+        alert("Opombo lahko dodaš le, če je dijak to uro označen kot manjkajoč (rdeče).");
+        return;
+    }
+    const html = `<input type="text" id="note-val" value="${abs.note||''}" style="width:100%">`;
+    showModal("Opomba", html, [{label:'Shrani', action:()=>{
+        abs.note = document.getElementById('note-val').value;
+        closeModal();
+    }}]);
 }
 
-// --- TOPIC & HISTORY ---
-function renderHistory(classId) {
-    const row = document.getElementById('eb-history-row');
-    // Remove old history boxes (keep current input)
-    while(row.children.length > 1) { row.removeChild(row.firstChild); }
+// --- HISTORY & SAVE ---
+function renderHistory(cid) {
+    const area = document.getElementById('eb-history-row');
+    // Remove old history boxes (keep input box at end)
+    const inputArea = area.lastElementChild;
+    const saveBtn = area.querySelector('button'); // find button inside
     
-    // Find last 5 entries for this class
-    const history = db.entries
-        .filter(e => e.classId === classId && e.id !== state.activeEntry.id)
-        .sort((a,b) => b.id - a.id) // Newest first
-        .slice(0, 5)
-        .reverse(); // Display oldest to newest
-        
-    history.forEach(h => {
+    // Clear only history boxes
+    const children = Array.from(area.children);
+    children.forEach(c => {
+        if(!c.classList.contains('current-topic-box') && c.tagName !== 'BUTTON') area.removeChild(c);
+    });
+
+    // Add last 5 entries
+    const hist = db.entries.filter(e => e.classId === cid && e.id !== state.activeEntry.id)
+                  .sort((a,b) => b.id - a.id).slice(0,5).reverse();
+    
+    hist.forEach(h => {
         const div = document.createElement('div');
-        div.className = 'topic-prev';
+        div.className = 'history-box';
         div.innerHTML = `
-            <div class="topic-prev-header">${h.period}. ura</div>
-            <div>${h.topic || ''}</div>
+            <div class="hist-header">${h.period}. ura</div>
+            <div class="hist-body">${h.topic}</div>
         `;
-        row.insertBefore(div, row.firstChild);
+        area.insertBefore(div, area.lastElementChild.previousElementSibling); // Insert before input box
     });
 }
 
-// --- SAVE ENTRY ---
 function saveEntry() {
-    if (!state.activeEntry) return;
+    if(!state.activeEntry) return;
+    state.activeEntry.topic = document.getElementById('topic-input').value;
     
-    // Update Topic
-    state.activeEntry.topic = document.getElementById('eb-topic-input').value;
+    // Update or Push
+    const idx = db.entries.findIndex(e => e.id === state.activeEntry.id);
+    if(idx > -1) db.entries[idx] = state.activeEntry;
+    else db.entries.push(state.activeEntry);
     
-    // Save to DB
-    const entryData = {
-        id: state.activeEntry.id || Date.now(),
-        date: state.currentDate.toLocaleDateString(),
-        period: state.activeEntry.period,
-        classId: state.activeEntry.classId,
-        type: state.activeEntry.type,
-        topic: state.activeEntry.topic,
-        absentees: state.activeEntry.absentees,
-        teacherId: state.user.id
-    };
-
-    if (state.activeEntry.isNew) {
-        db.entries.push(entryData);
-    } else {
-        const idx = db.entries.findIndex(e => e.id === entryData.id);
-        if (idx !== -1) db.entries[idx] = entryData;
-    }
-    
-    saveDB();
+    localStorage.setItem('mindex_db', JSON.stringify(db));
     closeEntryBelt();
     renderHome();
 }
 
-// --- ABSENCE VIEW LOGIC ---
-function selectClassForAbsence() {
+// --- ABSENCE VIEW ---
+function selectClassAbsence() {
     const opts = db.classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-    const html = `<select id="abs-cls-sel" class="win-input">${opts}</select>`;
-    showModal("Izberi razred", html, [{
-        label: 'Potrdi',
-        onClick: () => {
-            state.selectedClassId = parseInt(document.getElementById('abs-cls-sel').value);
-            renderAbsenceView();
+    showModal("Izberi razred", `<select id="abs-cls" style="width:100%">${opts}</select>`, [
+        { label:'Potrdi', action:()=>{
+            state.selectedClassId = parseInt(document.getElementById('abs-cls').value);
             closeModal();
-        }
-    }]);
+            renderAbsence();
+        }}
+    ]);
 }
 
-function renderAbsenceView() {
-    if (!state.selectedClassId) return;
+function renderAbsence() {
+    if(!state.selectedClassId && db.classes.length>0) state.selectedClassId = db.classes[0].id;
+    if(!state.selectedClassId) return;
+
     const cls = db.classes.find(c => c.id === state.selectedClassId);
-    document.getElementById('abs-class-display').innerText = cls.name;
+    document.getElementById('abs-class-label').innerText = cls.name;
     
-    const viewType = document.getElementById('abs-view-select').value;
+    const mode = document.getElementById('abs-view-select').value;
     
-    // Filter entries for this class and this week
-    const weekStart = new Date(state.currentWeekStart);
-    const weekEnd = new Date(state.currentWeekStart);
-    weekEnd.setDate(weekEnd.getDate() + 6);
+    // Get week entries
+    const sDate = new Date(state.currentWeekStart);
+    const eDate = new Date(state.currentWeekStart); eDate.setDate(eDate.getDate()+6);
     
-    const relevantEntries = db.entries.filter(e => {
-        // Convert 'd. m. yyyy' to Date object for comparison is tricky due to format.
-        // Assuming format 'D. M. YYYY' from localedatestring sl-SI
-        const parts = e.date.split('. ');
-        const d = new Date(parts[2], parts[1]-1, parts[0]);
-        return e.classId === cls.id && d >= weekStart && d <= weekEnd;
+    const weekEntries = db.entries.filter(e => {
+        if(e.classId !== cls.id) return false;
+        const p = e.date.split('. ');
+        const d = new Date(p[2], p[1]-1, p[0]);
+        return d >= sDate && d <= eDate;
     });
 
-    if (viewType === 'GENERAL') {
-        document.getElementById('abs-gen-container').classList.remove('hidden');
-        document.getElementById('abs-det-container').classList.add('hidden');
-        renderAbsenceGeneral(cls, relevantEntries);
+    if(mode === 'GENERAL') {
+        document.getElementById('abs-general-container').classList.remove('hidden');
+        document.getElementById('abs-detailed-container').classList.add('hidden');
+        
+        const tbody = document.getElementById('abs-gen-body');
+        tbody.innerHTML = '';
+        
+        cls.students.forEach(s => {
+            let g=0, r=0, b=0;
+            weekEntries.forEach(e => {
+                const a = e.absentees.find(x => x.studentId === s.id);
+                if(a) {
+                    if(a.status === 'O') g++;
+                    else if(a.status === 'N') r++;
+                    else b++;
+                }
+            });
+            const tr = document.createElement('tr');
+            tr.className = 'abs-row-highlight';
+            tr.innerHTML = `<td>${s.name}</td><td class="abs-stat-green bold">${g}</td><td class="abs-stat-red bold">${r}</td><td class="abs-stat-black bold">${b}</td>`;
+            tbody.appendChild(tr);
+        });
+        
     } else {
-        document.getElementById('abs-gen-container').classList.add('hidden');
-        document.getElementById('abs-det-container').classList.remove('hidden');
-        renderAbsenceDetailed(cls, relevantEntries, weekStart);
+        document.getElementById('abs-general-container').classList.add('hidden');
+        document.getElementById('abs-detailed-container').classList.remove('hidden');
+        
+        const cont = document.getElementById('abs-det-list');
+        cont.innerHTML = '';
+        
+        const days = ['Ponedeljek','Torek','Sreda','Četrtek','Petek'];
+        
+        days.forEach((dayName, i) => {
+            const d = new Date(state.currentWeekStart);
+            d.setDate(d.getDate()+i);
+            const dStr = d.toLocaleDateString();
+            
+            const dayEnts = weekEntries.filter(e => e.date === dStr);
+            if(dayEnts.length === 0) return;
+            
+            // Check if any absentees exist
+            let hasAbs = false;
+            dayEnts.forEach(e => { if(e.absentees.length > 0) hasAbs = true; });
+            if(!hasAbs) return;
+            
+            const table = document.createElement('table');
+            table.className = 'abs-det-table';
+            
+            let head = `<tr><th colspan="10" style="background:#e0e0e0; text-align:left; padding-left:5px;">${dayName} - ${dStr}</th></tr>
+                        <tr><th style="width:150px">Ime</th><th>1.</th><th>2.</th><th>3.</th><th>4.</th><th>5.</th><th>6.</th><th>7.</th><th>8.</th><th>9.</th></tr>`;
+            
+            let body = '';
+            
+            // For each student who is absent at least once
+            cls.students.forEach(s => {
+                let isAbsentToday = false;
+                dayEnts.forEach(e => { if(e.absentees.some(a=>a.studentId === s.id)) isAbsentToday = true; });
+                
+                if(isAbsentToday) {
+                    body += `<tr><td style="text-align:left; padding-left:5px;">${s.name}</td>`;
+                    for(let p=1; p<=9; p++) {
+                        const ent = dayEnts.find(e => e.period === p);
+                        let cellContent = '';
+                        let cellClass = '';
+                        let action = '';
+                        
+                        if(ent) {
+                            const abs = ent.absentees.find(a => a.studentId === s.id);
+                            if(abs) {
+                                cellContent = abs.status;
+                                if(abs.status==='O') cellClass='cell-O';
+                                else if(abs.status==='N') cellClass='cell-N';
+                                else cellClass='cell-Open';
+                                if(abs.note) cellClass += ' cell-Note'; // Visual cue for note
+                                action = `manageAbs(${ent.id}, ${s.id})`;
+                            }
+                        }
+                        body += `<td class="${cellClass}" onclick="${action}">${cellContent}</td>`;
+                    }
+                    body += `</tr>`;
+                }
+            });
+            
+            table.innerHTML = `<thead>${head}</thead><tbody>${body}</tbody>`;
+            cont.appendChild(table);
+        });
     }
 }
 
-function renderAbsenceGeneral(cls, entries) {
-    const tbody = document.getElementById('abs-gen-body');
-    tbody.innerHTML = '';
+function manageAbs(eid, sid) {
+    const ent = db.entries.find(e => e.id === eid);
+    const abs = ent.absentees.find(a => a.studentId === sid);
+    const cls = db.classes.find(c => c.id === ent.classId);
+    const stu = cls.students.find(s => s.id === sid);
     
-    cls.students.forEach(s => {
-        let green = 0, red = 0, black = 0;
-        
-        entries.forEach(e => {
-            const abs = e.absentees.find(a => a.studentId === s.id);
-            if (abs) {
-                if (abs.status === 'O') green++;
-                else if (abs.status === 'N') red++;
-                else black++;
-            }
-        });
-        
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${s.name}</td>
-            <td class="stat-col stat-green">${green}</td>
-            <td class="stat-col stat-red">${red}</td>
-            <td class="stat-col stat-black">${black}</td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-function renderAbsenceDetailed(cls, entries, weekStart) {
-    const container = document.getElementById('abs-det-tables');
-    container.innerHTML = '';
-    
-    const days = ['Ponedeljek', 'Torek', 'Sreda', 'Četrtek', 'Petek'];
-    
-    days.forEach((dayName, index) => {
-        const currDate = new Date(weekStart);
-        currDate.setDate(currDate.getDate() + index);
-        const dateStr = currDate.toLocaleDateString();
-        
-        // Find entries for this day
-        const dayEntries = entries.filter(e => e.date === dateStr);
-        if (dayEntries.length === 0) return; // Skip empty days or show empty? Prompt says "if no missing, not in table".
-        
-        // Find students who were absent at least once this day
-        const absentStudentIds = new Set();
-        dayEntries.forEach(e => e.absentees.forEach(a => absentStudentIds.add(a.studentId)));
-        if (absentStudentIds.size === 0) return;
-
-        // Create table for day
-        const table = document.createElement('table');
-        table.className = 'absence-table-det';
-        table.style.marginBottom = "10px";
-        
-        // Header
-        let headHtml = `<tr><th colspan="10" style="background:#ddd;">${dayName} - ${dateStr}</th></tr><tr><th>Ime</th>`;
-        for(let i=1; i<=9; i++) headHtml += `<th>${i}.</th>`;
-        headHtml += '</tr>';
-        
-        let bodyHtml = '';
-        absentStudentIds.forEach(sid => {
-            const student = cls.students.find(s => s.id === sid);
-            bodyHtml += `<tr><td style="text-align:left;">${student.name}</td>`;
-            
-            for(let i=1; i<=9; i++) {
-                const entry = dayEntries.find(e => e.period === i);
-                let content = '';
-                let cellClass = '';
-                let clickAction = '';
-                
-                if (entry) {
-                    const abs = entry.absentees.find(a => a.studentId === sid);
-                    if (abs) {
-                        content = abs.status;
-                        cellClass = 'abs-cell ' + (abs.status==='O'?'abs-excused':(abs.status==='N'?'abs-unexcused':'abs-open'));
-                        if (abs.note) cellClass += ' abs-note'; // Add yellow tint logic if needed
-                        clickAction = `manageAbsence(${entry.id}, ${sid})`;
-                    }
-                }
-                bodyHtml += `<td class="${cellClass}" onclick="${clickAction}">${content}</td>`;
-            }
-            bodyHtml += `</tr>`;
-        });
-        
-        table.innerHTML = `<thead>${headHtml}</thead><tbody>${bodyHtml}</tbody>`;
-        container.appendChild(table);
-    });
-}
-
-// --- ABSENCE MANAGEMENT MODAL ---
-function manageAbsence(entryId, studentId) {
-    const entry = db.entries.find(e => e.id === entryId);
-    const abs = entry.absentees.find(a => a.studentId === studentId);
-    const cls = db.classes.find(c => c.id === entry.classId);
-    const student = cls.students.find(s => s.id === studentId);
-    
-    // Find all hours for this student on this day
-    const dayEntries = db.entries.filter(e => e.date === entry.date && e.classId === entry.classId);
-    const missedHours = dayEntries.filter(e => e.absentees.some(a => a.studentId === studentId)).map(e => e.period);
-
     const html = `
-        <p><b>Učenec:</b> ${student.name}</p>
+        <p><b>Učenec:</b> ${stu.name}</p>
         <p><b>Opomba:</b> ${abs.note || '/'}</p>
         <hr>
-        <p>Ure odsotnosti ta dan: ${missedHours.join(', ')}</p>
-        <div style="display:flex; gap:10px; justify-content:center; margin-top:10px;">
-            <button class="win-btn" style="background:var(--pastel-green);" onclick="setAbsenceStatus(${entryId}, ${studentId}, 'O', false)">OPRAVIČI URO</button>
-            <button class="win-btn" style="background:var(--pastel-red);" onclick="setAbsenceStatus(${entryId}, ${studentId}, 'N', false)">NEOPRAVIČI URO</button>
+        <div style="display:flex; justify-content:center; gap:10px;">
+            <button class="win-btn" style="background:#dff0d8" onclick="setAbsStatus(${eid}, ${sid}, 'O', false)">OPRAVIČI URO</button>
+            <button class="win-btn" style="background:#f2dede" onclick="setAbsStatus(${eid}, ${sid}, 'N', false)">NEOPRAVIČI URO</button>
         </div>
-        <div style="text-align:center; margin-top:10px;">
-            <button class="win-btn bold" onclick="setAbsenceStatus(${entryId}, ${studentId}, 'O', true)">OPRAVIČI VSE DANES</button>
-            <button class="win-btn bold" onclick="setAbsenceStatus(${entryId}, ${studentId}, 'N', true)">NEOPRAVIČI VSE DANES</button>
+        <div style="margin-top:10px; text-align:center;">
+            <button class="win-btn bold" onclick="setAbsStatus(${eid}, ${sid}, 'O', true)">OPRAVIČI VSE DANES</button><br><br>
+            <button class="win-btn bold" onclick="setAbsStatus(${eid}, ${sid}, 'N', true)">NEOPRAVIČI VSE DANES</button>
         </div>
     `;
-    
-    showModal("Urejanje odsotnosti", html, [{label: 'Zapri', onClick: closeModal}]);
+    showModal("Urejanje", html, [{label:'Zapri', action:closeModal}]);
 }
 
-function setAbsenceStatus(entryId, studentId, status, allDay) {
-    const entry = db.entries.find(e => e.id === entryId);
+function setAbsStatus(eid, sid, stat, allDay) {
+    const ent = db.entries.find(e => e.id === eid);
     
-    if (allDay) {
-        // Find all entries for this day/class
-        const dayEntries = db.entries.filter(e => e.date === entry.date && e.classId === entry.classId);
-        dayEntries.forEach(e => {
-            const a = e.absentees.find(x => x.studentId === studentId);
-            if (a) a.status = status;
+    if(allDay) {
+        const dayEnts = db.entries.filter(x => x.date === ent.date && x.classId === ent.classId);
+        dayEnts.forEach(de => {
+            const a = de.absentees.find(ax => ax.studentId === sid);
+            if(a) a.status = stat;
         });
     } else {
-        const abs = entry.absentees.find(a => a.studentId === studentId);
-        if (abs) abs.status = status;
+        const a = ent.absentees.find(ax => ax.studentId === sid);
+        if(a) a.status = stat;
     }
     
-    saveDB();
+    localStorage.setItem('mindex_db', JSON.stringify(db));
     closeModal();
-    renderAbsenceView(); // Refresh table
+    renderAbsence();
 }
 
-
-// --- MODAL SYSTEM ---
-function showModal(title, htmlContent, buttons = []) {
-    const container = document.getElementById('modal-container');
-    let btnsHtml = '';
-    
-    if (buttons.length === 0) buttons = [{ label: 'V redu', onClick: closeModal }];
-    
-    buttons.forEach((btn, index) => {
-        btnsHtml += `<button class="win-btn" id="modal-btn-${index}">${btn.label}</button>`;
-    });
-
-    container.innerHTML = `
-        <div class="modal-overlay">
-            <div class="win-window">
-                <div class="win-header">
-                    <span>${title}</span>
-                    <span style="cursor:pointer;" onclick="closeModal()">X</span>
-                </div>
-                <div class="win-body">${htmlContent}</div>
-                <div class="win-footer">${btnsHtml}</div>
-            </div>
+// --- UTILS ---
+function showModal(title, content, buttons) {
+    const wrap = document.getElementById('modal-wrapper');
+    wrap.innerHTML = `
+        <div class="win-modal">
+            <div class="win-modal-header"><span>${title}</span><span style="cursor:pointer" onclick="closeModal()">X</span></div>
+            <div class="win-modal-body">${content}</div>
+            <div class="win-modal-footer" id="modal-footer"></div>
         </div>
     `;
-
-    buttons.forEach((btn, index) => {
-        document.getElementById(`modal-btn-${index}`).onclick = btn.onClick;
+    const foot = document.getElementById('modal-footer');
+    buttons.forEach(b => {
+        const btn = document.createElement('button');
+        btn.className = 'win-btn';
+        btn.innerText = b.label;
+        btn.onclick = b.action;
+        btn.style.marginLeft = "10px";
+        foot.appendChild(btn);
     });
+    wrap.classList.remove('hidden');
 }
 
 function closeModal() {
-    document.getElementById('modal-container').innerHTML = '';
+    document.getElementById('modal-wrapper').classList.add('hidden');
 }
 
-// --- PLACEHOLDERS ---
-function openSettings() { alert("Nastavitve urnika: Ta funkcija bo dodana kasneje."); }
-function showPastHours() { alert("Seznam preteklih ur: Prikaz vseh ur za ta razred."); }
-function showInfo() { alert("Info: Legenda statusov odsotnosti."); }
-function openDatePicker() { 
-    // Simple prompt simulation
-    const val = prompt("Vpiši datum (d. m. yyyy):", state.currentDate.toLocaleDateString());
-    if(val) {
-        const parts = val.split('. ');
-        if(parts.length===3) {
-            state.currentDate = new Date(parts[2], parts[1]-1, parts[0]);
-            updateDateDisplay();
-            renderHome();
-        }
-    }
-}
+// Dummy functions
+function openSettings() { alert("Nastavitve urnika: Funkcija bo na voljo kasneje."); }
+function showPastHours() { alert("Seznam preteklih ur."); }
+function showInfo() { alert("Info o statusih."); }
 
-// Start
+// Run
 init();
 
 </script>
