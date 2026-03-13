@@ -153,7 +153,7 @@
 
         /* Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .win-modal { background: #d4d0c8; border: 2px solid white; border-right-color: #404040; border-bottom-color: #404040; padding: 3px; max-width: 500px; min-width:300px; box-shadow: 5px 5px 10px rgba(0,0,0,0.5); max-height: 90vh; overflow-y:auto; }
+        .win-modal { background: #d4d0c8; border: 2px solid white; border-right-color: #404040; border-bottom-color: #404040; padding: 3px; max-width: 600px; min-width:300px; box-shadow: 5px 5px 10px rgba(0,0,0,0.5); max-height: 90vh; overflow-y:auto; }
         .win-modal-header { background: var(--win-blue); color: white; padding: 2px 5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .win-modal-body { padding: 15px; }
         .win-modal-footer { padding: 10px; text-align: right; border-top: 1px solid #808080; }
@@ -235,6 +235,7 @@
 
                     <div class="eb-sidebar">
                         <button class="win-btn" onclick="openStudentPicker()">DIJAKI</button>
+                        <button class="win-btn" onclick="showDnevnik()">DNEVNIK</button>
                     </div>
 
                     <div class="eb-missing-area">
@@ -323,7 +324,6 @@ const database = firebase.database();
 
 // --- GLOBAL STATE ---
 let db = { users:[], classes:[], entries:[], schedules:{} }; 
-// schedules format: { teacherId: { dayOfWeek(1-7): { period(1-9): classId } } }
 
 let state = {
     user: null,
@@ -342,7 +342,6 @@ function init() {
         if(snapshot.exists()) {
             db = snapshot.val();
         } else {
-            // Ustvari default admina, če je baza povsem prazna
             db = {
                 users: [{id:1, role:'admin', username:'admin', password:'admin', name:'Admin', surname:'Sistem'}],
                 classes: [], entries: [], schedules: {}
@@ -350,7 +349,7 @@ function init() {
             saveDb();
         }
         
-        // Sanitize arrays
+        // Sanitize
         if(!db.users) db.users = [];
         if(!db.classes) db.classes = [];
         if(!db.entries) db.entries = [];
@@ -373,8 +372,10 @@ function saveDb() {
 
 // --- UTILS: Date Parsing ---
 function parseSlDate(dStr) {
-    const p = dStr.split('. ');
-    if(p.length === 3) return new Date(p[2], p[1]-1, p[0]);
+    if(!dStr) return new Date(0);
+    // Varno branje datuma (odstrani vse presledke in razdeli po pikah)
+    const p = dStr.replace(/\s/g, '').split('.');
+    if(p.length >= 3) return new Date(p[2], p[1]-1, p[0]);
     return new Date(0);
 }
 function formatDate(d) { return d.toLocaleDateString('sl-SI'); }
@@ -390,7 +391,6 @@ function tryLogin() {
         document.getElementById('page-login').classList.add('hidden');
         document.getElementById('page-app').classList.remove('hidden');
         
-        // UI permissions
         document.getElementById('user-role-badge').innerText = `(${usr.role})`;
         if(usr.role === 'student') {
             document.getElementById('nav-absence').classList.add('hidden');
@@ -437,18 +437,21 @@ function renderStudentView() {
     tbody.innerHTML = '';
     
     let nCount = 0, oCount = 0, qCount = 0;
-    
-    // Find all entries where this student is marked absent
     let myAbsences = [];
-    db.entries.forEach(e => {
-        const abs = e.absentees.find(a => a.studentId === state.user.id);
-        if(abs) {
-            myAbsences.push({ entry: e, abs: abs });
-            if(abs.status === 'N') nCount++;
-            else if(abs.status === 'O') oCount++;
-            else qCount++;
-        }
-    });
+    
+    if (db.entries) {
+        db.entries.forEach(e => {
+            if (!e.absentees) return;
+            // Varnostni popravek za ujemanje ID-jev (kot število)
+            const abs = e.absentees.find(a => parseInt(a.studentId) === parseInt(state.user.id));
+            if(abs) {
+                myAbsences.push({ entry: e, abs: abs });
+                if(abs.status === 'N') nCount++;
+                else if(abs.status === 'O') oCount++;
+                else qCount++;
+            }
+        });
+    }
     
     document.getElementById('stu-o-count').innerText = oCount;
     document.getElementById('stu-n-count').innerText = nCount;
@@ -466,8 +469,8 @@ function renderStudentView() {
         else wb.innerText = "Prvi opomin zaradi prevelikega števila neopravičenih ur";
     }
 
-    // Sort by date descending
-    myAbsences.sort((a,b) => parseSlDate(b.entry.date) - parseSlDate(a.entry.date));
+    // Sort descending
+    myAbsences.sort((a,b) => parseSlDate(b.entry.date) - parseSlDate(a.entry.date) || b.entry.period - a.entry.period);
     
     myAbsences.forEach(m => {
         const tr = document.createElement('tr');
@@ -518,17 +521,15 @@ function pickDate(type) {
 // --- LESSON COUNTER UTILITY ---
 function getLessonNumber(classId, targetDateStr, targetPeriod) {
     const targetTime = parseSlDate(targetDateStr).getTime();
-    // Vse ure za ta razred do tega datuma vključno
     let rel = db.entries.filter(e => e.classId === classId && parseSlDate(e.date).getTime() <= targetTime);
     rel.sort((a,b) => {
         const dtA = parseSlDate(a.date).getTime(); const dtB = parseSlDate(b.date).getTime();
         if(dtA === dtB) return a.period - b.period;
         return dtA - dtB;
     });
-    // Poiščimo indeks
     let idx = rel.findIndex(e => e.date === targetDateStr && e.period === targetPeriod);
     if(idx !== -1) return idx + 1;
-    return rel.length + 1; // Če ure še ni v bazi (kreiramo novo)
+    return rel.length + 1;
 }
 
 // --- HOME / URNIK ---
@@ -537,7 +538,6 @@ function renderHome() {
     row.innerHTML = '';
     const dStr = formatDate(state.currentDate);
     
-    // Day of week: 1=Mon ... 7=Sun
     let dow = state.currentDate.getDay();
     if(dow === 0) dow = 7;
 
@@ -555,7 +555,6 @@ function renderHome() {
             `;
             td.onclick = () => activateEntry(i, ent);
         } else {
-            // Preveri predviden urnik
             let predClsId = null, predHtml = '';
             if(db.schedules[state.user.id] && db.schedules[state.user.id][dow] && db.schedules[state.user.id][dow][i]) {
                 predClsId = db.schedules[state.user.id][dow][i];
@@ -608,8 +607,7 @@ function initEntryBelt(period, classId, type, entry) {
     document.getElementById('entry-belt').classList.remove('hidden');
     document.getElementById('eb-title').innerText = `Vpis ure: ${period}. ura; ${cls.name}; ${type}`;
     
-    // Prikaz datuma in zaporedne ure
-    const datePart = state.activeEntry.date.replace(/\s/g,''); // npr 22.3.2026
+    const datePart = state.activeEntry.date.replace(/\s/g,''); 
     const lessonNum = getLessonNumber(classId, state.activeEntry.date, period);
     document.getElementById('curr-topic-date').innerText = datePart + " | ";
     document.getElementById('curr-topic-num').innerText = lessonNum;
@@ -657,7 +655,7 @@ function renderMissingList() {
     const todayEntries = db.entries.filter(e => e.date === todayStr && e.classId === cls.id);
     
     const studentsAbsentToday = new Set();
-    todayEntries.forEach(e => e.absentees.forEach(a => studentsAbsentToday.add(a.studentId)));
+    todayEntries.forEach(e => { if(e.absentees) e.absentees.forEach(a => studentsAbsentToday.add(a.studentId)) });
     state.activeEntry.absentees.forEach(a => studentsAbsentToday.add(a.studentId));
     
     studentsAbsentToday.forEach(sid => {
@@ -667,7 +665,7 @@ function renderMissingList() {
         
         let hours = [];
         todayEntries.forEach(e => {
-            if (e.id !== state.activeEntry.id && e.absentees.some(a => a.studentId === sid)) hours.push(e.period);
+            if (e.id !== state.activeEntry.id && e.absentees && e.absentees.some(a => a.studentId === sid)) hours.push(e.period);
         });
         if(isCurrentAbsent) hours.push(state.activeEntry.period);
         hours.sort((a,b)=>a-b);
@@ -705,13 +703,49 @@ function editNote(sid) {
     [{label:'Shrani', action:()=>{ abs.note = document.getElementById('note-val').value; closeModal(); }}]);
 }
 
+// --- DNEVNIK LOGIC ---
+function showDnevnik() {
+    if(!state.activeEntry) return;
+    const cid = state.activeEntry.classId;
+    const cls = db.classes.find(c => c.id === cid);
+    if(!cls) return;
+
+    let hist = db.entries.filter(e => e.classId === cid);
+    hist.sort((a,b) => parseSlDate(b.date) - parseSlDate(a.date) || b.period - a.period);
+
+    let html = `<table class="data-table"><tr><th>Datum</th><th>Ura</th><th>Snov</th><th>Akcija</th></tr>`;
+    hist.forEach(h => {
+        const lNum = getLessonNumber(cid, h.date, h.period);
+        html += `<tr>
+            <td>${h.date}</td>
+            <td>${h.period}. (${lNum}.)</td>
+            <td>${h.topic || '/'}</td>
+            <td><button class="win-btn" onclick="editPastEntry(${h.id})">Uredi</button></td>
+        </tr>`;
+    });
+    html += `</table>`;
+
+    showModal(`Dnevnik ur: ${cls.name}`, html, [{label:'Zapri', action:closeModal}]);
+}
+
+function editPastEntry(eid) {
+    const ent = db.entries.find(e => e.id === eid);
+    if(!ent) return;
+    closeModal();
+    // Spremeni datum na datum te stare ure
+    state.currentDate = parseSlDate(ent.date);
+    updateDateUI();
+    renderHome();
+    activateEntry(ent.period, ent);
+}
+
 function renderHistory(cid) {
     const area = document.getElementById('eb-history-row');
     Array.from(area.children).forEach(c => { if(!c.classList.contains('current-topic-box') && c.tagName !== 'BUTTON') area.removeChild(c); });
 
     let hist = db.entries.filter(e => e.classId === cid && e.id !== state.activeEntry.id);
     hist.sort((a,b) => parseSlDate(a.date) - parseSlDate(b.date) || a.period - b.period);
-    hist = hist.slice(-5); // Zadnjih 5 ur
+    hist = hist.slice(-5); // Zadnjih 5
     
     hist.forEach(h => {
         const div = document.createElement('div'); div.className = 'history-box';
@@ -747,6 +781,8 @@ function renderAbsence() {
     if(!state.selectedClassId) return;
 
     const cls = db.classes.find(c => c.id === state.selectedClassId);
+    if(!cls) return; // Varnost
+
     document.getElementById('abs-class-label').innerText = cls.name;
     const mode = document.getElementById('abs-view-select').value;
     
@@ -755,16 +791,21 @@ function renderAbsence() {
         document.getElementById('abs-detailed-container').classList.add('hidden');
         
         const tbody = document.getElementById('abs-gen-body'); tbody.innerHTML = '';
-        const clsEntries = db.entries.filter(e => e.classId === cls.id); // Vse ure zanje
+        const clsEntries = db.entries ? db.entries.filter(e => e.classId === cls.id) : []; 
+        
+        if (!cls.students) cls.students = []; // Varnost
         
         cls.students.forEach(s => {
+            if (!s) return; // Varnost prepreči crash
             let g=0, r=0, b=0;
             clsEntries.forEach(e => {
-                const a = e.absentees.find(x => x.studentId === s.id);
-                if(a) { if(a.status === 'O') g++; else if(a.status === 'N') r++; else b++; }
+                if(e.absentees) {
+                    const a = e.absentees.find(x => x.studentId === s.id);
+                    if(a) { if(a.status === 'O') g++; else if(a.status === 'N') r++; else b++; }
+                }
             });
             const tr = document.createElement('tr'); tr.className = 'abs-row-highlight';
-            tr.innerHTML = `<td>${s.name}</td><td class="abs-stat-green bold">${g}</td><td class="abs-stat-red bold">${r}</td><td class="abs-stat-black bold">${b}</td>`;
+            tr.innerHTML = `<td>${s.name || '?'}</td><td class="abs-stat-green bold">${g}</td><td class="abs-stat-red bold">${r}</td><td class="abs-stat-black bold">${b}</td>`;
             tbody.appendChild(tr);
         });
     } else {
@@ -773,7 +814,7 @@ function renderAbsence() {
         
         const cont = document.getElementById('abs-det-list'); cont.innerHTML = '';
         const dStr = formatDate(state.currentAbsDate);
-        const dayEnts = db.entries.filter(e => e.classId === cls.id && e.date === dStr);
+        const dayEnts = db.entries ? db.entries.filter(e => e.classId === cls.id && e.date === dStr) : [];
         
         if(dayEnts.length === 0) { cont.innerHTML = "<p>Ni vpisanih ur za ta dan.</p>"; return; }
         
@@ -783,13 +824,14 @@ function renderAbsence() {
         let body = '';
         
         cls.students.forEach(s => {
-            let isAbsentToday = dayEnts.some(e => e.absentees.some(a=>a.studentId === s.id));
+            if (!s) return; // Varnost
+            let isAbsentToday = dayEnts.some(e => e.absentees && e.absentees.some(a=>a.studentId === s.id));
             if(isAbsentToday) {
                 body += `<tr><td style="text-align:left; padding-left:5px;">${s.name}</td>`;
                 for(let p=1; p<=9; p++) {
                     const ent = dayEnts.find(e => e.period === p);
                     let cellContent = '', cellClass = '', action = '';
-                    if(ent) {
+                    if(ent && ent.absentees) {
                         const abs = ent.absentees.find(a => a.studentId === s.id);
                         if(abs) {
                             cellContent = abs.status;
@@ -832,7 +874,7 @@ function setAbsStatus(eid, sid, stat, allDay) {
     const ent = db.entries.find(e => e.id === eid);
     if(allDay) {
         db.entries.filter(x => x.date === ent.date && x.classId === ent.classId).forEach(de => {
-            const a = de.absentees.find(ax => ax.studentId === sid); if(a) a.status = stat;
+            if(de.absentees) { const a = de.absentees.find(ax => ax.studentId === sid); if(a) a.status = stat; }
         });
     } else {
         const a = ent.absentees.find(ax => ax.studentId === sid); if(a) a.status = stat;
@@ -867,7 +909,7 @@ function renderSetClasses() {
     let html = `<button class="win-btn" onclick="editClass(null)">+ Dodaj Razred</button>
         <table class="data-table"><tr><th>Ime</th><th>Št. dijakov</th><th>Akcije</th></tr>`;
     db.classes.forEach(c => {
-        html += `<tr><td>${c.name}</td><td>${c.students.length}</td>
+        html += `<tr><td>${c.name}</td><td>${c.students?c.students.length:0}</td>
         <td><button class="win-btn" onclick="editClass(${c.id})">Uredi</button> <button class="win-btn" onclick="delClass(${c.id})">X</button></td></tr>`;
     });
     html += `</table>`;
@@ -926,6 +968,7 @@ function delUser(id) { db.users = db.users.filter(u=>u.id!==id); saveDb().then((
 
 function editClass(cid) {
     let c = db.classes.find(x=>x.id===cid) || {name:'', students:[]};
+    if(!c.students) c.students = [];
     let sOpts = db.users.filter(u=>u.role==='student').map(s=>`
         <div><input type="checkbox" id="sc-${s.id}" ${c.students.some(cs=>cs.id===s.id)?'checked':''}> ${s.name} ${s.surname}</div>
     `).join('');
