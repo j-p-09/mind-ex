@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MINDEX - ewi</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
     <style>
         /* --- STILI (WINDOWS RETRO / EWI SPECIFIC) --- */
         :root {
@@ -12,7 +16,7 @@
             --win-light: #ffffff;
             --win-text: #000000;
             --win-blue: #0a246a;
-            --entry-bg: #cccccc; /* Svetlo siva za pas */
+            --entry-bg: #cccccc;
             --input-bg: #ffffff;
             --pastel-green: #dff0d8;
             --pastel-red: #f2dede;
@@ -22,7 +26,7 @@
 
         body {
             font-family: 'Tahoma', 'Segoe UI', sans-serif;
-            background-color: white; /* Ozadje aplikacije je belo, razen headerja */
+            background-color: white;
             margin: 0; padding: 0;
             height: 100vh; overflow: hidden;
             user-select: none;
@@ -37,20 +41,16 @@
 
         /* Gumbi - Retro stil */
         .win-btn {
-            background: #e0e0e0;
-            border: 2px solid;
-            border-color: #fff #808080 #808080 #fff;
+            background: #e0e0e0; border: 2px solid; border-color: #fff #808080 #808080 #fff;
             padding: 2px 10px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: bold;
-            color: black;
-            min-width: 80px; text-align: center;
+            color: black; min-width: 80px; text-align: center;
         }
         .win-btn:active { border-style: inset; }
 
         /* HEADER */
         .top-header {
             background: #999; height: 35px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px;
-            font-weight: bold; font-size: 20px; border-bottom: 2px solid #555;
-            font-family: Arial, sans-serif;
+            font-weight: bold; font-size: 20px; border-bottom: 2px solid #555; font-family: Arial, sans-serif;
         }
         .header-title { float: left; }
         .header-controls { float: right; display: flex; gap: 15px; font-size: 16px; font-weight: normal; align-items: center; }
@@ -78,72 +78,57 @@
         .sch-cell-filled { background-color: var(--cell-green); height: 100%; border: 2px solid black; box-sizing: border-box; padding: 5px; }
         .sch-class-label { border-bottom: 1px solid black; margin-bottom: 5px; font-weight: bold; text-align: center; }
         .sch-topic-text { font-size: 12px; }
+        .sch-ghost-text { color: rgba(0,0,0,0.3); font-size: 24px; font-weight: bold; text-align: center; padding-top: 40px; }
 
         /* --- PAS ZA VPIS URE (ENTRY BELT) --- */
         #entry-belt {
             background: var(--entry-bg); border: 2px solid black; padding: 0; margin-bottom: 15px;
-            display: grid;
-            /* Layout: Info vrstica zgoraj, potem spodaj levo gumbi, sredina manjkajoči, spodaj snov */
-            grid-template-rows: 30px auto auto; 
-            grid-template-columns: 120px 1fr;
+            display: grid; grid-template-rows: 30px auto auto; grid-template-columns: 120px 1fr;
         }
         
-        /* Vrstica 1: Info (siva, polna širina) */
         .eb-header {
             grid-column: 1 / -1; background: #d0d0d0; border-bottom: 2px solid black; 
-            display: flex; align-items: center; justify-content: space-between; padding: 0 5px;
-            font-size: 14px;
+            display: flex; align-items: center; justify-content: space-between; padding: 0 5px; font-size: 14px;
         }
         
-        /* Vrstica 2, Stolpec 1: Gumbi */
         .eb-sidebar {
-            grid-row: 2; grid-column: 1;
-            padding: 5px; border-right: 2px solid black;
+            grid-row: 2; grid-column: 1; padding: 5px; border-right: 2px solid black;
             display: flex; flex-direction: column; gap: 5px; align-items: center;
         }
         
-        /* Vrstica 2, Stolpec 2: Manjkajoči */
         .eb-missing-area {
-            grid-row: 2; grid-column: 2;
-            padding: 5px; position: relative;
-            background: #ccc; /* Temnejša siva kot header */
+            grid-row: 2; grid-column: 2; padding: 5px; position: relative; background: #ccc;
         }
         .missing-list-container {
-            margin-top: 15px; /* Prostor za labelo */
-            max-height: 80px; overflow-y: auto;
-            display: flex; flex-direction: column; gap: 2px;
+            margin-top: 15px; max-height: 80px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px;
         }
         .missing-label { position: absolute; top: 2px; left: 5px; font-size: 12px; font-weight: normal; color: black; }
         
-        /* Vrstica 3: Zgodovina snovi */
         .eb-history-area {
-            grid-column: 1 / -1;
-            border-top: 2px solid black;
-            padding: 5px;
-            display: flex; gap: 0; overflow-x: auto;
-            background: #ccc;
+            grid-column: 1 / -1; border-top: 2px solid black; padding: 5px;
+            display: flex; gap: 0; overflow-x: auto; background: #ccc;
         }
 
-        /* Elementi znotraj pasu */
-        .student-row {
-            display: flex; align-items: center; background: white; border: 1px solid #999; padding: 2px; width: fit-content; min-width: 250px;
-        }
+        .student-row { display: flex; align-items: center; background: white; border: 1px solid #999; padding: 2px; width: fit-content; min-width: 250px; }
         .student-name { width: 150px; cursor: pointer; padding-left: 5px; }
         .student-hours { width: 80px; font-size: 11px; color: #555; }
         .edit-icon { cursor: pointer; }
 
         .history-box {
-            border: 1px solid black; background: #e0e0e0; width: 80px; height: 60px; margin-right: -1px;
+            border: 1px solid black; background: #e0e0e0; width: 120px; height: 60px; margin-right: -1px;
             display: flex; flex-direction: column;
         }
-        .hist-header { border-bottom: 1px solid black; font-size: 10px; text-align: center; background: #dcdcdc; }
+        .hist-header { 
+            border-bottom: 1px solid black; font-size: 11px; text-align: center; background: #dcdcdc; 
+            display: flex; justify-content: space-between; padding: 0 3px;
+        }
         .hist-body { font-size: 10px; padding: 2px; overflow: hidden; }
         
         .current-topic-box {
-            border: 2px solid black; background: white; width: 120px; height: 60px; margin-left: 5px;
+            border: 2px solid black; background: white; width: 150px; height: 60px; margin-left: 5px;
             display: flex; flex-direction: column;
         }
-        .current-topic-header { text-align: center; font-size: 11px; border-bottom: 1px solid #ccc; background: #eee; }
+        .current-topic-header { display: flex; justify-content: space-between; padding: 0 4px; font-size: 12px; border-bottom: 1px solid #ccc; background: #eee; }
         .topic-input { border: none; flex-grow: 1; resize: none; font-family: inherit; font-size: 11px; padding: 2px; }
 
         /* --- ABSENCE VIEW --- */
@@ -168,21 +153,31 @@
 
         /* Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .win-modal { background: #d4d0c8; border: 2px solid white; border-right-color: #404040; border-bottom-color: #404040; padding: 3px; width: 400px; box-shadow: 5px 5px 10px rgba(0,0,0,0.5); }
+        .win-modal { background: #d4d0c8; border: 2px solid white; border-right-color: #404040; border-bottom-color: #404040; padding: 3px; max-width: 500px; min-width:300px; box-shadow: 5px 5px 10px rgba(0,0,0,0.5); max-height: 90vh; overflow-y:auto; }
         .win-modal-header { background: var(--win-blue); color: white; padding: 2px 5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .win-modal-body { padding: 15px; }
         .win-modal-footer { padding: 10px; text-align: right; border-top: 1px solid #808080; }
 
-        /* Login */
-        #page-login { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: white; }
+        /* Login & Loader */
+        #page-loader, #page-login { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: white; position: absolute; top:0; left:0; width:100%; z-index: 10; }
         .login-frame { background: #c0c0c0; border: 2px solid #808080; padding: 20px; width: 300px; text-align: center; }
         .login-inp { width: 90%; margin-bottom: 10px; padding: 3px; border: 2px inset white; }
 
+        /* Settings View */
+        .settings-nav { margin-bottom: 15px; border-bottom: 2px solid black; padding-bottom: 5px; }
+        .set-btn { margin-right: 5px; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        .data-table th, .data-table td { border: 1px solid #999; padding: 4px; text-align: left; }
+        .data-table th { background: #ddd; }
     </style>
 </head>
 <body>
 
-    <div id="page-login">
+    <div id="page-loader">
+        <h2>Povezovanje z bazo...</h2>
+    </div>
+
+    <div id="page-login" class="hidden">
         <h1 style="font-family: Arial; letter-spacing: 2px;">MINDEX - ewi</h1>
         <div class="login-frame">
             <p>Prijava v sistem:</p>
@@ -190,58 +185,68 @@
             <input type="password" id="login-p" class="login-inp" placeholder="Geslo"><br>
             <button class="win-btn" onclick="tryLogin()">POTRDI</button>
         </div>
-        <div id="last-login-info" class="hidden" style="margin-top:10px; border:1px solid gray; background:#eee; padding:5px; width:300px;">
-            Zadnja prijava: <span id="last-login-user" class="bold"></span>
-        </div>
     </div>
 
     <div id="page-app" class="hidden">
         
         <div class="top-header">
-            <div class="header-title">MINDEX - ewi</div>
+            <div class="header-title">MINDEX - ewi <span id="user-role-badge" style="font-size:12px; font-weight:normal; margin-left:10px;"></span></div>
             <div class="header-controls">
-                <span class="header-link" onclick="setView('ABSENCE')">Opraviči</span>
-                <span class="header-link" onclick="setView('HOME')">Domov</span>
-                <span class="header-link" onclick="openSettings()">Nastavitve</span>
+                <span class="header-link" id="nav-absence" onclick="setView('ABSENCE')">Opraviči</span>
+                <span class="header-link" id="nav-home" onclick="setView('HOME')">Domov</span>
+                <span class="header-link" id="nav-settings" onclick="setView('SETTINGS')">Nastavitve</span>
                 <span class="close-x" onclick="logout()">X</span>
             </div>
         </div>
 
         <div class="main-container">
 
-            <div id="view-home">
+            <div id="view-student" class="hidden">
+                <h2>Moje odsotnosti</h2>
+                <div id="student-warning-box" style="margin-bottom:15px; padding:10px; border:2px solid red; background:#f2dede; font-weight:bold; font-size:16px;" class="hidden red-text"></div>
+                <div class="abs-legend">
+                    <span class="abs-stat-green">Opravičene: <span id="stu-o-count">0</span></span>
+                    <span class="abs-stat-red">Neopravičene: <span id="stu-n-count">0</span></span>
+                    <span class="abs-stat-black">Odprto: <span id="stu-q-count">0</span></span>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>Datum</th><th>Ura</th><th>Predmet/Razred</th><th>Status</th><th>Opomba</th></tr></thead>
+                    <tbody id="student-abs-list"></tbody>
+                </table>
+            </div>
+
+            <div id="view-home" class="hidden">
                 
                 <div class="date-nav-container">
                     <div class="date-nav-bar">
                         <button class="nav-arrow" onclick="changeDate(-1)">←</button>
-                        <span id="date-display" style="cursor: pointer;" onclick="pickDate()">Datum</span>
+                        <span id="date-display" style="cursor: pointer;" onclick="pickDate('home')">Datum</span>
                         <button class="nav-arrow" onclick="changeDate(1)">→</button>
                     </div>
                 </div>
 
                 <div id="entry-belt" class="hidden">
                     <div class="eb-header">
-                        <span class="bold" id="eb-title">Vpis ure: 1. ura; A1; redna ura</span>
+                        <span class="bold" id="eb-title">Vpis ure</span>
                         <span style="cursor: pointer;" onclick="editReditelji()">
-                            ✎ <span class="bold">Reditelja:</span> <span id="eb-reditelji">Učenec 1; Učenec 2</span>
+                            ✎ <span class="bold">Reditelja:</span> <span id="eb-reditelji"></span>
                         </span>
                     </div>
 
                     <div class="eb-sidebar">
                         <button class="win-btn" onclick="openStudentPicker()">DIJAKI</button>
-                        <button class="win-btn" onclick="showPastHours()">URE</button>
-                        <button class="win-btn" onclick="showInfo()">INFO</button>
                     </div>
 
                     <div class="eb-missing-area">
                         <span class="missing-label">Manjkajoči:</span>
-                        <div class="missing-list-container" id="eb-missing-list">
-                            </div>
+                        <div class="missing-list-container" id="eb-missing-list"></div>
                     </div>
 
                     <div class="eb-history-area" id="eb-history-row">
                         <div class="current-topic-box">
-                            <div class="current-topic-header" id="curr-topic-header">1. ura</div>
+                            <div class="current-topic-header" id="curr-topic-header">
+                                <span id="curr-topic-date"></span><span class="bold" id="curr-topic-num"></span>
+                            </div>
                             <textarea id="topic-input" class="topic-input" placeholder="Vpiši snov..."></textarea>
                         </div>
                         <button class="win-btn" style="height:30px; margin-top:15px; margin-left:5px;" onclick="saveEntry()">SHRANI URO</button>
@@ -250,36 +255,33 @@
 
                 <table class="schedule-table">
                     <thead>
-                        <tr>
-                            <th>1.</th><th>2.</th><th>3.</th><th>4.</th><th>5.</th><th>6.</th><th>7.</th><th>8.</th><th>9.</th>
-                        </tr>
+                        <tr><th>1.</th><th>2.</th><th>3.</th><th>4.</th><th>5.</th><th>6.</th><th>7.</th><th>8.</th><th>9.</th></tr>
                     </thead>
                     <tbody>
-                        <tr id="schedule-row">
-                            </tr>
+                        <tr id="schedule-row"></tr>
                     </tbody>
                 </table>
             </div>
 
             <div id="view-absence" class="hidden">
                 <div class="date-nav-container">
-                    <div class="date-nav-bar" style="width: 350px;">
-                        <button class="nav-arrow" onclick="changeWeek(-1)">←</button>
-                        <span id="week-display">Teden 1</span>
-                        <button class="nav-arrow" onclick="changeWeek(1)">→</button>
+                    <div class="date-nav-bar">
+                        <button class="nav-arrow" onclick="changeAbsDate(-1)">←</button>
+                        <span id="abs-date-display" style="cursor:pointer;" onclick="pickDate('abs')">Datum</span>
+                        <button class="nav-arrow" onclick="changeAbsDate(1)">→</button>
                     </div>
                     <button class="win-btn" style="margin-left: 10px; font-weight:bold;" onclick="selectClassAbsence()">RAZRED</button>
                     <div style="margin-left: auto; font-weight: bold; font-size: 16px;">
                         Pogled: 
                         <select id="abs-view-select" onchange="renderAbsence()" style="font-weight:bold; font-size:16px; border:none; background:none;">
-                            <option value="GENERAL">SPLOŠNO</option>
-                            <option value="DETAILED">PODROBNO</option>
+                            <option value="GENERAL">SPLOŠNO (Vse ure)</option>
+                            <option value="DETAILED">PODROBNO (Izbran dan)</option>
                         </select>
                     </div>
                 </div>
 
                 <div style="border: 1px solid black; background: #ccc; padding: 2px 5px; font-weight: bold; border-bottom: none;">
-                    Odsotnosti - razred: <span id="abs-class-label">A1</span>
+                    Odsotnosti - razred: <span id="abs-class-label">-</span>
                 </div>
 
                 <div id="abs-general-container">
@@ -298,71 +300,109 @@
                 </div>
             </div>
 
+            <div id="view-settings" class="hidden">
+                <div class="settings-nav">
+                    <button class="win-btn set-btn" onclick="renderSetTeachers()">Učitelji</button>
+                    <button class="win-btn set-btn" onclick="renderSetStudents()">Učenci</button>
+                    <button class="win-btn set-btn" onclick="renderSetClasses()">Razredi</button>
+                    <button class="win-btn set-btn" onclick="renderSetSchedule()">Urnik</button>
+                </div>
+                <div id="settings-content"></div>
+            </div>
+
         </div>
     </div>
 
     <div id="modal-wrapper" class="hidden modal-overlay"></div>
 
 <script>
-/**
- * MINDEX - ewi
- * Logic for attendance and evidence.
- * Requires localStorage 'mindex_db' from main app.
- */
+// --- FIREBASE SETUP ---
+const firebaseConfig = { databaseURL: "https://mindex-b92ed-default-rtdb.europe-west1.firebasedatabase.app/" };
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
 
 // --- GLOBAL STATE ---
-let db = { users:[], classes:[], subjects:[], entries:[] }; 
-// Entry structure: { id, date, period, classId, type, topic, absentees: [ {studentId, status:'?'|'O'|'N', note:''} ], teacherId }
+let db = { users:[], classes:[], entries:[], schedules:{} }; 
+// schedules format: { teacherId: { dayOfWeek(1-7): { period(1-9): classId } } }
 
 let state = {
     user: null,
     currentDate: new Date(),
-    currentWeekStart: new Date(),
+    currentAbsDate: new Date(),
     view: 'HOME',
-    selectedClassId: null, // For absence view
-    
-    // Entry Belt State
+    selectedClassId: null,
     entryMode: false,
-    activeEntry: null, // Copy of entry being edited
+    activeEntry: null,
     activePeriod: 1
 };
 
-// --- INIT ---
+// --- INIT & DB SYNC ---
 function init() {
-    const stored = localStorage.getItem('mindex_db');
-    if(stored) {
-        db = JSON.parse(stored);
+    database.ref('mindex_db').once('value').then(snapshot => {
+        if(snapshot.exists()) {
+            db = snapshot.val();
+        } else {
+            // Ustvari default admina, če je baza povsem prazna
+            db = {
+                users: [{id:1, role:'admin', username:'admin', password:'admin', name:'Admin', surname:'Sistem'}],
+                classes: [], entries: [], schedules: {}
+            };
+            saveDb();
+        }
+        
+        // Sanitize arrays
+        if(!db.users) db.users = [];
+        if(!db.classes) db.classes = [];
         if(!db.entries) db.entries = [];
-        // Ensure classes have reditelji array
-        db.classes.forEach(c => { if(!c.reditelji) c.reditelji = []; });
-    } else {
-        alert("Baza podatkov ni najdena. Zaženi MINDEX glavno aplikacijo.");
-    }
-    
-    // Set week start to Monday
-    const today = new Date();
-    const day = today.getDay(); 
-    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
-    state.currentWeekStart = new Date(today.setDate(diff));
-    
-    updateDateUI();
+        if(!db.schedules) db.schedules = {};
+        db.classes.forEach(c => { 
+            if(!c.reditelji) c.reditelji = []; 
+            if(!c.students) c.students = [];
+        });
+
+        document.getElementById('page-loader').classList.add('hidden');
+        document.getElementById('page-login').classList.remove('hidden');
+    }).catch(err => {
+        alert("Napaka pri povezavi s Firebase: " + err);
+    });
 }
+
+function saveDb() {
+    return database.ref('mindex_db').set(db);
+}
+
+// --- UTILS: Date Parsing ---
+function parseSlDate(dStr) {
+    const p = dStr.split('. ');
+    if(p.length === 3) return new Date(p[2], p[1]-1, p[0]);
+    return new Date(0);
+}
+function formatDate(d) { return d.toLocaleDateString('sl-SI'); }
 
 // --- LOGIN ---
 function tryLogin() {
-    const u = document.getElementById('login-u').value;
-    const p = document.getElementById('login-p').value;
-    const usr = db.users.find(x => x.username === u && x.password === p && (x.role === 'admin' || x.role === 'teacher'));
+    const u = document.getElementById('login-u').value.trim();
+    const p = document.getElementById('login-p').value.trim();
+    const usr = db.users.find(x => x.username === u && x.password === p);
     
     if(usr) {
         state.user = usr;
         document.getElementById('page-login').classList.add('hidden');
         document.getElementById('page-app').classList.remove('hidden');
-        if(db.classes.length > 0) state.selectedClassId = db.classes[0].id;
-        renderHome();
-    } else {
-        alert("Napačni podatki.");
-    }
+        
+        // UI permissions
+        document.getElementById('user-role-badge').innerText = `(${usr.role})`;
+        if(usr.role === 'student') {
+            document.getElementById('nav-absence').classList.add('hidden');
+            document.getElementById('nav-home').classList.add('hidden');
+            document.getElementById('nav-settings').classList.add('hidden');
+            setView('STUDENT');
+        } else {
+            if(usr.role !== 'admin') document.getElementById('nav-settings').classList.add('hidden');
+            if(db.classes.length > 0) state.selectedClassId = db.classes[0].id;
+            setView('HOME');
+        }
+    } else { alert("Napačni podatki."); }
 }
 
 function logout() { location.reload(); }
@@ -372,62 +412,135 @@ function setView(v) {
     state.view = v;
     document.getElementById('view-home').classList.add('hidden');
     document.getElementById('view-absence').classList.add('hidden');
+    document.getElementById('view-settings').classList.add('hidden');
+    document.getElementById('view-student').classList.add('hidden');
+    closeEntryBelt();
     
     if(v === 'HOME') {
         document.getElementById('view-home').classList.remove('hidden');
-        closeEntryBelt();
-        renderHome();
-    } else {
+        updateDateUI(); renderHome();
+    } else if(v === 'ABSENCE') {
         document.getElementById('view-absence').classList.remove('hidden');
-        renderAbsence();
+        updateAbsDateUI(); renderAbsence();
+    } else if(v === 'SETTINGS') {
+        document.getElementById('view-settings').classList.remove('hidden');
+        renderSetTeachers();
+    } else if(v === 'STUDENT') {
+        document.getElementById('view-student').classList.remove('hidden');
+        renderStudentView();
     }
 }
 
+// --- STUDENT VIEW (UČENEC) ---
+function renderStudentView() {
+    const tbody = document.getElementById('student-abs-list');
+    tbody.innerHTML = '';
+    
+    let nCount = 0, oCount = 0, qCount = 0;
+    
+    // Find all entries where this student is marked absent
+    let myAbsences = [];
+    db.entries.forEach(e => {
+        const abs = e.absentees.find(a => a.studentId === state.user.id);
+        if(abs) {
+            myAbsences.push({ entry: e, abs: abs });
+            if(abs.status === 'N') nCount++;
+            else if(abs.status === 'O') oCount++;
+            else qCount++;
+        }
+    });
+    
+    document.getElementById('stu-o-count').innerText = oCount;
+    document.getElementById('stu-n-count').innerText = nCount;
+    document.getElementById('stu-q-count').innerText = qCount;
+    
+    // Warning logic
+    const wb = document.getElementById('student-warning-box');
+    wb.classList.add('hidden');
+    if(nCount >= 6) {
+        wb.classList.remove('hidden');
+        if(nCount >= 30) wb.innerText = "IZKLJUČITEV ZARADI NEOPRAVIČENIH UR";
+        else if(nCount >= 24) wb.innerText = "Ukor pred izključitvijo zaradi neopravičenih ur";
+        else if(nCount >= 18) wb.innerText = "Drugi ukor zaradi neopravičenih ur";
+        else if(nCount >= 12) wb.innerText = "Prvi ukor zaradi neopravičenih ur";
+        else wb.innerText = "Prvi opomin zaradi prevelikega števila neopravičenih ur";
+    }
+
+    // Sort by date descending
+    myAbsences.sort((a,b) => parseSlDate(b.entry.date) - parseSlDate(a.entry.date));
+    
+    myAbsences.forEach(m => {
+        const tr = document.createElement('tr');
+        const c = db.classes.find(x => x.id === m.entry.classId);
+        let statStyl = '';
+        if(m.abs.status==='O') statStyl='color:green;font-weight:bold;';
+        if(m.abs.status==='N') statStyl='color:red;font-weight:bold;';
+        tr.innerHTML = `
+            <td>${m.entry.date}</td>
+            <td>${m.entry.period}.</td>
+            <td>${c ? c.name : '?'}</td>
+            <td style="${statStyl}">${m.abs.status}</td>
+            <td>${m.abs.note || ''}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// --- DATE NAVIGATION ---
 function changeDate(d) {
     state.currentDate.setDate(state.currentDate.getDate() + d);
-    updateDateUI();
-    closeEntryBelt();
-    renderHome();
+    updateDateUI(); closeEntryBelt(); renderHome();
 }
-
-function changeWeek(w) {
-    state.currentWeekStart.setDate(state.currentWeekStart.getDate() + (w*7));
-    updateDateUI();
-    renderAbsence();
+function changeAbsDate(d) {
+    state.currentAbsDate.setDate(state.currentAbsDate.getDate() + d);
+    updateAbsDateUI(); renderAbsence();
 }
-
 function updateDateUI() {
-    // Date
-    const d = state.currentDate;
-    const dStr = d.toLocaleDateString('sl-SI', { weekday:'long', year:'numeric', month:'numeric', day:'numeric' });
+    const dStr = state.currentDate.toLocaleDateString('sl-SI', { weekday:'long', year:'numeric', month:'numeric', day:'numeric' });
     document.getElementById('date-display').innerText = dStr.charAt(0).toUpperCase() + dStr.slice(1);
-    
-    // Week
-    const s = new Date(state.currentWeekStart);
-    const e = new Date(state.currentWeekStart);
-    e.setDate(e.getDate() + 4);
-    document.getElementById('week-display').innerText = `Teden (${s.toLocaleDateString()} - ${e.toLocaleDateString()})`;
 }
-
-function pickDate() {
-    const inp = prompt("Vpiši datum (d. m. llll):", state.currentDate.toLocaleDateString());
+function updateAbsDateUI() {
+    const dStr = state.currentAbsDate.toLocaleDateString('sl-SI', { weekday:'long', year:'numeric', month:'numeric', day:'numeric' });
+    document.getElementById('abs-date-display').innerText = dStr.charAt(0).toUpperCase() + dStr.slice(1);
+}
+function pickDate(type) {
+    const current = type === 'home' ? state.currentDate : state.currentAbsDate;
+    const inp = prompt("Vpiši datum (d. m. llll):", current.toLocaleDateString('sl-SI'));
     if(inp) {
-        const p = inp.split('. ');
-        if(p.length === 3) {
-            state.currentDate = new Date(p[2], p[1]-1, p[0]);
-            updateDateUI();
-            closeEntryBelt();
-            renderHome();
+        const d = parseSlDate(inp);
+        if(d.getTime() > 0) {
+            if(type === 'home') { state.currentDate = d; updateDateUI(); closeEntryBelt(); renderHome(); }
+            else { state.currentAbsDate = d; updateAbsDateUI(); renderAbsence(); }
         }
     }
+}
+
+// --- LESSON COUNTER UTILITY ---
+function getLessonNumber(classId, targetDateStr, targetPeriod) {
+    const targetTime = parseSlDate(targetDateStr).getTime();
+    // Vse ure za ta razred do tega datuma vključno
+    let rel = db.entries.filter(e => e.classId === classId && parseSlDate(e.date).getTime() <= targetTime);
+    rel.sort((a,b) => {
+        const dtA = parseSlDate(a.date).getTime(); const dtB = parseSlDate(b.date).getTime();
+        if(dtA === dtB) return a.period - b.period;
+        return dtA - dtB;
+    });
+    // Poiščimo indeks
+    let idx = rel.findIndex(e => e.date === targetDateStr && e.period === targetPeriod);
+    if(idx !== -1) return idx + 1;
+    return rel.length + 1; // Če ure še ni v bazi (kreiramo novo)
 }
 
 // --- HOME / URNIK ---
 function renderHome() {
     const row = document.getElementById('schedule-row');
     row.innerHTML = '';
-    const dStr = state.currentDate.toLocaleDateString();
+    const dStr = formatDate(state.currentDate);
     
+    // Day of week: 1=Mon ... 7=Sun
+    let dow = state.currentDate.getDay();
+    if(dow === 0) dow = 7;
+
     for(let i=1; i<=9; i++) {
         const ent = db.entries.find(e => e.date === dStr && e.period === i && e.teacherId === state.user.id);
         const td = document.createElement('td');
@@ -440,20 +553,26 @@ function renderHome() {
                     <div class="sch-topic-text">${ent.topic}</div>
                 </div>
             `;
+            td.onclick = () => activateEntry(i, ent);
         } else {
-            td.innerHTML = `<div class="sch-cell-content"></div>`;
+            // Preveri predviden urnik
+            let predClsId = null, predHtml = '';
+            if(db.schedules[state.user.id] && db.schedules[state.user.id][dow] && db.schedules[state.user.id][dow][i]) {
+                predClsId = db.schedules[state.user.id][dow][i];
+                const pc = db.classes.find(x => x.id === predClsId);
+                if(pc) predHtml = `<div class="sch-ghost-text">${pc.name}</div>`;
+            }
+            td.innerHTML = `<div class="sch-cell-content">${predHtml}</div>`;
+            td.onclick = () => activateEntry(i, null, predClsId);
         }
-        
-        td.onclick = () => activateEntry(i, ent);
         row.appendChild(td);
     }
 }
 
 // --- ENTRY BELT LOGIC ---
-function activateEntry(period, existing) {
+function activateEntry(period, existing, defaultClassId=null) {
     if(!existing) {
-        // Prompt for class/type
-        const opts = db.classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        const opts = db.classes.map(c => `<option value="${c.id}" ${c.id==defaultClassId?'selected':''}>${c.name}</option>`).join('');
         const html = `
             <label>Razred:</label><select id="new-cls" style="width:100%">${opts}</select><br><br>
             <label>Tip:</label><select id="new-typ" style="width:100%">
@@ -478,22 +597,23 @@ function initEntryBelt(period, classId, type, entry) {
     const cls = db.classes.find(c => c.id === classId);
     state.activePeriod = period;
     
-    // Create temp entry object
     state.activeEntry = {
         id: entry ? entry.id : Date.now(),
-        date: state.currentDate.toLocaleDateString(),
-        period: period,
-        classId: classId,
-        type: type,
-        topic: entry ? entry.topic : '',
-        absentees: entry ? JSON.parse(JSON.stringify(entry.absentees)) : [], // Deep copy
+        date: formatDate(state.currentDate),
+        period: period, classId: classId, type: type, topic: entry ? entry.topic : '',
+        absentees: entry ? JSON.parse(JSON.stringify(entry.absentees)) : [],
         teacherId: state.user.id
     };
     
-    // UI Update
     document.getElementById('entry-belt').classList.remove('hidden');
     document.getElementById('eb-title').innerText = `Vpis ure: ${period}. ura; ${cls.name}; ${type}`;
-    document.getElementById('curr-topic-header').innerText = `${period}. ura`;
+    
+    // Prikaz datuma in zaporedne ure
+    const datePart = state.activeEntry.date.replace(/\s/g,''); // npr 22.3.2026
+    const lessonNum = getLessonNumber(classId, state.activeEntry.date, period);
+    document.getElementById('curr-topic-date').innerText = datePart + " | ";
+    document.getElementById('curr-topic-num').innerText = lessonNum;
+    
     document.getElementById('topic-input').value = state.activeEntry.topic;
     
     updateRediteljiUI(cls);
@@ -501,10 +621,7 @@ function initEntryBelt(period, classId, type, entry) {
     renderHistory(cls.id);
 }
 
-function closeEntryBelt() {
-    document.getElementById('entry-belt').classList.add('hidden');
-    state.activeEntry = null;
-}
+function closeEntryBelt() { document.getElementById('entry-belt').classList.add('hidden'); state.activeEntry = null; }
 
 function updateRediteljiUI(cls) {
     let txt = "Ni določeno";
@@ -521,71 +638,42 @@ function editReditelji() {
     const cls = db.classes.find(c => c.id === state.activeEntry.classId);
     const opts = `<option value="">-</option>` + cls.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     
-    const html = `
+    showModal("Določi reditelje", `
         <label>Reditelj 1:</label><select id="r1" style="width:100%">${opts}</select><br>
         <label>Reditelj 2:</label><select id="r2" style="width:100%">${opts}</select>
-    `;
-    showModal("Določi reditelje", html, [{
-        label:'Shrani', action: () => {
-            const r1 = document.getElementById('r1').value;
-            const r2 = document.getElementById('r2').value;
-            const idx = db.classes.findIndex(c => c.id === cls.id);
-            db.classes[idx].reditelji = [];
-            if(r1) db.classes[idx].reditelji.push(parseInt(r1));
-            if(r2) db.classes[idx].reditelji.push(parseInt(r2));
-            localStorage.setItem('mindex_db', JSON.stringify(db));
-            updateRediteljiUI(db.classes[idx]);
-            closeModal();
+    `, [{ label:'Shrani', action: () => {
+            const r1 = document.getElementById('r1').value; const r2 = document.getElementById('r2').value;
+            cls.reditelji = [];
+            if(r1) cls.reditelji.push(parseInt(r1)); if(r2) cls.reditelji.push(parseInt(r2));
+            saveDb(); updateRediteljiUI(cls); closeModal();
         }
     }]);
 }
 
-// --- MANJKAJOČI LOGIC (Fix: Show all absent today) ---
 function renderMissingList() {
-    const container = document.getElementById('eb-missing-list');
-    container.innerHTML = '';
-    
+    const container = document.getElementById('eb-missing-list'); container.innerHTML = '';
     const cls = db.classes.find(c => c.id === state.activeEntry.classId);
     const todayStr = state.activeEntry.date;
-    
-    // 1. Get all students who are absent TODAY in ANY period (saved entries)
     const todayEntries = db.entries.filter(e => e.date === todayStr && e.classId === cls.id);
+    
     const studentsAbsentToday = new Set();
-    
-    todayEntries.forEach(e => {
-        e.absentees.forEach(a => studentsAbsentToday.add(a.studentId));
-    });
-    
-    // 2. Add students currently marked in active entry
+    todayEntries.forEach(e => e.absentees.forEach(a => studentsAbsentToday.add(a.studentId)));
     state.activeEntry.absentees.forEach(a => studentsAbsentToday.add(a.studentId));
     
-    // Render list
     studentsAbsentToday.forEach(sid => {
         const student = cls.students.find(s => s.id === sid);
         if(!student) return;
-        
-        // Is absent in CURRENT active entry?
         const isCurrentAbsent = state.activeEntry.absentees.some(a => a.studentId === sid);
         
-        // Calculate hours missed
         let hours = [];
         todayEntries.forEach(e => {
-            // If checking saved entries, verify student is in absentees list. 
-            // BUT: if we are editing an existing entry, ignore its saved version to avoid duplication/confusion?
-            // Actually, simplest is: Check saved entries (excluding self if strictly saving new).
-            // Logic: Scan all saved entries. If saved entry ID != active ID, check list. 
-            if (e.id !== state.activeEntry.id) {
-                if(e.absentees.some(a => a.studentId === sid)) hours.push(e.period);
-            }
+            if (e.id !== state.activeEntry.id && e.absentees.some(a => a.studentId === sid)) hours.push(e.period);
         });
         if(isCurrentAbsent) hours.push(state.activeEntry.period);
         hours.sort((a,b)=>a-b);
         
-        // Determine style
         const nameClass = isCurrentAbsent ? 'student-name red-text bold' : 'student-name black-text';
-        
-        const div = document.createElement('div');
-        div.className = 'student-row';
+        const div = document.createElement('div'); div.className = 'student-row';
         div.innerHTML = `
             <div class="${nameClass}" onclick="toggleAbsent(${sid})">${student.name}</div>
             <div class="student-hours">${hours.join('. ')}.</div>
@@ -596,95 +684,61 @@ function renderMissingList() {
 }
 
 function openStudentPicker() {
-    if(!state.activeEntry) return;
     const cls = db.classes.find(c => c.id === state.activeEntry.classId);
-    
-    // Simple list of all students
     let html = '<div style="height:200px; overflow-y:auto;">';
-    cls.students.forEach(s => {
-        html += `<div onclick="toggleAbsent(${s.id}); closeModal();" style="cursor:pointer; padding:3px; border-bottom:1px dotted #ccc;">${s.name}</div>`;
-    });
+    cls.students.forEach(s => { html += `<div onclick="toggleAbsent(${s.id}); closeModal();" style="cursor:pointer; padding:3px; border-bottom:1px dotted #ccc;">${s.name}</div>`; });
     html += '</div>';
     showModal("Izberi dijaka", html, [{label:'Zapri', action:closeModal}]);
 }
 
 function toggleAbsent(sid) {
     const idx = state.activeEntry.absentees.findIndex(a => a.studentId === sid);
-    if(idx > -1) {
-        // Remove
-        state.activeEntry.absentees.splice(idx, 1);
-    } else {
-        // Add
-        state.activeEntry.absentees.push({ studentId: sid, status: '?', note: '' });
-    }
+    if(idx > -1) state.activeEntry.absentees.splice(idx, 1);
+    else state.activeEntry.absentees.push({ studentId: sid, status: '?', note: '' });
     renderMissingList();
 }
 
 function editNote(sid) {
-    // Note can only be edited if student is marked for current hour
     let abs = state.activeEntry.absentees.find(a => a.studentId === sid);
-    if(!abs) {
-        alert("Opombo lahko dodaš le, če je dijak to uro označen kot manjkajoč (rdeče).");
-        return;
-    }
-    const html = `<input type="text" id="note-val" value="${abs.note||''}" style="width:100%">`;
-    showModal("Opomba", html, [{label:'Shrani', action:()=>{
-        abs.note = document.getElementById('note-val').value;
-        closeModal();
-    }}]);
+    if(!abs) { alert("Samo za tiste, ki manjkajo to uro."); return; }
+    showModal("Opomba", `<input type="text" id="note-val" value="${abs.note||''}" style="width:100%">`, 
+    [{label:'Shrani', action:()=>{ abs.note = document.getElementById('note-val').value; closeModal(); }}]);
 }
 
-// --- HISTORY & SAVE ---
 function renderHistory(cid) {
     const area = document.getElementById('eb-history-row');
-    // Remove old history boxes (keep input box at end)
-    const inputArea = area.lastElementChild;
-    const saveBtn = area.querySelector('button'); // find button inside
-    
-    // Clear only history boxes
-    const children = Array.from(area.children);
-    children.forEach(c => {
-        if(!c.classList.contains('current-topic-box') && c.tagName !== 'BUTTON') area.removeChild(c);
-    });
+    Array.from(area.children).forEach(c => { if(!c.classList.contains('current-topic-box') && c.tagName !== 'BUTTON') area.removeChild(c); });
 
-    // Add last 5 entries
-    const hist = db.entries.filter(e => e.classId === cid && e.id !== state.activeEntry.id)
-                  .sort((a,b) => b.id - a.id).slice(0,5).reverse();
+    let hist = db.entries.filter(e => e.classId === cid && e.id !== state.activeEntry.id);
+    hist.sort((a,b) => parseSlDate(a.date) - parseSlDate(b.date) || a.period - b.period);
+    hist = hist.slice(-5); // Zadnjih 5 ur
     
     hist.forEach(h => {
-        const div = document.createElement('div');
-        div.className = 'history-box';
+        const div = document.createElement('div'); div.className = 'history-box';
+        const lNum = getLessonNumber(cid, h.date, h.period);
         div.innerHTML = `
-            <div class="hist-header">${h.period}. ura</div>
+            <div class="hist-header"><span>${h.date.replace(/\s/g,'')}</span> <b>${lNum}</b></div>
             <div class="hist-body">${h.topic}</div>
         `;
-        area.insertBefore(div, area.lastElementChild.previousElementSibling); // Insert before input box
+        area.insertBefore(div, area.lastElementChild.previousElementSibling);
     });
 }
 
 function saveEntry() {
     if(!state.activeEntry) return;
     state.activeEntry.topic = document.getElementById('topic-input').value;
-    
-    // Update or Push
     const idx = db.entries.findIndex(e => e.id === state.activeEntry.id);
     if(idx > -1) db.entries[idx] = state.activeEntry;
     else db.entries.push(state.activeEntry);
     
-    localStorage.setItem('mindex_db', JSON.stringify(db));
-    closeEntryBelt();
-    renderHome();
+    saveDb().then(() => { closeEntryBelt(); renderHome(); });
 }
 
 // --- ABSENCE VIEW ---
 function selectClassAbsence() {
     const opts = db.classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
     showModal("Izberi razred", `<select id="abs-cls" style="width:100%">${opts}</select>`, [
-        { label:'Potrdi', action:()=>{
-            state.selectedClassId = parseInt(document.getElementById('abs-cls').value);
-            closeModal();
-            renderAbsence();
-        }}
+        { label:'Potrdi', action:()=>{ state.selectedClassId = parseInt(document.getElementById('abs-cls').value); closeModal(); renderAbsence(); }}
     ]);
 }
 
@@ -694,106 +748,64 @@ function renderAbsence() {
 
     const cls = db.classes.find(c => c.id === state.selectedClassId);
     document.getElementById('abs-class-label').innerText = cls.name;
-    
     const mode = document.getElementById('abs-view-select').value;
     
-    // Get week entries
-    const sDate = new Date(state.currentWeekStart);
-    const eDate = new Date(state.currentWeekStart); eDate.setDate(eDate.getDate()+6);
-    
-    const weekEntries = db.entries.filter(e => {
-        if(e.classId !== cls.id) return false;
-        const p = e.date.split('. ');
-        const d = new Date(p[2], p[1]-1, p[0]);
-        return d >= sDate && d <= eDate;
-    });
-
     if(mode === 'GENERAL') {
         document.getElementById('abs-general-container').classList.remove('hidden');
         document.getElementById('abs-detailed-container').classList.add('hidden');
         
-        const tbody = document.getElementById('abs-gen-body');
-        tbody.innerHTML = '';
+        const tbody = document.getElementById('abs-gen-body'); tbody.innerHTML = '';
+        const clsEntries = db.entries.filter(e => e.classId === cls.id); // Vse ure zanje
         
         cls.students.forEach(s => {
             let g=0, r=0, b=0;
-            weekEntries.forEach(e => {
+            clsEntries.forEach(e => {
                 const a = e.absentees.find(x => x.studentId === s.id);
-                if(a) {
-                    if(a.status === 'O') g++;
-                    else if(a.status === 'N') r++;
-                    else b++;
-                }
+                if(a) { if(a.status === 'O') g++; else if(a.status === 'N') r++; else b++; }
             });
-            const tr = document.createElement('tr');
-            tr.className = 'abs-row-highlight';
+            const tr = document.createElement('tr'); tr.className = 'abs-row-highlight';
             tr.innerHTML = `<td>${s.name}</td><td class="abs-stat-green bold">${g}</td><td class="abs-stat-red bold">${r}</td><td class="abs-stat-black bold">${b}</td>`;
             tbody.appendChild(tr);
         });
-        
     } else {
         document.getElementById('abs-general-container').classList.add('hidden');
         document.getElementById('abs-detailed-container').classList.remove('hidden');
         
-        const cont = document.getElementById('abs-det-list');
-        cont.innerHTML = '';
+        const cont = document.getElementById('abs-det-list'); cont.innerHTML = '';
+        const dStr = formatDate(state.currentAbsDate);
+        const dayEnts = db.entries.filter(e => e.classId === cls.id && e.date === dStr);
         
-        const days = ['Ponedeljek','Torek','Sreda','Četrtek','Petek'];
+        if(dayEnts.length === 0) { cont.innerHTML = "<p>Ni vpisanih ur za ta dan.</p>"; return; }
         
-        days.forEach((dayName, i) => {
-            const d = new Date(state.currentWeekStart);
-            d.setDate(d.getDate()+i);
-            const dStr = d.toLocaleDateString();
-            
-            const dayEnts = weekEntries.filter(e => e.date === dStr);
-            if(dayEnts.length === 0) return;
-            
-            // Check if any absentees exist
-            let hasAbs = false;
-            dayEnts.forEach(e => { if(e.absentees.length > 0) hasAbs = true; });
-            if(!hasAbs) return;
-            
-            const table = document.createElement('table');
-            table.className = 'abs-det-table';
-            
-            let head = `<tr><th colspan="10" style="background:#e0e0e0; text-align:left; padding-left:5px;">${dayName} - ${dStr}</th></tr>
-                        <tr><th style="width:150px">Ime</th><th>1.</th><th>2.</th><th>3.</th><th>4.</th><th>5.</th><th>6.</th><th>7.</th><th>8.</th><th>9.</th></tr>`;
-            
-            let body = '';
-            
-            // For each student who is absent at least once
-            cls.students.forEach(s => {
-                let isAbsentToday = false;
-                dayEnts.forEach(e => { if(e.absentees.some(a=>a.studentId === s.id)) isAbsentToday = true; });
-                
-                if(isAbsentToday) {
-                    body += `<tr><td style="text-align:left; padding-left:5px;">${s.name}</td>`;
-                    for(let p=1; p<=9; p++) {
-                        const ent = dayEnts.find(e => e.period === p);
-                        let cellContent = '';
-                        let cellClass = '';
-                        let action = '';
-                        
-                        if(ent) {
-                            const abs = ent.absentees.find(a => a.studentId === s.id);
-                            if(abs) {
-                                cellContent = abs.status;
-                                if(abs.status==='O') cellClass='cell-O';
-                                else if(abs.status==='N') cellClass='cell-N';
-                                else cellClass='cell-Open';
-                                if(abs.note) cellClass += ' cell-Note'; // Visual cue for note
-                                action = `manageAbs(${ent.id}, ${s.id})`;
-                            }
+        const table = document.createElement('table'); table.className = 'abs-det-table';
+        let head = `<tr><th colspan="10" style="background:#e0e0e0; text-align:left; padding-left:5px;">${dStr}</th></tr>
+                    <tr><th style="width:150px">Ime</th><th>1.</th><th>2.</th><th>3.</th><th>4.</th><th>5.</th><th>6.</th><th>7.</th><th>8.</th><th>9.</th></tr>`;
+        let body = '';
+        
+        cls.students.forEach(s => {
+            let isAbsentToday = dayEnts.some(e => e.absentees.some(a=>a.studentId === s.id));
+            if(isAbsentToday) {
+                body += `<tr><td style="text-align:left; padding-left:5px;">${s.name}</td>`;
+                for(let p=1; p<=9; p++) {
+                    const ent = dayEnts.find(e => e.period === p);
+                    let cellContent = '', cellClass = '', action = '';
+                    if(ent) {
+                        const abs = ent.absentees.find(a => a.studentId === s.id);
+                        if(abs) {
+                            cellContent = abs.status;
+                            if(abs.status==='O') cellClass='cell-O'; else if(abs.status==='N') cellClass='cell-N'; else cellClass='cell-Open';
+                            if(abs.note) cellClass += ' cell-Note';
+                            action = `manageAbs(${ent.id}, ${s.id})`;
                         }
-                        body += `<td class="${cellClass}" onclick="${action}">${cellContent}</td>`;
                     }
-                    body += `</tr>`;
+                    body += `<td class="${cellClass}" onclick="${action}">${cellContent}</td>`;
                 }
-            });
-            
-            table.innerHTML = `<thead>${head}</thead><tbody>${body}</tbody>`;
-            cont.appendChild(table);
+                body += `</tr>`;
+            }
         });
+        
+        table.innerHTML = `<thead>${head}</thead><tbody>${body}</tbody>`;
+        cont.appendChild(table);
     }
 }
 
@@ -803,10 +815,8 @@ function manageAbs(eid, sid) {
     const cls = db.classes.find(c => c.id === ent.classId);
     const stu = cls.students.find(s => s.id === sid);
     
-    const html = `
-        <p><b>Učenec:</b> ${stu.name}</p>
-        <p><b>Opomba:</b> ${abs.note || '/'}</p>
-        <hr>
+    showModal("Urejanje odsotnosti", `
+        <p><b>Učenec:</b> ${stu.name}</p><p><b>Opomba:</b> ${abs.note || '/'}</p><hr>
         <div style="display:flex; justify-content:center; gap:10px;">
             <button class="win-btn" style="background:#dff0d8" onclick="setAbsStatus(${eid}, ${sid}, 'O', false)">OPRAVIČI URO</button>
             <button class="win-btn" style="background:#f2dede" onclick="setAbsStatus(${eid}, ${sid}, 'N', false)">NEOPRAVIČI URO</button>
@@ -815,61 +825,136 @@ function manageAbs(eid, sid) {
             <button class="win-btn bold" onclick="setAbsStatus(${eid}, ${sid}, 'O', true)">OPRAVIČI VSE DANES</button><br><br>
             <button class="win-btn bold" onclick="setAbsStatus(${eid}, ${sid}, 'N', true)">NEOPRAVIČI VSE DANES</button>
         </div>
-    `;
-    showModal("Urejanje", html, [{label:'Zapri', action:closeModal}]);
+    `, [{label:'Zapri', action:closeModal}]);
 }
 
 function setAbsStatus(eid, sid, stat, allDay) {
     const ent = db.entries.find(e => e.id === eid);
-    
     if(allDay) {
-        const dayEnts = db.entries.filter(x => x.date === ent.date && x.classId === ent.classId);
-        dayEnts.forEach(de => {
-            const a = de.absentees.find(ax => ax.studentId === sid);
-            if(a) a.status = stat;
+        db.entries.filter(x => x.date === ent.date && x.classId === ent.classId).forEach(de => {
+            const a = de.absentees.find(ax => ax.studentId === sid); if(a) a.status = stat;
         });
     } else {
-        const a = ent.absentees.find(ax => ax.studentId === sid);
-        if(a) a.status = stat;
+        const a = ent.absentees.find(ax => ax.studentId === sid); if(a) a.status = stat;
     }
-    
-    localStorage.setItem('mindex_db', JSON.stringify(db));
-    closeModal();
-    renderAbsence();
+    saveDb().then(() => { closeModal(); renderAbsence(); });
 }
 
-// --- UTILS ---
+// --- ADMIN SETTINGS ---
+function renderSetTeachers() {
+    let html = `<button class="win-btn" onclick="editUser(null, 'teacher')">+ Dodaj Učitelja</button>
+        <table class="data-table"><tr><th>Ime</th><th>Priimek</th><th>Uporabniško ime</th><th>Geslo</th><th>Akcije</th></tr>`;
+    db.users.filter(u=>u.role==='teacher').forEach(u => {
+        html += `<tr><td>${u.name}</td><td>${u.surname}</td><td>${u.username}</td><td>${u.password}</td>
+        <td><button class="win-btn" onclick='editUser(${JSON.stringify(u)},"teacher")'>Uredi</button> <button class="win-btn" onclick="delUser(${u.id})">X</button></td></tr>`;
+    });
+    html += `</table>`;
+    document.getElementById('settings-content').innerHTML = html;
+}
+
+function renderSetStudents() {
+    let html = `<button class="win-btn" onclick="editUser(null, 'student')">+ Dodaj Učenca</button>
+        <table class="data-table"><tr><th>Ime in Priimek</th><th>Uporabniško ime</th><th>Geslo</th><th>Akcije</th></tr>`;
+    db.users.filter(u=>u.role==='student').forEach(u => {
+        html += `<tr><td>${u.name} ${u.surname}</td><td>${u.username}</td><td>${u.password}</td>
+        <td><button class="win-btn" onclick='editUser(${JSON.stringify(u)},"student")'>Uredi</button> <button class="win-btn" onclick="delUser(${u.id})">X</button></td></tr>`;
+    });
+    html += `</table>`;
+    document.getElementById('settings-content').innerHTML = html;
+}
+
+function renderSetClasses() {
+    let html = `<button class="win-btn" onclick="editClass(null)">+ Dodaj Razred</button>
+        <table class="data-table"><tr><th>Ime</th><th>Št. dijakov</th><th>Akcije</th></tr>`;
+    db.classes.forEach(c => {
+        html += `<tr><td>${c.name}</td><td>${c.students.length}</td>
+        <td><button class="win-btn" onclick="editClass(${c.id})">Uredi</button> <button class="win-btn" onclick="delClass(${c.id})">X</button></td></tr>`;
+    });
+    html += `</table>`;
+    document.getElementById('settings-content').innerHTML = html;
+}
+
+function renderSetSchedule() {
+    const tOpts = db.users.filter(u=>u.role==='teacher').map(t=>`<option value="${t.id}">${t.name} ${t.surname}</option>`).join('');
+    let html = `Izberi učitelja: <select id="sched-teacher" onchange="loadSetSchedule()">${tOpts}</select><br><br><div id="sched-grid"></div>`;
+    document.getElementById('settings-content').innerHTML = html;
+    if(db.users.some(u=>u.role==='teacher')) loadSetSchedule();
+}
+
+function loadSetSchedule() {
+    const tid = parseInt(document.getElementById('sched-teacher').value);
+    const days = ['Ponedeljek','Torek','Sreda','Četrtek','Petek','Sobota','Nedelja'];
+    const cOpts = `<option value="">-</option>` + db.classes.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    
+    let html = `<table class="data-table"><tr><th>Dan</th><th>1.</th><th>2.</th><th>3.</th><th>4.</th><th>5.</th><th>6.</th><th>7.</th><th>8.</th><th>9.</th></tr>`;
+    for(let d=1; d<=7; d++) {
+        html += `<tr><td>${days[d-1]}</td>`;
+        for(let p=1; p<=9; p++) {
+            let val = db.schedules[tid] && db.schedules[tid][d] ? db.schedules[tid][d][p] : '';
+            html += `<td><select onchange="saveSched(${tid},${d},${p},this.value)" style="width:50px">${cOpts.replace(`value="${val}"`,`value="${val}" selected`)}</select></td>`;
+        }
+        html += `</tr>`;
+    }
+    html += `</table>`;
+    document.getElementById('sched-grid').innerHTML = html;
+}
+function saveSched(tid, d, p, cid) {
+    if(!db.schedules[tid]) db.schedules[tid] = {};
+    if(!db.schedules[tid][d]) db.schedules[tid][d] = {};
+    db.schedules[tid][d][p] = cid ? parseInt(cid) : null;
+    saveDb();
+}
+
+// User/Class Edit Logic
+function editUser(u, role) {
+    const isEdit = !!u; u = u || {name:'', surname:'', username:'', password:''};
+    showModal((isEdit?"Uredi":"Nov") + " Uporabnika", `
+        Ime: <input id="eu-n" value="${u.name}"><br>
+        Priimek: <input id="eu-s" value="${u.surname}"><br>
+        Uporabniško ime: <input id="eu-u" value="${u.username}"><br>
+        Geslo: <input id="eu-p" value="${u.password}">
+    `, [{label:'Shrani', action:()=>{
+        if(isEdit) {
+            Object.assign(db.users.find(x=>x.id===u.id), {name:document.getElementById('eu-n').value, surname:document.getElementById('eu-s').value, username:document.getElementById('eu-u').value, password:document.getElementById('eu-p').value});
+        } else {
+            db.users.push({id:Date.now(), role:role, name:document.getElementById('eu-n').value, surname:document.getElementById('eu-s').value, username:document.getElementById('eu-u').value, password:document.getElementById('eu-p').value});
+        }
+        saveDb().then(()=>{ closeModal(); role==='teacher'?renderSetTeachers():renderSetStudents(); });
+    }}]);
+}
+function delUser(id) { db.users = db.users.filter(u=>u.id!==id); saveDb().then(()=>renderSetTeachers()); }
+
+function editClass(cid) {
+    let c = db.classes.find(x=>x.id===cid) || {name:'', students:[]};
+    let sOpts = db.users.filter(u=>u.role==='student').map(s=>`
+        <div><input type="checkbox" id="sc-${s.id}" ${c.students.some(cs=>cs.id===s.id)?'checked':''}> ${s.name} ${s.surname}</div>
+    `).join('');
+    
+    showModal((cid?"Uredi":"Nov")+" Razred", `
+        Ime razreda: <input id="ec-n" value="${c.name}"><br><br>
+        <b>Učenci:</b><div style="max-height:150px;overflow-y:auto;border:1px solid #ccc;padding:5px;">${sOpts}</div>
+    `, [{label:'Shrani', action:()=>{
+        let students = [];
+        db.users.filter(u=>u.role==='student').forEach(s => { if(document.getElementById('sc-'+s.id).checked) students.push({id:s.id, name:`${s.name} ${s.surname}`}); });
+        if(cid) { let cl = db.classes.find(x=>x.id===cid); cl.name=document.getElementById('ec-n').value; cl.students=students; }
+        else db.classes.push({id:Date.now(), name:document.getElementById('ec-n').value, students:students, reditelji:[]});
+        saveDb().then(()=>{ closeModal(); renderSetClasses(); });
+    }}]);
+}
+function delClass(id) { db.classes = db.classes.filter(c=>c.id!==id); saveDb().then(()=>renderSetClasses()); }
+
 function showModal(title, content, buttons) {
     const wrap = document.getElementById('modal-wrapper');
-    wrap.innerHTML = `
-        <div class="win-modal">
-            <div class="win-modal-header"><span>${title}</span><span style="cursor:pointer" onclick="closeModal()">X</span></div>
-            <div class="win-modal-body">${content}</div>
-            <div class="win-modal-footer" id="modal-footer"></div>
-        </div>
-    `;
+    wrap.innerHTML = `<div class="win-modal"><div class="win-modal-header"><span>${title}</span><span style="cursor:pointer" onclick="closeModal()">X</span></div><div class="win-modal-body">${content}</div><div class="win-modal-footer" id="modal-footer"></div></div>`;
     const foot = document.getElementById('modal-footer');
     buttons.forEach(b => {
-        const btn = document.createElement('button');
-        btn.className = 'win-btn';
-        btn.innerText = b.label;
-        btn.onclick = b.action;
-        btn.style.marginLeft = "10px";
-        foot.appendChild(btn);
+        const btn = document.createElement('button'); btn.className = 'win-btn'; btn.innerText = b.label; btn.onclick = b.action; btn.style.marginLeft = "10px"; foot.appendChild(btn);
     });
     wrap.classList.remove('hidden');
 }
+function closeModal() { document.getElementById('modal-wrapper').classList.add('hidden'); }
 
-function closeModal() {
-    document.getElementById('modal-wrapper').classList.add('hidden');
-}
-
-// Dummy functions
-function openSettings() { alert("Nastavitve urnika: Funkcija bo na voljo kasneje."); }
-function showPastHours() { alert("Seznam preteklih ur."); }
-function showInfo() { alert("Info o statusih."); }
-
-// Run
+// Zagon
 init();
 
 </script>
