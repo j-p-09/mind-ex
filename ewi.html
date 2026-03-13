@@ -140,7 +140,7 @@
         .abs-gen-table { width: 100%; border-collapse: collapse; border: 2px solid black; background: #e0e0e0; }
         .abs-gen-table tr { border-bottom: 1px solid #999; }
         .abs-gen-table td { padding: 3px 10px; }
-        .abs-row-highlight:hover { background: #ffffcc; cursor: default; }
+        .abs-row-highlight:hover { background: #ffffcc; }
 
         .abs-det-table { width: 100%; border-collapse: collapse; border: 2px solid black; margin-bottom: 10px; background: white; font-size: 12px; }
         .abs-det-table th { background: #ccc; border: 1px solid black; }
@@ -150,6 +150,20 @@
         .cell-N { background: var(--pastel-red); }
         .cell-Open { color: black; }
         .cell-Note { background: var(--pastel-yellow); }
+
+        /* --- STUDENT VIEW SPECIFIC --- */
+        .student-summary-table {
+            border-collapse: collapse; margin-bottom: 15px; font-size: 14px; background: white; border: 1px solid #a0a0a0;
+        }
+        .student-summary-table td { border: 1px solid #a0a0a0; padding: 4px 10px; }
+        .student-summary-table .title-cell { background: #f0f0f0; text-align: center; font-weight: bold; }
+        
+        .student-abs-table { width: 100%; border-collapse: collapse; font-size: 13px; background: #f0f0f0; border: 1px solid #808080; }
+        .student-abs-table th { background: #ffffcc; border: 1px solid #808080; padding: 4px; font-weight: normal; text-align: center; }
+        .student-abs-table td { border: 1px solid #808080; padding: 2px 5px; background: #e8e8e8; }
+        .student-abs-table tr:nth-child(even) td { background: #dfdfdf; }
+        
+        .stu-hour-span { cursor: help; }
 
         /* Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999; }
@@ -202,15 +216,21 @@
         <div class="main-container">
 
             <div id="view-student" class="hidden">
-                <h2>Moje odsotnosti</h2>
                 <div id="student-warning-box" style="margin-bottom:15px; padding:10px; border:2px solid red; background:#f2dede; font-weight:bold; font-size:16px;" class="hidden red-text"></div>
-                <div class="abs-legend">
-                    <span class="abs-stat-green">Opravičene: <span id="stu-o-count">0</span></span>
-                    <span class="abs-stat-red">Neopravičene: <span id="stu-n-count">0</span></span>
-                    <span class="abs-stat-black">Odprto: <span id="stu-q-count">0</span></span>
-                </div>
-                <table class="data-table">
-                    <thead><tr><th>Datum</th><th>Ura</th><th>Predmet/Razred</th><th>Status</th><th>Opomba</th></tr></thead>
+                
+                <table class="student-summary-table">
+                    <tr>
+                        <td rowspan="2" class="title-cell">Izostanki:</td>
+                        <td>Opravičeni: <span class="abs-stat-green" id="stu-o-count">0</span></td>
+                    </tr>
+                    <tr>
+                        <td>Neopravičeni: <span class="abs-stat-red" id="stu-n-count">0</span></td>
+                        <td>???: <span class="abs-stat-black" id="stu-q-count">0</span></td>
+                    </tr>
+                </table>
+
+                <table class="student-abs-table">
+                    <thead><tr><th style="width:100px;">Datum</th><th style="width:150px;">Ure izostanka</th><th>Razlog</th></tr></thead>
                     <tbody id="student-abs-list"></tbody>
                 </table>
             </div>
@@ -290,6 +310,7 @@
                         <span class="abs-stat-green">Zelena: Opravičeno</span>
                         <span class="abs-stat-red">Rdeča: Neopravičeno</span>
                         <span class="abs-stat-black">Črna: Odprto</span>
+                        <span style="margin-left:auto; font-style:italic;">*Klikni na ime učenca za pregled odprtih ur</span>
                     </div>
                     <table class="abs-gen-table">
                         <tbody id="abs-gen-body"></tbody>
@@ -373,7 +394,6 @@ function saveDb() {
 // --- UTILS: Date Parsing ---
 function parseSlDate(dStr) {
     if(!dStr) return new Date(0);
-    // Varno branje datuma (odstrani vse presledke in razdeli po pikah)
     const p = dStr.replace(/\s/g, '').split('.');
     if(p.length >= 3) return new Date(p[2], p[1]-1, p[0]);
     return new Date(0);
@@ -437,18 +457,22 @@ function renderStudentView() {
     tbody.innerHTML = '';
     
     let nCount = 0, oCount = 0, qCount = 0;
-    let myAbsences = [];
+    let absencesByDate = {}; 
     
     if (db.entries) {
         db.entries.forEach(e => {
             if (!e.absentees) return;
-            // Varnostni popravek za ujemanje ID-jev (kot število)
             const abs = e.absentees.find(a => parseInt(a.studentId) === parseInt(state.user.id));
             if(abs) {
-                myAbsences.push({ entry: e, abs: abs });
                 if(abs.status === 'N') nCount++;
                 else if(abs.status === 'O') oCount++;
                 else qCount++;
+
+                if (!absencesByDate[e.date]) {
+                    absencesByDate[e.date] = { periods: [], notes: new Set() };
+                }
+                absencesByDate[e.date].periods.push({ period: e.period, status: abs.status, note: abs.note });
+                if(abs.note) absencesByDate[e.date].notes.add(abs.note);
             }
         });
     }
@@ -470,20 +494,26 @@ function renderStudentView() {
     }
 
     // Sort descending
-    myAbsences.sort((a,b) => parseSlDate(b.entry.date) - parseSlDate(a.entry.date) || b.entry.period - a.entry.period);
+    let dates = Object.keys(absencesByDate).sort((a, b) => parseSlDate(b).getTime() - parseSlDate(a).getTime());
     
-    myAbsences.forEach(m => {
+    dates.forEach(date => {
+        let data = absencesByDate[date];
+        data.periods.sort((a,b) => a.period - b.period);
+        
+        let ureHtml = data.periods.map(p => {
+            let color = 'blue'; 
+            if (p.status === 'O') color = 'green';
+            if (p.status === 'N') color = 'red';
+            return `<span class="stu-hour-span" style="color:${color}; font-weight:bold;" title="${p.period}. ura">${p.period},</span>`;
+        }).join('');
+        
+        let opombe = Array.from(data.notes).join('; ');
+        
         const tr = document.createElement('tr');
-        const c = db.classes.find(x => x.id === m.entry.classId);
-        let statStyl = '';
-        if(m.abs.status==='O') statStyl='color:green;font-weight:bold;';
-        if(m.abs.status==='N') statStyl='color:red;font-weight:bold;';
         tr.innerHTML = `
-            <td>${m.entry.date}</td>
-            <td>${m.entry.period}.</td>
-            <td>${c ? c.name : '?'}</td>
-            <td style="${statStyl}">${m.abs.status}</td>
-            <td>${m.abs.note || ''}</td>
+            <td style="text-align:center;">${date}</td>
+            <td style="text-align:center;">${ureHtml}</td>
+            <td>${opombe}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -732,7 +762,6 @@ function editPastEntry(eid) {
     const ent = db.entries.find(e => e.id === eid);
     if(!ent) return;
     closeModal();
-    // Spremeni datum na datum te stare ure
     state.currentDate = parseSlDate(ent.date);
     updateDateUI();
     renderHome();
@@ -745,7 +774,7 @@ function renderHistory(cid) {
 
     let hist = db.entries.filter(e => e.classId === cid && e.id !== state.activeEntry.id);
     hist.sort((a,b) => parseSlDate(a.date) - parseSlDate(b.date) || a.period - b.period);
-    hist = hist.slice(-5); // Zadnjih 5
+    hist = hist.slice(-5); 
     
     hist.forEach(h => {
         const div = document.createElement('div'); div.className = 'history-box';
@@ -781,7 +810,7 @@ function renderAbsence() {
     if(!state.selectedClassId) return;
 
     const cls = db.classes.find(c => c.id === state.selectedClassId);
-    if(!cls) return; // Varnost
+    if(!cls) return; 
 
     document.getElementById('abs-class-label').innerText = cls.name;
     const mode = document.getElementById('abs-view-select').value;
@@ -793,10 +822,10 @@ function renderAbsence() {
         const tbody = document.getElementById('abs-gen-body'); tbody.innerHTML = '';
         const clsEntries = db.entries ? db.entries.filter(e => e.classId === cls.id) : []; 
         
-        if (!cls.students) cls.students = []; // Varnost
+        if (!cls.students) cls.students = []; 
         
         cls.students.forEach(s => {
-            if (!s) return; // Varnost prepreči crash
+            if (!s) return; 
             let g=0, r=0, b=0;
             clsEntries.forEach(e => {
                 if(e.absentees) {
@@ -805,7 +834,13 @@ function renderAbsence() {
                 }
             });
             const tr = document.createElement('tr'); tr.className = 'abs-row-highlight';
-            tr.innerHTML = `<td>${s.name || '?'}</td><td class="abs-stat-green bold">${g}</td><td class="abs-stat-red bold">${r}</td><td class="abs-stat-black bold">${b}</td>`;
+            // Dodan onclick za pregled odprtih ur učenca
+            tr.innerHTML = `
+                <td style="cursor:pointer; text-decoration:underline; font-weight:bold;" onclick="showOpenAbsences(${s.id}, ${cls.id}, '${s.name}')">${s.name || '?'}</td>
+                <td class="abs-stat-green bold">${g}</td>
+                <td class="abs-stat-red bold">${r}</td>
+                <td class="abs-stat-black bold">${b}</td>
+            `;
             tbody.appendChild(tr);
         });
     } else {
@@ -824,7 +859,7 @@ function renderAbsence() {
         let body = '';
         
         cls.students.forEach(s => {
-            if (!s) return; // Varnost
+            if (!s) return; 
             let isAbsentToday = dayEnts.some(e => e.absentees && e.absentees.some(a=>a.studentId === s.id));
             if(isAbsentToday) {
                 body += `<tr><td style="text-align:left; padding-left:5px;">${s.name}</td>`;
@@ -849,6 +884,36 @@ function renderAbsence() {
         table.innerHTML = `<thead>${head}</thead><tbody>${body}</tbody>`;
         cont.appendChild(table);
     }
+}
+
+// NOVO: Prikaz odprtih ur za posameznega učenca v pop-upu
+function showOpenAbsences(studentId, classId, studentName) {
+    let openDates = {};
+    db.entries.forEach(e => {
+        if(e.classId === classId && e.absentees) {
+            const abs = e.absentees.find(a => a.studentId === studentId);
+            if(abs && abs.status !== 'O' && abs.status !== 'N') {
+                if(!openDates[e.date]) openDates[e.date] = [];
+                openDates[e.date].push(e.period);
+            }
+        }
+    });
+    
+    let html = `<p style="margin-top:0;">Odprte ure za učenca: <b style="font-size:16px;">${studentName}</b></p>`;
+    let dates = Object.keys(openDates).sort((a,b) => parseSlDate(b).getTime() - parseSlDate(a).getTime());
+    
+    if(dates.length === 0) {
+        html += `<p style="color:green; font-weight:bold;">Učenec nima odprtih ali neopravičenih ur.</p>`;
+    } else {
+        html += `<table class="data-table"><tr><th style="width:120px;">Datum</th><th>Odprte ure</th></tr>`;
+        dates.forEach(d => {
+            let periods = openDates[d].sort((a,b)=>a-b).join(', ');
+            html += `<tr><td>${d}</td><td><b>${periods}.</b></td></tr>`;
+        });
+        html += `</table>`;
+    }
+    
+    showModal("Pregled odprtih ur", html, [{label:'Zapri', action:closeModal}]);
 }
 
 function manageAbs(eid, sid) {
