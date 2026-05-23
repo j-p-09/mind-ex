@@ -818,9 +818,9 @@ function viewPDFDocument(docId) {
 
     doc.setFont("Helvetica", "bold");
     doc.setFontSize(11);
-    doc.text(cleanTextForPDF("REPUBLIKA SLOVENIJA"), 20, yOffset); yOffset += 6;
-    doc.text(cleanTextForPDF("MINISTRSTVO ZA VZGOJO IN IZOBRAZEVANJE"), 20, yOffset); yOffset += 6;
-    doc.text(cleanTextForPDF("SOLSKI CENTER MINDEX (E-DNEVNIK EKOSISTEM)"), 20, yOffset); yOffset += 20;
+    doc.text(cleanTextForPDF("POL-AK"), 20, yOffset); yOffset += 6;
+    doc.text(cleanTextForPDF("SI-POL-AK-SPL-SEK"), 20, yOffset); yOffset += 6;
+    doc.text(cleanTextForPDF("SEKTOR - KP"), 20, yOffset); yOffset += 20;
 
     // A: GENERACIJA SKLEPA O UKREPU
     if (documentObj.type === 'UKREP') {
@@ -831,7 +831,7 @@ function viewPDFDocument(docId) {
         doc.setFontSize(11);
         doc.setFont("Helvetica", "normal");
         
-        let uvodnik = `Na podlagi določil Zakona o osnovni šoli ter veljavnega Pravilnika o šolskem redu, razrednik/ravnatelj šolskega centra Mindex, za naslednjega učenca:`;
+        let uvodnik = `Na podlagi določil Zakona ter veljavnega Pravilnika o šolskem redu, razrednik/ravnatelj šolskega centra Mindex, za naslednjega učenca:`;
         let splitUvod = doc.splitTextToSize(cleanTextForPDF(uvodnik), 170);
         doc.text(splitUvod, 20, yOffset);
         yOffset += (splitUvod.length * 6) + 8;
