@@ -154,6 +154,7 @@
             width: fit-content;
             border: 1px dotted transparent;
             user-select: none;
+            cursor: pointer;
         }
         .measure-item:hover {
             border: 1px dotted #555;
@@ -347,17 +348,15 @@
  * MINDEX SERVIS - MODUL ZA PREGLED DOKUMENTOV IN UKREPOV
  */
 
-const FIREBASE_URL = 'https://mindex-b92ed-default-rtdb.europe-west1.firebasedatabase.app/.json';
-
 // Globalna baza podatkov (sinhronizirana s skupnim ekosistemom)
 let db = {
-    users: [],
+    users: [{ id: 1, name: 'Administrator', username: 'ADMIN', password: 'ADMIN', role: 'admin', sessionTimeout: 30 }],
     classes: [], 
     subjects: [], 
     grades: [], 
     warnings: [], 
-    documents: [],       
-    issuedMeasures: [],  
+    documents: [],       // Shranjevanje uradnih dokumentov
+    issuedMeasures: [],  // Shranjevanje aktivnih ukrepov za učence
     lastLogin: { user: '', time: '' }
 };
 
@@ -380,8 +379,8 @@ const VALID_MEASURES = [
 
 // --- POMOŽNA FUNKCIJA ZA ČIŠČENJE ŠUMNIKOV V PDF ---
 function cleanTextForPDF(str) {
-    if (!str) return "";
-    return str
+    if (str === null || str === undefined) return "";
+    return String(str)
         .replace(/[čČ]/g, m => m === 'č' ? 'c' : 'C')
         .replace(/[šŠ]/g, m => m === 'š' ? 's' : 'S')
         .replace(/[žŽ]/g, m => m === 'ž' ? 'z' : 'Z');
@@ -436,9 +435,19 @@ function customConfirm(message, onConfirm) {
 }
 
 // --- INITIALIZATION ---
-async function init() {
-    await loadDB();
+function init() {
+    const saved = localStorage.getItem('mindex_db');
+    if (saved) {
+        db = JSON.parse(saved);
+    } else {
+        localStorage.setItem('mindex_db', JSON.stringify(db));
+    }
     
+    // Zagotovimo obstoj tabel v skupni bazi
+    if (!db.users) db.users = [{ id: 1, name: 'Administrator', username: 'ADMIN', password: 'ADMIN', role: 'admin', sessionTimeout: 30 }];
+    if (!db.documents) db.documents = [];
+    if (!db.issuedMeasures) db.issuedMeasures = [];
+
     updateClock();
     setInterval(updateClock, 1000);
     
@@ -448,59 +457,8 @@ async function init() {
     }
 }
 
-async function loadDB() {
-    try {
-        const response = await fetch(FIREBASE_URL);
-        const data = await response.json();
-        if (data) {
-            db = data;
-            
-            // Popravek strukture iz Firebase (Pretvorba objektov nazaj v matrike in čiščenje null vrednosti)
-            if(db.users && !Array.isArray(db.users)) db.users = Object.values(db.users);
-            if(db.classes && !Array.isArray(db.classes)) db.classes = Object.values(db.classes);
-            if(db.subjects && !Array.isArray(db.subjects)) db.subjects = Object.values(db.subjects);
-            if(db.grades && !Array.isArray(db.grades)) db.grades = Object.values(db.grades);
-            if(db.documents && !Array.isArray(db.documents)) db.documents = Object.values(db.documents);
-            if(db.issuedMeasures && !Array.isArray(db.issuedMeasures)) db.issuedMeasures = Object.values(db.issuedMeasures);
-            
-            if(!db.users) db.users = [];
-            if(!db.classes) db.classes = [];
-            if(!db.subjects) db.subjects = [];
-            if(!db.grades) db.grades = [];
-            if(!db.documents) db.documents = [];
-            if(!db.issuedMeasures) db.issuedMeasures = [];
-
-            db.users = db.users.filter(x => x !== null);
-            db.classes = db.classes.filter(x => x !== null);
-            db.subjects = db.subjects.filter(x => x !== null);
-            db.grades = db.grades.filter(x => x !== null);
-            db.documents = db.documents.filter(x => x !== null);
-            db.issuedMeasures = db.issuedMeasures.filter(x => x !== null);
-
-            db.classes.forEach(c => {
-                if(c && c.students) {
-                    if(!Array.isArray(c.students)) c.students = Object.values(c.students);
-                    c.students = c.students.filter(x => x !== null);
-                } else if(c) {
-                    c.students = [];
-                }
-            });
-        }
-    } catch (error) {
-        console.error("Napaka pri nalaganju iz baze podatkov:", error);
-    }
-}
-
-async function saveDB() {
-    try {
-        await fetch(FIREBASE_URL, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(db)
-        });
-    } catch (error) {
-        console.error("Napaka pri shranjevanju v bazo podatkov:", error);
-    }
+function saveDB() {
+    localStorage.setItem('mindex_db', JSON.stringify(db));
 }
 
 // --- CLOCK & SESSION ---
@@ -511,7 +469,7 @@ function updateClock() {
 }
 
 function startSessionTimer() {
-    const minutes = currentState.user.sessionTimeout || 30;
+    const minutes = currentState.user.sessionTimeout || 15;
     currentState.sessionTime = minutes * 60;
     
     if (currentState.sessionInterval) clearInterval(currentState.sessionInterval);
@@ -532,23 +490,27 @@ function startSessionTimer() {
 }
 
 // --- LOGIN / LOGOUT ---
-async function handleLogin() {
+function handleLogin() {
     const u = document.getElementById('login-username').value.trim();
-    const p = document.getElementById('login-password').value.trim();
+    const p = document.getElementById('login-password').value;
     
-    await loadDB();
-    
-    // Uporabimo enak sistem iskanja kot e-dnevnik
-    const user = db.users.find(x => x.username === u && x.password === p);
+    // Fleksibilno preverjanje med db.users in db.teachers iz E-dnevnika
+    let user = null;
+    if (db.users) {
+        user = db.users.find(x => x.username === u && x.password === p);
+    }
+    if (!user && db.teachers) {
+        user = db.teachers.find(x => (x.username === u || x.uime === u) && x.password === p);
+    }
     
     if (user) {
         currentState.user = user;
         db.lastLogin = { user: u, time: new Date().toLocaleString('sl-SI') };
-        await saveDB();
+        saveDB();
         
         document.getElementById('login-page').classList.add('hidden');
         document.getElementById('dashboard-page').classList.remove('hidden');
-        document.getElementById('teacher-name-display').innerText = user.name;
+        document.getElementById('teacher-name-display').innerText = user.name || user.username || u;
         
         startSessionTimer();
         loadClassesToDropdown();
@@ -568,8 +530,8 @@ function handleLogout() {
     document.getElementById('login-page').classList.remove('hidden');
     document.getElementById('student-profile-area').classList.add('hidden');
     document.getElementById('student-no-selection').classList.remove('hidden');
-    document.getElementById('last-login-user').innerText = db.lastLogin ? db.lastLogin.user : '';
-    document.getElementById('last-login-time').innerText = db.lastLogin ? db.lastLogin.time : '';
+    document.getElementById('last-login-user').innerText = db.lastLogin.user || '';
+    document.getElementById('last-login-time').innerText = db.lastLogin.time || '';
     document.getElementById('login-username').value = "";
     document.getElementById('login-password').value = "";
 }
@@ -584,15 +546,37 @@ function showPage(pageId) {
     if (pageId === 'dokumenti') document.getElementById('view-dokumenti').classList.remove('hidden');
 }
 
+// --- POMOŽNA FUNKCIJA ZA PRIDOBIVANJE UČENCEV IZ KATERIHKOLI STRUKTURE ---
+function getStudentsForClass(classId) {
+    if (!classId) return [];
+    const cls = db.classes ? db.classes.find(c => c.id == classId) : null;
+    
+    // 1. Gnezdena struktura (klasifikacija v nekaterih e-dnevnikih)
+    if (cls && cls.students && cls.students.length > 0) {
+        return cls.students;
+    }
+    
+    // 2. Ploščata struktura (db.students s classId ali razred povezavo)
+    if (db.students && db.students.length > 0) {
+        return db.students.filter(s => s.classId == classId || s.razredId == classId || (cls && (s.class == cls.name || s.razred == cls.name)));
+    }
+    
+    return [];
+}
+
 // --- KREIRANJE DROPDOWNA ZA RAZREDE ---
 function loadClassesToDropdown() {
     const cSel = document.getElementById('sel-class');
+    if (!db.classes || db.classes.length === 0) {
+        cSel.innerHTML = '<option value="">Ni najdenih razredov</option>';
+        return;
+    }
     cSel.innerHTML = '<option value="">Izberi razred</option>' + db.classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 }
 
 // Sproženo ob spremembi izbire razreda
 function handleClassChange() {
-    const classId = document.getElementById('sel-class').value;
+    const classId = parseInt(document.getElementById('sel-class').value);
     const container = document.getElementById('student-list-container');
     
     document.getElementById('student-profile-area').classList.add('hidden');
@@ -606,16 +590,16 @@ function handleClassChange() {
     }
 
     currentState.selectedClassId = classId;
-    const cls = db.classes.find(c => c.id == classId); // ohlapna primerjava zaradi tipov podatkov
+    const students = getStudentsForClass(classId);
     
-    if (!cls || !cls.students || cls.students.length === 0) {
+    if (students.length === 0) {
         container.innerHTML = '<p style="color: #666; font-style: italic; font-size: 12px;">V tem razredu ni vpisanih učencev.</p>';
         return;
     }
 
     let html = '<ul class="admin-list" style="max-height: calc(100vh - 350px);">';
-    cls.students.forEach(st => {
-        html += `<li onclick="loadStudentProfile('${st.id}')" style="cursor: pointer; font-weight: bold; padding: 6px 8px;">${st.name}</li>`;
+    students.forEach(st => {
+        html += `<li onclick="loadStudentProfile(${st.id})" style="cursor: pointer; font-weight: bold; padding: 6px 8px;">${st.name}</li>`;
     });
     html += '</ul>';
     container.innerHTML = html;
@@ -624,18 +608,24 @@ function handleClassChange() {
 // --- NALAGANJE PROFILA POSAMEZNEGA UČENCA ---
 function loadStudentProfile(studentId) {
     currentState.selectedStudentId = studentId;
-    const cls = db.classes.find(c => c.id == currentState.selectedClassId);
-    const student = cls.students.find(s => s.id == studentId);
+    const cls = db.classes.find(c => c.id === currentState.selectedClassId);
+    
+    // Poiščemo študenta fleksibilno
+    const students = getStudentsForClass(currentState.selectedClassId);
+    let student = students.find(s => s.id == studentId);
+    if (!student && db.students) {
+        student = db.students.find(s => s.id == studentId);
+    }
 
-    if(!student) return;
+    if (!student) return;
 
     document.getElementById('student-no-selection').classList.add('hidden');
     document.getElementById('student-profile-area').classList.remove('hidden');
 
     // Polnjenje osnovnih podatkov
     document.getElementById('lbl-student-name').innerText = student.name;
-    document.getElementById('lbl-student-class').innerText = cls.name;
-    document.getElementById('lbl-student-username').innerText = student.username || '';
+    document.getElementById('lbl-student-class').innerText = cls ? cls.name : (student.class || student.razred || '');
+    document.getElementById('lbl-student-username').innerText = student.username || student.uime || 'nima';
 
     renderStudentMeasures(studentId);
     renderStudentCertificates(studentId);
@@ -668,8 +658,11 @@ function renderStudentMeasures(studentId) {
 
 // --- MODAL ZA VNOS OBRAZLOŽITVE UKREPA ---
 function openMeasureIssuanceModal(measure, studentId) {
-    const cls = db.classes.find(c => c.id == currentState.selectedClassId);
-    const student = cls.students.find(s => s.id == studentId);
+    const cls = db.classes.find(c => c.id === currentState.selectedClassId);
+    const students = getStudentsForClass(currentState.selectedClassId);
+    let student = students.find(s => s.id == studentId) || (db.students && db.students.find(s => s.id == studentId));
+
+    if(!student) return;
 
     const isAlreadyIssued = db.issuedMeasures.some(m => m.studentId == studentId && m.measureType === measure);
     let warningMsg = isAlreadyIssued ? '<p style="color:red; font-weight:bold;">Pozor: Ta ukrep je bil za tega učenca že predhodno izdan! Ponovna izdaja bo ustvarila nov dokument.</p>' : '';
@@ -684,7 +677,7 @@ function openMeasureIssuanceModal(measure, studentId) {
     showModal("Izdaja vzgojnega ukrepa", html, [
         {
             label: "Potrdi in zgeneriraj Sklep",
-            onClick: async () => {
+            onClick: () => {
                 const reasonText = document.getElementById('txt-measure-reason').value.trim();
                 if (!reasonText) {
                     customAlert("Za izdajo uradnega sklepa morate obvezno vnesti obrazložitev!");
@@ -709,14 +702,13 @@ function openMeasureIssuanceModal(measure, studentId) {
                     details: {
                         measureName: measure,
                         reason: reasonText,
-                        issuer: currentState.user.name
+                        issuer: currentState.user ? (currentState.user.name || currentState.user.username) : 'Sistem'
                     }
                 });
 
-                await saveDB();
-                loadStudentProfile(studentId); 
+                saveDB();
+                loadStudentProfile(studentId);
                 closeModal();
-
                 viewPDFDocument(docId);
             },
             shouldClose: false
@@ -726,7 +718,7 @@ function openMeasureIssuanceModal(measure, studentId) {
 }
 
 // --- GENERIRANJE OBVESTILA O USPEHU IN POLLETJU ---
-async function issueReportCard(type) {
+function issueReportCard(type) {
     const studentId = currentState.selectedStudentId;
     if (!studentId) return;
 
@@ -740,11 +732,11 @@ async function issueReportCard(type) {
         title: titleStr,
         date: new Date().toLocaleDateString('sl-SI'),
         details: {
-            issuer: currentState.user.name
+            issuer: currentState.user ? (currentState.user.name || currentState.user.username) : 'Sistem'
         }
     });
 
-    await saveDB();
+    saveDB();
     renderStudentCertificates(studentId);
     viewPDFDocument(docId);
 }
@@ -792,20 +784,20 @@ function renderStudentCertificates(studentId) {
 
 // --- BRISANJE DOKUMENTA ---
 function deleteDocument(docId) {
-    customConfirm("Ali res želite trajno izbrisati ta dokument iz evidence?", async () => {
-        const docToDelete = db.documents.find(d => d.id == docId);
+    customConfirm("Ali res želite trajno izbrisati ta dokument iz evidence?", () => {
+        const docToDelete = db.documents.find(d => d.id === docId);
         if (docToDelete && docToDelete.type === 'UKREP') {
             const measureName = docToDelete.details.measureName;
             const studentId = docToDelete.studentId;
             
-            const remainingSameMeasures = db.documents.filter(d => d.id != docId && d.studentId == studentId && d.type === 'UKREP' && d.details.measureName === measureName);
+            const remainingSameMeasures = db.documents.filter(d => d.id !== docId && d.studentId == studentId && d.type === 'UKREP' && d.details.measureName === measureName);
             if (remainingSameMeasures.length === 0) {
                 db.issuedMeasures = db.issuedMeasures.filter(m => !(m.studentId == studentId && m.measureType === measureName));
             }
         }
 
-        db.documents = db.documents.filter(d => d.id != docId);
-        await saveDB();
+        db.documents = db.documents.filter(d => d.id !== docId);
+        saveDB();
         loadStudentProfile(currentState.selectedStudentId);
         closeModal();
     });
@@ -813,29 +805,39 @@ function deleteDocument(docId) {
 
 // --- URADNA GENERACIJA IN PRIKAZ PDF PREKO JSPD KNJIŽNICE ---
 function viewPDFDocument(docId) {
-    const documentObj = db.documents.find(d => d.id == docId);
+    const documentObj = db.documents.find(d => d.id === docId);
     if (!documentObj) {
         customAlert("Napaka: Dokumenta ni mogoče najti!");
         return;
     }
 
-    const classObj = db.classes.find(c => c.id == currentState.selectedClassId);
-    const studentObj = classObj.students.find(s => s.id == documentObj.studentId);
+    const classObj = db.classes.find(c => c.id === currentState.selectedClassId);
+    
+    // Pridobimo študenta fleksibilno
+    let studentObj = null;
+    const studentsList = getStudentsForClass(currentState.selectedClassId);
+    if (studentsList.length > 0) {
+        studentObj = studentsList.find(s => s.id == documentObj.studentId);
+    }
+    if (!studentObj && db.students) {
+        studentObj = db.students.find(s => s.id == documentObj.studentId);
+    }
 
     if(!studentObj) {
-        customAlert("Napaka: Podatkov o učencu ni mogoče najti!");
+        customAlert("Napaka: Podatkov o učencu ni mogoče najti.");
         return;
     }
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    
     let yOffset = 25;
 
-    // Glava dokumenta (Samo šola, brez države in ministrstva)
+    // Glava dokumenta
     doc.setFont("Helvetica", "bold");
     doc.setFontSize(11);
-    doc.text(cleanTextForPDF("SOLSKI CENTER MINDEX (E-DNEVNIK MODUL)"), 20, yOffset); yOffset += 20;
+    doc.text(cleanTextForPDF("REPUBLIKA SLOVENIJA"), 20, yOffset); yOffset += 6;
+    doc.text(cleanTextForPDF("MINISTRSTVO ZA VZGOJO IN IZOBRAZEVANJE"), 20, yOffset); yOffset += 6;
+    doc.text(cleanTextForPDF("SOLSKI CENTER MINDEX (DOKUMENTI & UKREPI)"), 20, yOffset); yOffset += 20;
 
     // --- GENERACIJA SKLEPA O UKREPU ---
     if (documentObj.type === 'UKREP') {
@@ -853,17 +855,17 @@ function viewPDFDocument(docId) {
 
         doc.setFont("Helvetica", "bold");
         doc.text(cleanTextForPDF(`Ime in priimek: ${studentObj.name}`), 25, yOffset); yOffset += 6;
-        doc.text(cleanTextForPDF(`Razred: ${classObj.name}`), 25, yOffset); yOffset += 12;
+        doc.text(cleanTextForPDF(`Razred: ${classObj ? classObj.name : (studentObj.class || studentObj.razred || '/')}`), 25, yOffset); yOffset += 12;
 
         doc.setFont("Helvetica", "normal");
         doc.text(cleanTextForPDF("izreka naslednji uradni vzgojni oziroma disciplinski ukrep:"), 20, yOffset); yOffset += 10;
 
         doc.setFont("Helvetica", "bold");
         doc.setFontSize(14);
-        doc.setTextColor(200, 0, 0); 
+        doc.setTextColor(200, 0, 0);
         doc.text(cleanTextForPDF(documentObj.details.measureName), 30, yOffset); yOffset += 12;
         
-        doc.setTextColor(0, 0, 0); 
+        doc.setTextColor(0, 0, 0);
         doc.setFontSize(12);
         doc.text(cleanTextForPDF("OBRAZLOZITEV"), 20, yOffset); yOffset += 8;
 
@@ -886,8 +888,9 @@ function viewPDFDocument(docId) {
         doc.setFontSize(11);
         doc.setFont("Helvetica", "normal");
         doc.text(cleanTextForPDF(`Ucenec/učenka: ${studentObj.name}`), 20, yOffset); yOffset += 6;
-        doc.text(cleanTextForPDF(`Razred: ${classObj.name}`), 20, yOffset); yOffset += 15;
+        doc.text(cleanTextForPDF(`Razred: ${classObj ? classObj.name : (studentObj.class || studentObj.razred || '/')}`), 20, yOffset); yOffset += 15;
 
+        // Tabela ocen
         doc.setFont("Helvetica", "bold");
         doc.text(cleanTextForPDF("Predmet"), 20, yOffset);
         doc.text(cleanTextForPDF("Zakljucna ocena"), 120, yOffset);
@@ -899,18 +902,35 @@ function viewPDFDocument(docId) {
         
         let imaNeocenjenoAliNezadostno = false;
 
-        db.subjects.forEach(sub => {
-            const končnaOcenaObj = db.grades.find(g => g.studentId == studentObj.id && g.subjectId == sub.id && g.isFinal === true);
+        // Fleksibilna pridobitev vseh predmetov
+        let subjectsList = db.subjects && db.subjects.length > 0 ? db.subjects : [];
+        if (subjectsList.length === 0 && db.grades) {
+            const uniqueSubjectNames = [...new Set(db.grades.map(g => g.subject || g.subjectName).filter(Boolean))];
+            subjectsList = uniqueSubjectNames.map((name, idx) => ({ id: idx + 1, name: name }));
+        }
+        if (subjectsList.length === 0) {
+            const defaultSubjects = ["Slovenščina", "Matematika", "Angleščina", "Zgodovina", "Geografija", "Fizika", "Kemija", "Biologija"];
+            subjectsList = defaultSubjects.map((name, idx) => ({ id: idx + 1, name: name }));
+        }
+
+        subjectsList.forEach(sub => {
+            // Vsestranski iskalnik končne ocene
+            const končnaOcenaObj = db.grades ? db.grades.find(g => 
+                (g.studentId == studentObj.id || g.studentName == studentObj.name) && 
+                (g.subjectId == sub.id || g.subject == sub.name || g.subjectName == sub.name) && 
+                (g.isFinal === true || g.isFinal == 'true' || g.final === true || g.final == 1 || g.type == 'final' || g.tip == 'končna' || g.isKončna == true)
+            ) : null;
+
             let ocenaTekst = "NE OCENJEN";
 
             if (končnaOcenaObj) {
-                const val = končnaOcenaObj.value.toString().trim().toUpperCase();
+                const val = (končnaOcenaObj.value || končnaOcenaObj.ocena || končnaOcenaObj.grade || "").toString().trim().toUpperCase();
                 if (val === '1') { ocenaTekst = "nezadostno (1)"; imaNeocenjenoAliNezadostno = true; }
                 else if (val === '2') ocenaTekst = "zadostno (2)";
                 else if (val === '3') ocenaTekst = "dobro (3)";
                 else if (val === '4') ocenaTekst = "prav dobro (4)";
                 else if (val === '5') ocenaTekst = "odlicno (5)";
-                else if (val === 'N') { ocenaTekst = "NE OCENJEN"; imaNeocenjenoAliNezadostno = true; }
+                else if (val === 'N' || val === 'NEOCENJEN') { ocenaTekst = "NE OCENJEN"; imaNeocenjenoAliNezadostno = true; }
                 else { ocenaTekst = val; }
             } else {
                 imaNeocenjenoAliNezadostno = true;
@@ -927,6 +947,7 @@ function viewPDFDocument(docId) {
         doc.line(20, yOffset, 190, yOffset);
         yOffset += 12;
 
+        // Sklep o napredovanju
         doc.setFont("Helvetica", "bold");
         doc.text(cleanTextForPDF("SKLEP O NAPREDOVANJU:"), 20, yOffset);
         yOffset += 8;
@@ -934,9 +955,9 @@ function viewPDFDocument(docId) {
         doc.setFont("Helvetica", "normal");
         let končniSklepTekst = "";
         if (imaNeocenjenoAliNezadostno) {
-            končniSklepTekst = "Na podlagi zbranih ocen je ugotovljeno, da učenec NEUSPESNO opravlja svoje šolske dolžnosti, zato na koncu tega ocenjevalnega obdobja NE NAPREDUJE v naslednji razred.";
+            končniSklepTekst = "Na podlagi zbranih ocen je ugotovljeno, da učenec neizpolnjuje pogojev za napredovanje v tem ocenjevalnem obdobju, zato NE NAPREDUJE v naslednji razred.";
         } else {
-            končniSklepTekst = "Na podlagi zbranih ocen je ugotovljeno, da je učenec USPESNO opravil vse šolske dolžnosti, zato NAPREDUJE v naslednji razred šolskega centra.";
+            končniSklepTekst = "Na podlagi zbranih ocen je ugotovljeno, da je učenec uspešno opravil vse šolske dolžnosti, zato NAPREDUJE v naslednji razred šolskega centra.";
         }
 
         let splitSklep = doc.splitTextToSize(cleanTextForPDF(končniSklepTekst), 170);
@@ -952,8 +973,9 @@ function viewPDFDocument(docId) {
         doc.setFontSize(11);
         doc.setFont("Helvetica", "normal");
         doc.text(cleanTextForPDF(`Ucenec/učenka: ${studentObj.name}`), 20, yOffset); yOffset += 6;
-        doc.text(cleanTextForPDF(`Razred: ${classObj.name}`), 20, yOffset); yOffset += 15;
+        doc.text(cleanTextForPDF(`Razred: ${classObj ? classObj.name : (studentObj.class || studentObj.razred || '/')}`), 20, yOffset); yOffset += 15;
 
+        // Tabela vseh ocen
         doc.setFont("Helvetica", "bold");
         doc.text(cleanTextForPDF("Predmet"), 20, yOffset);
         doc.text(cleanTextForPDF("Vse tekoce ocene v obdobju"), 95, yOffset);
@@ -963,10 +985,26 @@ function viewPDFDocument(docId) {
 
         doc.setFont("Helvetica", "normal");
 
-        db.subjects.forEach(sub => {
-            const vseTekoceOcene = db.grades.filter(g => g.studentId == studentObj.id && g.subjectId == sub.id && !g.isFinal);
-            let stringOcen = vseTekoceOcene.map(g => g.value).join(", ");
-            if (!stringOcen) stringOcen = "/"; 
+        let subjectsList = db.subjects && db.subjects.length > 0 ? db.subjects : [];
+        if (subjectsList.length === 0 && db.grades) {
+            const uniqueSubjectNames = [...new Set(db.grades.map(g => g.subject || g.subjectName).filter(Boolean))];
+            subjectsList = uniqueSubjectNames.map((name, idx) => ({ id: idx + 1, name: name }));
+        }
+        if (subjectsList.length === 0) {
+            const defaultSubjects = ["Slovenščina", "Matematika", "Angleščina", "Zgodovina", "Geografija", "Fizika", "Kemija", "Biologija"];
+            subjectsList = defaultSubjects.map((name, idx) => ({ id: idx + 1, name: name }));
+        }
+
+        subjectsList.forEach(sub => {
+            // Pridobimo vse ocene, ki niso končne
+            const vseTekoceOcene = db.grades ? db.grades.filter(g => 
+                (g.studentId == studentObj.id || g.studentName == studentObj.name) && 
+                (g.subjectId == sub.id || g.subject == sub.name || g.subjectName == sub.name) && 
+                !(g.isFinal || g.final || g.type == 'final' || g.tip == 'končna' || g.isKončna == true)
+            ) : [];
+
+            let stringOcen = vseTekoceOcene.map(g => g.value || g.ocena || g.grade).filter(Boolean).join(", ");
+            if (!stringOcen) stringOcen = "/";
 
             doc.text(cleanTextForPDF(sub.name), 20, yOffset);
             
@@ -984,7 +1022,7 @@ function viewPDFDocument(docId) {
         yOffset += 10;
     }
 
-    // Zaključni podpisi na dnu dokumenta
+    // Podpisi na dnu dokumenta
     if (yOffset > 250) { doc.addPage(); yOffset = 30; }
     doc.setFont("Helvetica", "normal");
     doc.setFontSize(10);
@@ -994,6 +1032,7 @@ function viewPDFDocument(docId) {
     doc.text(cleanTextForPDF(`Datum izdaje dokumenta: ${documentObj.date}`), 20, yOffset + 6);
     doc.text(cleanTextForPDF("Uradni podpis / Pecat: _________________________"), 110, yOffset + 3);
 
+    // Odpremo v novem zavihku
     const blobPdf = doc.output('bloburl');
     window.open(blobPdf, '_blank');
 }
