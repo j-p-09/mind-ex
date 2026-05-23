@@ -1,38 +1,35 @@
 <!DOCTYPE html>
-<html lang="sl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MINDEX - Vzgojni Ukrepi in Dokumenti</title>
+<html lang="sl"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINDEX - Pregled Dokumentov in Ukrepov</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
-        /* --- RETRO WINDOWS STIL --- */
+        /* --- STIL (WINDOWS RETRO) --- */
         :root {
             --win-gray: #d4d0c8;
             --win-dark: #808080;
             --win-light: #ffffff;
             --win-text: #000000;
             --win-blue: #0a246a;
-            --input-bg: #ffffff;
         }
 
         body {
             font-family: 'Tahoma', 'Segoe UI', sans-serif;
             background-color: var(--win-gray);
-            margin: 0; padding: 0;
-            height: 100vh; overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
             user-select: none;
-            color: var(--win-text);
         }
 
+        /* Utility */
         .hidden { display: none !important; }
         .bold { font-weight: bold; }
-
+        
         /* Gumbi */
         .win-btn {
             background: var(--win-gray);
@@ -41,455 +38,953 @@
             padding: 4px 12px;
             cursor: pointer;
             font-family: inherit;
-            font-size: 13px;
-            font-weight: bold;
-            min-width: 80px;
-            text-align: center;
+            min-width: 70px;
         }
         .win-btn:active {
             border-color: var(--win-dark) var(--win-light) var(--win-light) var(--win-dark);
+            transform: translate(1px, 1px);
         }
 
-        /* Glavno okno in Header */
-        .top-header {
-            background: #999; height: 35px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px;
-            font-weight: bold; font-size: 18px; border-bottom: 2px solid #555; font-family: Arial, sans-serif;
-        }
-        .close-x { font-weight: bold; font-size: 22px; cursor: pointer; }
-
-        /* Vsebnik in razdelitev */
-        .main-container { padding: 10px; height: calc(100vh - 45px); display: flex; gap: 15px; box-sizing: border-box; }
+        /* Layout */
+        .layout-container { display: flex; width: 100%; height: 100%; }
         
-        .panel {
+        /* STRANSKI MENI */
+        .sidebar {
+            width: 180px;
+            background: white;
+            border-right: 2px solid black;
+            display: flex;
+            flex-direction: column;
+            padding-top: 20px;
+            align-items: center; 
+        }
+
+        .sidebar-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            margin-bottom: 10px;
+            width: 150px; 
+            height: auto; 
+            display: block;
+        }
+        
+        .sidebar-btn img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border: 1px solid #ccc;
+        }
+        .sidebar-btn img:active { transform: translate(1px, 1px); }
+
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; }
+
+        /* Header */
+        .top-header {
+            height: 80px;
+            background: #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #999;
+        }
+        .app-title { font-size: 48px; font-family: 'Arial', sans-serif; letter-spacing: 2px; }
+        .time-info, .session-info { font-weight: bold; font-size: 14px; }
+
+        .content-body { padding: 20px; overflow-y: auto; background: white; height: 100%; }
+
+        /* Login page elements */
+        #login-page { display: flex; width: 100%; height: 100%; background: white; }
+        .login-box {
+            background: #c0c0c0; padding: 20px; width: 350px;
+            margin-top: 20px; border: 2px solid #808080;
+        }
+        .login-input { width: 90%; padding: 5px; margin-bottom: 10px; border: 2px inset #808080; }
+        .last-login-box {
+            background: #dcdcdc; padding: 10px; margin-top: 20px; width: 350px;
+            border: 1px solid #999; display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* Info bar */
+        .info-bar {
+            background: #e0e0e0; padding: 10px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #ccc; font-size: 18px; font-weight: bold;
+        }
+        .logout-icon-btn { cursor: pointer; height: 50px; width: auto; vertical-align: middle; margin-left: 10px; }
+        .logout-icon-btn:hover { opacity: 0.8; }
+
+        /* Split Workspace Grid */
+        .workspace-grid {
+            display: flex;
+            gap: 20px;
+            height: calc(100% - 40px);
+            margin-top: 10px;
+        }
+        .workspace-left {
+            width: 260px;
+            border-right: 2px inset var(--win-dark);
+            padding-right: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        .workspace-right {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-left: 5px;
+        }
+
+        /* Seznami */
+        .admin-list { list-style: none; padding: 0; border: 2px inset white; background: white; max-height: 250px; overflow-y: auto; margin-bottom: 10px; }
+        .admin-list li { padding: 6px; border-bottom: 1px dotted #ccc; display: flex; justify-content: space-between; align-items: center; }
+        .admin-list li:hover { background: #e0e0ff; }
+        
+        /* Gradebook/Certificates Table Retro Style */
+        .gradebook-table { width: 100%; border-collapse: collapse; margin-top: 15px; border: 2px solid black; }
+        .gradebook-table th { border: 1px solid black; padding: 6px; text-align: center; background: #eee; font-weight: bold; }
+        .gradebook-table td { border: 1px solid black; padding: 6px; text-align: center; }
+
+        /* Vzgojni ukrepi */
+        .measure-item {
+            font-size: 15px;
+            padding: 4px 8px;
+            margin: 3px 0;
+            width: fit-content;
+            border: 1px dotted transparent;
+            user-select: none;
+        }
+        .measure-item:hover {
+            border: 1px dotted #555;
+            background-color: #f0f0f0;
+        }
+
+        /* --- UNIVERZALNI MODALNI SISTEM --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex; justify-content: center; align-items: center; z-index: 2000;
+        }
+        .win-window {
             background: var(--win-gray);
             border: 2px solid;
             border-color: var(--win-light) var(--win-dark) var(--win-dark) var(--win-light);
-            padding: 10px;
+            padding: 3px;
+            width: 480px;
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.5);
             display: flex; flex-direction: column;
         }
-        .left-panel { width: 300px; gap: 15px; }
-        .right-panel { flex-grow: 1; overflow-y: auto; background: white; border: 2px inset white; padding: 15px; }
-
-        /* Obrazci, vnosi in tabele */
-        .win-group {
-            border: 2px solid; border-color: var(--win-dark) var(--win-light) var(--win-light) var(--win-dark);
-            padding: 10px; position: relative; margin-top: 5px;
+        .win-header {
+            background: var(--win-blue); color: white; padding: 4px 6px;
+            font-weight: bold; font-size: 14px;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .win-legend { position: absolute; top: -10px; left: 10px; background: var(--win-gray); padding: 0 5px; font-weight: bold; font-size: 12px; }
-        
-        label { display: block; margin-top: 8px; font-size: 12px; font-weight: bold; }
-        select, input, textarea {
-            width: 100%; padding: 4px; border: 2px inset white; background: white;
-            font-family: inherit; font-size: 13px; box-sizing: border-box;
+        .win-close {
+            background: var(--win-gray); color: black; border: 1px outset white;
+            font-size: 12px; line-height: 12px; padding: 2px 4px; cursor: pointer;
         }
-        textarea { resize: none; height: 80px; }
-
-        .retro-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; text-align: left; }
-        .retro-table th, .retro-table td { border: 1px solid #808080; padding: 6px; }
-        .retro-table th { background: #d0d0d0; font-weight: bold; }
-        .retro-table tr:nth-child(even) { background: #f5f5f5; }
-
-        /* Modali */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .win-window { background: var(--win-gray); border: 2px solid white; border-right-color: #404040; border-bottom-color: #404040; padding: 3px; width: 450px; box-shadow: 4px 4px 10px rgba(0,0,0,0.5); }
-        .win-header { background: var(--win-blue); color: white; padding: 3px 6px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-        .win-body { padding: 15px; }
-        .win-footer { padding: 10px; text-align: right; border-top: 1px solid #808080; display: flex; justify-content: flex-end; gap: 8px; }
-
-        #page-loader, #page-login { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: white; position: absolute; top:0; left:0; width:100%; z-index: 10000; }
-        .login-frame { background: #c0c0c0; border: 2px solid #808080; padding: 20px; width: 300px; text-align: center; }
+        .win-close:active { border-style: inset; }
+        .win-body { padding: 15px; font-size: 14px; }
+        .win-body label { display: block; margin-top: 10px; margin-bottom: 2px; font-weight: bold; }
+        .win-body input, .win-body select, .win-body textarea { width: 95%; padding: 3px; border: 2px inset #fff; font-family: inherit; }
+        .win-footer { padding: 10px; text-align: right; border-top: 1px solid #999; display: flex; justify-content: flex-end; gap: 10px; }
+        .mini-btn { font-size: 11px; padding: 2px 5px; margin-left: 3px; }
     </style>
 </head>
 <body>
 
-    <div id="page-loader">
-        <h2>Povezovanje z Firebase bazo podatkov...</h2>
-    </div>
+    <div id="login-page">
+        <div class="sidebar">
+            <button class="sidebar-btn"><img src="redovalnica_sivo.png"></button>
+            <button class="sidebar-btn"><img src="profil_sivo.png"></button>
+            <button class="sidebar-btn"><img src="podatki_sivo.png"></button>
+            <button class="sidebar-btn"><img src="odjava_sivo.png"></button>
+            <button class="sidebar-btn"><img src="domov_sivo.png"></button>
+        </div>
+        <div class="main-content">
+            <div class="top-header">
+                <div></div> <div class="app-title">MINDEX</div> <div></div>
+            </div>
+            <div class="content-body">
+                <h2>Splošni pregled dokumentov & Ukrepi:</h2>
+                <div style="background: #dcdcdc; padding: 10px; margin-bottom: 20px; width: 350px; border: 1px solid gray;">
+                    Modul: <span class="bold">Dokumenti, Sklepi in Potrdila</span><br>
+                    Licenca: <span class="bold">Veljavna (SI-882190)</span>
+                </div>
 
-    <div id="page-login" class="hidden">
-        <h1 style="font-family: Arial; letter-spacing: 2px;">MINDEX - Ukrepi & Dokumenti</h1>
-        <div class="login-frame">
-            <p>Prijava za učitelje / admina:</p>
-            <input type="text" id="login-u" style="margin-bottom:10px;" placeholder="Uporabniško ime"><br>
-            <input type="password" id="login-p" style="margin-bottom:10px;" placeholder="Geslo"><br>
-            <button class="win-btn" onclick="tryLogin()">POTRDI</button>
+                <h2>Prijava v sistem za učitelje:</h2>
+                <div class="login-box">
+                    <input type="text" id="login-username" class="login-input" placeholder="Uporabniško ime"><br>
+                    <input type="password" id="login-password" class="login-input" placeholder="Geslo"><br>
+                    <div style="text-align: center; margin-top: 10px;">
+                        <button class="win-btn bold" onclick="handleLogin()">POTRDI PRIJAVO</button>
+                    </div>
+                </div>
+
+                <h2>Zadnja prijava kot:</h2>
+                <div class="last-login-box">
+                    <div style="font-size: 13px;">
+                        Uporabnik: <span id="last-login-user" class="bold"></span><br>
+                        Datum: <span id="last-login-time" class="bold"></span>
+                    </div>
+                    <button class="win-btn bold" onclick="fillLastLogin()">Uporabi</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="page-app" class="hidden">
-        <div class="top-header">
-            <div>MINDEX - Modul za Vzgojne Ukrepe in Dokumentacijo</div>
-            <div class="close-x" onclick="logout()">X</div>
+    <div id="dashboard-page" class="layout-container hidden">
+        <div class="sidebar">
+            <button class="sidebar-btn" onclick="showPage('dokumenti')"><img src="podatki_barve.png"></button>
+            <button class="sidebar-btn" onclick="handleLogout()"><img src="odjava_sivo.png" onmouseover="this.src='odjava_barve.png'" onmouseout="this.src='odjava_sivo.png'"></button>
+            <button class="sidebar-btn" onclick="showPage('home')"><img src="domov_sivo.png" onmouseover="this.src='domov_barve.png'" onmouseout="this.src='domov_sivo.png'"></button>
         </div>
 
-        <div class="main-container">
-            <div class="panel left-panel">
-                <div class="win-group">
-                    <span class="win-legend">Filter izbire</span>
-                    
-                    <label>Razred:</label>
-                    <select id="select-razred" onchange="onClassChanged()">
-                        <option value="">-- Izberi razred --</option>
-                    </select>
-
-                    <label>Učenec / Dijak:</label>
-                    <select id="select-ucenec" onchange="onStudentChanged()">
-                        <option value="">-- Najprej izberi razred --</option>
-                    </select>
+        <div class="main-content">
+            <div class="top-header">
+                <div class="session-info">
+                    Seja poteče čez:<br>
+                    <span id="session-timer" class="bold"></span>
                 </div>
-
-                <div class="win-group">
-                    <span class="win-legend">Urejanje</span>
-                    <button class="win-btn" id="btn-nov-ukrep" style="width: 100%; margin-top: 5px;" onclick="openNewUkrepModal()" disabled>DODAJ VZGOJNI UKREP</button>
+                <div class="app-title">MINDEX</div>
+                <div class="time-info">
+                    Ura je:<br>
+                    <span id="clock" class="bold"></span>
                 </div>
+            </div>
+
+            <div class="info-bar">
+                <div>
+                    Pozdravljeni, <br>
+                    <span id="teacher-name-display" style="text-transform: uppercase;"></span> (PREGLED DOKUMENTOV)
+                </div>
+                <img src="odjava_ikona_barvno.png" class="logout-icon-btn" onclick="handleLogout()" alt="Odjava">
+            </div>
+
+            <div id="content-area" class="content-body">
                 
-                <div style="margin-top: auto; font-size: 11px; color: #555; text-align: center;">
-                    Povezano z: <br><span style="word-break: break-all;">mindex-b92ed-default-rtdb</span>
+                <div id="view-home" class="view-section hidden">
+                    <div style="text-align: center; margin-top: 50px; font-size: 16px; font-weight: bold;">
+                        <img src="podatki_barve.png" style="height: 60px; margin: 10px;"><br>
+                        DOKUMENTACIJSKI SISTEM MINDEX<br><br>
+                        <button class="win-btn" onclick="showPage('dokumenti')" style="padding: 10px; font-weight: bold;">ODPRI PREGLED RAZREDOV</button>
+                    </div>
                 </div>
-            </div>
 
-            <div class="right-panel" id="viewer-content">
-                <div style="text-align: center; color: #808080; margin-top: 100px;">
-                    <h3>Izberite razred in učenca na levi strani za pregled dokumentov in ukrepov.</h3>
+                <div id="view-dokumenti" class="view-section">
+                    <div class="workspace-grid">
+                        
+                        <div class="workspace-left">
+                            <label style="font-weight: bold; margin-bottom: 5px;">Izberi razred:</label>
+                            <select id="sel-class" onchange="handleClassChange()" style="padding: 4px; width: 100%;">
+                                <option value="">Izberi razred</option>
+                            </select>
+                            
+                            <label style="font-weight: bold; margin-top: 15px; margin-bottom: 5px;">Seznam učencev:</label>
+                            <div id="student-list-container" style="flex-grow: 1; overflow-y: auto;">
+                                <p style="color: #666; font-style: italic; font-size: 12px;">Izberite razred za prikaz učencev.</p>
+                            </div>
+                        </div>
+
+                        <div class="workspace-right">
+                            <div id="student-profile-area" class="hidden" style="border: 2px solid #808080; padding: 15px; background: #fafafa;">
+                                
+                                <div style="background: #e0e0ff; padding: 10px; border: 1px solid #999; margin-bottom: 15px;">
+                                    <h3 style="margin: 0 0 5px 0;">Osnovni podatki o učencu</h3>
+                                    <table style="width: 100%; font-size: 14px;">
+                                        <tr>
+                                            <td width="30%">Ime in priimek:</td>
+                                            <td><span id="lbl-student-name" class="bold" style="font-size: 16px; color: #0a246a;"></span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Razred:</td>
+                                            <td><span id="lbl-student-class" class="bold"></span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Uporabniško ime:</td>
+                                            <td><span id="lbl-student-username" style="font-style: italic;"></span></td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <div style="border: 1px solid #999; background: #fff; padding: 10px; margin-bottom: 15px;">
+                                    <h4 style="margin: 0 0 5px 0; border-bottom: 1px dashed #999; padding-bottom: 3px;">Uradni vzgojni ukrepi (Klikni za izdajo sklepa):</h4>
+                                    <div id="measures-container">
+                                        </div>
+                                </div>
+
+                                <div style="border: 1px solid #999; background: #fff; padding: 10px; margin-bottom: 15px; display: flex; gap: 15px; align-items: center;">
+                                    <h4 style="margin: 0;">Splošna potrdila:</h4>
+                                    <button class="win-btn bold" onclick="issueReportCard('USPEH')" style="background: #e1ffe1;">OBVESTILO O USPEHU / POLLETJU (Konec leta)</button>
+                                    <button class="win-btn bold" onclick="issueReportCard('POLLETJE')" style="background: #ffffdf;">OBVESTILO OB POLLETJU</button>
+                                </div>
+
+                                <div style="border: 1px solid #999; background: #fff; padding: 10px;">
+                                    <h4 style="margin: 0 0 5px 0; border-bottom: 1px dashed #999; padding-bottom: 3px;">Vsa izdana uradna potrdila in sklepi za učenca:</h4>
+                                    <div id="certificates-list-container">
+                                        </div>
+                                </div>
+
+                            </div>
+
+                            <div id="student-no-selection" style="text-align: center; margin-top: 80px; color: #666;">
+                                <p style="font-size: 16px; font-style: italic;">Izberite učenca na levi strani za urejanje ukrepov in ogled dokumentacije.</p>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
+
             </div>
         </div>
     </div>
 
-    <div id="modal-wrapper" class="hidden modal-overlay">
-        <div class="win-window">
-            <div class="win-header">
-                <span>Vnos vzgojnega ukrepa</span>
-                <span style="cursor:pointer;" onclick="closeModal()">X</span>
-            </div>
-            <div class="win-body">
-                <label>Tip vzgojnega ukrepa:</label>
-                <select id="form-tip">
-                    <option value="OPOMIN RAZREDNIKA">Opomin razrednika</option>
-                    <option value="UKREP RAVNATELJA">Ukrep ravnatelja</option>
-                    <option value="VZGOJNI OPOMIN">Vzgojni opomin</option>
-                    <option value="POHVALA">Uradna pohvala šole</option>
-                </select>
+    <div id="modal-container"></div>
 
-                <label>Datum izdaje:</label>
-                <input type="text" id="form-datum">
+<script>
+/**
+ * MINDEX SERVIS - MODUL ZA PREGLED DOKUMENTOV IN UKREPOV
+ */
 
-                <label>Razlog in podrobna obrazložitev:</label>
-                <textarea id="form-razlog" placeholder="Navedite kršitev ali razlog za izdajo..."></textarea>
-            </div>
-            <div class="win-footer">
-                <button class="win-btn" onclick="saveUkrepData()">SHRANI v bazo</button>
-                <button class="win-btn" onclick="closeModal()">PREKLIČI</button>
+const FIREBASE_URL = 'https://mindex-b92ed-default-rtdb.europe-west1.firebasedatabase.app/.json';
+
+// Globalna baza podatkov (sinhronizirana s skupnim ekosistemom)
+let db = {
+    users: [{ id: 1, name: 'Administrator', username: 'ADMIN', password: 'ADMIN', role: 'admin', sessionTimeout: 30 }],
+    classes: [], 
+    subjects: [], 
+    grades: [], 
+    warnings: [], 
+    documents: [],       // Shranjevanje uradnih dokumentov
+    issuedMeasures: [],  // Shranjevanje aktivnih ukrepov za učence
+    lastLogin: { user: '', time: '' }
+};
+
+let currentState = {
+    user: null,
+    selectedClassId: null,
+    selectedStudentId: null,
+    sessionInterval: null,
+    sessionTime: 0 
+};
+
+// Seznam zakonskih vzgojnih ukrepov v RS
+const VALID_MEASURES = [
+    "OPOMIN",
+    "1. UKOR",
+    "2. UKOR",
+    "UKOR PRED IZKLJUČITVIJO",
+    "IZKLJUČITEV"
+];
+
+// --- POMOŽNA FUNKCIJA ZA ČIŠČENJE ŠUMNIKOV V PDF ---
+function cleanTextForPDF(str) {
+    if (!str) return "";
+    return str
+        .replace(/[čČ]/g, m => m === 'č' ? 'c' : 'C')
+        .replace(/[šŠ]/g, m => m === 'š' ? 's' : 'S')
+        .replace(/[žŽ]/g, m => m === 'ž' ? 'z' : 'Z');
+}
+
+// --- MODALNI SISTEM ---
+function closeModal() {
+    document.getElementById('modal-container').innerHTML = '';
+}
+
+function showModal(title, htmlContent, buttons = []) {
+    const container = document.getElementById('modal-container');
+    let btnsHtml = '';
+    if (buttons.length === 0) {
+        buttons = [{ label: 'V redu', onClick: closeModal }];
+    }
+    buttons.forEach((btn, index) => {
+        btnsHtml += `<button class="win-btn" id="modal-btn-${index}">${btn.label}</button>`;
+    });
+
+    container.innerHTML = `
+        <div class="modal-overlay">
+            <div class="win-window">
+                <div class="win-header">
+                    <span>${title}</span>
+                    <span class="win-close" id="modal-x-close">X</span>
+                </div>
+                <div class="win-body">${htmlContent}</div>
+                <div class="win-footer">${btnsHtml}</div>
             </div>
         </div>
-    </div>
+    `;
 
-    <script>
-        // --- FIREBASE KONFIGURACIJA ---
-        const firebaseConfig = {
-            databaseURL: "https://mindex-b92ed-default-rtdb.europe-west1.firebasedatabase.app/"
+    document.getElementById('modal-x-close').onclick = closeModal;
+    buttons.forEach((btn, index) => {
+        document.getElementById(`modal-btn-${index}`).onclick = function() {
+            if (btn.onClick) btn.onClick();
+            if (btn.shouldClose !== false) closeModal();
         };
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+    });
+}
 
-        // --- GLOBALNI PODATKI ---
-        let mainDb = { users: [], classes: [], ukrepi: [] };
-        let currentUser = null;
-        let selectedClassId = null;
-        let selectedStudentId = null;
+function customAlert(message) {
+    showModal("Obvestilo", `<p>${message}</p>`, [{label: 'V redu', onClick: closeModal}]);
+}
 
-        // --- ZAGON IN PREVZEM PODATKOV ---
-        function init() {
-            database.ref('mindex_db').on('value', (snapshot) => {
-                document.getElementById('page-loader').classList.add('hidden');
-                if (snapshot.exists()) {
-                    const rawData = snapshot.val();
-                    mainDb.users = rawData.users || [];
-                    mainDb.classes = rawData.classes || [];
-                    mainDb.ukrepi = rawData.ukrepi || [];
-                    
-                    // Če smo že prijavljeni, osvežimo sezname
-                    if (currentUser) {
-                        renderClasses();
-                    } else {
-                        document.getElementById('page-login').classList.remove('hidden');
-                    }
-                } else {
-                    alert("Podatki mindex_db v bazi ne obstajajo. Preverite ostala modula.");
+function customConfirm(message, onConfirm) {
+    showModal("Potrditev", `<p>${message}</p>`, [
+        { label: 'Potrdi', onClick: onConfirm },
+        { label: 'Prekliči', onClick: closeModal }
+    ]);
+}
+
+// --- INITIALIZATION ---
+async function init() {
+    await loadDB();
+    
+    updateClock();
+    setInterval(updateClock, 1000);
+    
+    if(db.lastLogin && db.lastLogin.user) {
+        document.getElementById('last-login-user').innerText = db.lastLogin.user;
+        document.getElementById('last-login-time').innerText = db.lastLogin.time;
+    }
+}
+
+async function loadDB() {
+    try {
+        const response = await fetch(FIREBASE_URL);
+        const data = await response.json();
+        if (data) {
+            db = data;
+        }
+    } catch (error) {
+        console.error("Napaka pri nalaganju iz baze podatkov:", error);
+    }
+
+    // Zagotovimo obstoj tabel v bazi
+    if (!db.users || db.users.length === 0) db.users = [{ id: 1, name: 'Administrator', username: 'ADMIN', password: 'ADMIN', role: 'admin', sessionTimeout: 30 }];
+    if (!db.classes) db.classes = [];
+    if (!db.subjects) db.subjects = [];
+    if (!db.grades) db.grades = [];
+    if (!db.warnings) db.warnings = [];
+    if (!db.documents) db.documents = [];
+    if (!db.issuedMeasures) db.issuedMeasures = [];
+}
+
+async function saveDB() {
+    try {
+        await fetch(FIREBASE_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(db)
+        });
+    } catch (error) {
+        console.error("Napaka pri shranjevanju v bazo podatkov:", error);
+    }
+}
+
+// --- CLOCK & SESSION ---
+function updateClock() {
+    const now = new Date();
+    const clockEl = document.getElementById('clock');
+    if (clockEl) clockEl.innerText = now.toLocaleTimeString('sl-SI');
+}
+
+function startSessionTimer() {
+    const minutes = currentState.user.sessionTimeout || 15;
+    currentState.sessionTime = minutes * 60;
+    
+    if (currentState.sessionInterval) clearInterval(currentState.sessionInterval);
+    
+    currentState.sessionInterval = setInterval(() => {
+        currentState.sessionTime--;
+        if (currentState.sessionTime <= 0) {
+            handleLogout();
+            customAlert("Seja je potekla, potrebna je ponovna prijava.");
+        } else {
+            const h = Math.floor(currentState.sessionTime / 3600);
+            const m = Math.floor((currentState.sessionTime % 3600) / 60);
+            const s = currentState.sessionTime % 60;
+            document.getElementById('session-timer').innerText = 
+                `${h.toString().padStart(2,'0')} : ${m.toString().padStart(2,'0')} : ${s.toString().padStart(2,'0')}`;
+        }
+    }, 1000);
+}
+
+// --- LOGIN / LOGOUT ---
+async function handleLogin() {
+    const u = document.getElementById('login-username').value;
+    const p = document.getElementById('login-password').value;
+    
+    // Osvežimo bazo pred prijavo za najnovejše podatke
+    await loadDB();
+    
+    const user = db.users.find(x => x.username === u && x.password === p);
+    
+    if (user) {
+        currentState.user = user;
+        db.lastLogin = { user: u, time: new Date().toLocaleString('sl-SI') };
+        await saveDB();
+        
+        document.getElementById('login-page').classList.add('hidden');
+        document.getElementById('dashboard-page').classList.remove('hidden');
+        document.getElementById('teacher-name-display').innerText = user.name;
+        
+        startSessionTimer();
+        loadClassesToDropdown();
+        showPage('dokumenti');
+    } else {
+        customAlert("Napačno uporabniško ime ali geslo!");
+    }
+}
+
+function handleLogout() {
+    currentState.user = null;
+    currentState.selectedClassId = null;
+    currentState.selectedStudentId = null;
+    clearInterval(currentState.sessionInterval);
+    
+    document.getElementById('dashboard-page').classList.add('hidden');
+    document.getElementById('login-page').classList.remove('hidden');
+    document.getElementById('student-profile-area').classList.add('hidden');
+    document.getElementById('student-no-selection').classList.remove('hidden');
+    document.getElementById('last-login-user').innerText = db.lastLogin.user;
+    document.getElementById('last-login-time').innerText = db.lastLogin.time;
+    document.getElementById('login-username').value = "";
+    document.getElementById('login-password').value = "";
+}
+
+function fillLastLogin() {
+    if(db.lastLogin.user) document.getElementById('login-username').value = db.lastLogin.user;
+}
+
+function showPage(pageId) {
+    document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+    if (pageId === 'home') document.getElementById('view-home').classList.remove('hidden');
+    if (pageId === 'dokumenti') document.getElementById('view-dokumenti').classList.remove('hidden');
+}
+
+// --- KREIRANJE DROPDOWNA ZA RAZREDE ---
+function loadClassesToDropdown() {
+    const cSel = document.getElementById('sel-class');
+    cSel.innerHTML = '<option value="">Izberi razred</option>' + db.classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+// Spodbujeno ob spremembi izbire razreda
+function handleClassChange() {
+    const classId = parseInt(document.getElementById('sel-class').value);
+    const container = document.getElementById('student-list-container');
+    
+    document.getElementById('student-profile-area').classList.add('hidden');
+    document.getElementById('student-no-selection').classList.remove('hidden');
+    currentState.selectedStudentId = null;
+    currentState.selectedClassId = null;
+
+    if (!classId) {
+        container.innerHTML = '<p style="color: #666; font-style: italic; font-size: 12px;">Izberite razred za prikaz učencev.</p>';
+        return;
+    }
+
+    currentState.selectedClassId = classId;
+    const cls = db.classes.find(c => c.id === classId);
+    
+    if (!cls || !cls.students || cls.students.length === 0) {
+        container.innerHTML = '<p style="color: #666; font-style: italic; font-size: 12px;">V tem razredu ni vpisanih učencev.</p>';
+        return;
+    }
+
+    let html = '<ul class="admin-list" style="max-height: calc(100vh - 350px);">';
+    cls.students.forEach(st => {
+        html += `<li onclick="loadStudentProfile(${st.id})" style="cursor: pointer; font-weight: bold; padding: 6px 8px;">${st.name}</li>`;
+    });
+    html += '</ul>';
+    container.innerHTML = html;
+}
+
+// --- NALAGANJE PROFILA POSAMEZNEGA UČENCA ---
+function loadStudentProfile(studentId) {
+    currentState.selectedStudentId = studentId;
+    const cls = db.classes.find(c => c.id === currentState.selectedClassId);
+    const student = cls.students.find(s => s.id === studentId);
+
+    document.getElementById('student-no-selection').classList.add('hidden');
+    document.getElementById('student-profile-area').classList.remove('hidden');
+
+    // Polnjenje osnovnih podatkov
+    document.getElementById('lbl-student-name').innerText = student.name;
+    document.getElementById('lbl-student-class').innerText = cls.name;
+    document.getElementById('lbl-student-username').innerText = student.username;
+
+    renderStudentMeasures(studentId);
+    renderStudentCertificates(studentId);
+}
+
+// --- PRIKAZ IN OBARVANJE VZGOJNIH UKREPOV ---
+function renderStudentMeasures(studentId) {
+    const container = document.getElementById('measures-container');
+    container.innerHTML = '';
+
+    VALID_MEASURES.forEach(measure => {
+        // Preverimo, če je ta ukrep za tega učenca že izdan v bazi
+        const isIssued = db.issuedMeasures.some(m => m.studentId === studentId && m.measureType === measure);
+        
+        const el = document.createElement('div');
+        el.className = 'measure-item';
+        el.innerText = measure;
+        
+        if (isIssued) {
+            // Izdan ukrep: Krepko rdeč text
+            el.style.color = 'red';
+            el.style.fontWeight = 'bold';
+        } else {
+            // Neizdan ukrep: Navaden zelen text
+            el.style.color = 'green';
+            el.style.fontWeight = 'normal';
+        }
+
+        // Klik sproži izdajo sklepa
+        el.onclick = () => openMeasureIssuanceModal(measure, studentId);
+        container.appendChild(el);
+    });
+}
+
+// --- MODAL ZA VNOS OBRAZLOŽITVE UKREPA ---
+function openMeasureIssuanceModal(measure, studentId) {
+    const cls = db.classes.find(c => c.id === currentState.selectedClassId);
+    const student = cls.students.find(s => s.id === studentId);
+
+    const isAlreadyIssued = db.issuedMeasures.some(m => m.studentId === studentId && m.measureType === measure);
+    let warningMsg = isAlreadyIssued ? '<p style="color:red; font-weight:bold;">Pozor: Ta ukrep je bil za tega učenca že predhodno izdan! Ponovna izdaja bo ustvarila nov dokument.</p>' : '';
+
+    const html = `
+        ${warningMsg}
+        <p>Izdajate uradni sklep za ukrep: <span class="bold" style="color:blue;">${measure}</span> za učenca <span class="bold">${student.name}</span>.</p>
+        <label>Uradna obrazložitev sklepa (razlogi za izrek ukrepa):</label>
+        <textarea id="txt-measure-reason" style="height: 120px;" placeholder="Vpišite natančen pravni in dejanski razlog za izrek vzgojnega ukrepa..."></textarea>
+    `;
+
+    showModal("Izdaja vzgojnega ukrepa", html, [
+        {
+            label: "Potrdi in zgeneriraj Sklep",
+            onClick: async () => {
+                const reasonText = document.getElementById('txt-measure-reason').value.trim();
+                if (!reasonText) {
+                    customAlert("Za izdajo uradnega sklepa morate obvezno vnesti obrazložitev!");
+                    return;
                 }
-            }, (error) => {
-                alert("Napaka pri povezavi: " + error.message);
-            });
-        }
 
-        // --- PRIJAVA (Usklajena z EWI šifrantom) ---
-        function tryLogin() {
-            const u = document.getElementById('login-u').value.trim();
-            const p = document.getElementById('login-p').value.trim();
-            
-            // Poišči učitelja ali admina
-            const found = mainDb.users.find(user => user.username === u && user.password === p && (user.role === 'teacher' || user.role === 'admin'));
-            
-            if (found) {
-                currentUser = found;
-                document.getElementById('page-login').classList.add('hidden');
-                document.getElementById('page-app').classList.remove('hidden');
-                renderClasses();
-            } else {
-                alert("Napačni prijavni podatki ali nimate pravic (učitelj/admin)!");
-            }
-        }
+                // Shranimo v stanje ukrepov, če še ne obstaja
+                if (!isAlreadyIssued) {
+                    db.issuedMeasures.push({
+                        studentId: studentId,
+                        measureType: measure,
+                        timestamp: new Date().toLocaleString('sl-SI')
+                    });
+                }
 
-        function logout() {
-            currentUser = null;
-            selectedClassId = null;
-            selectedStudentId = null;
-            document.getElementById('page-app').classList.add('hidden');
-            document.getElementById('page-login').classList.remove('hidden');
-        }
-
-        // --- IZRIS FILTROV (Neposredno iz sinhronizirane baze) ---
-        function renderClasses() {
-            const select = document.getElementById('select-razred');
-            select.innerHTML = '<option value="">-- Izberi razred --</option>';
-            
-            mainDb.classes.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.innerText = c.name;
-                select.appendChild(opt);
-            });
-        }
-
-        function onClassChanged() {
-            selectedClassId = document.getElementById('select-razred').value;
-            const selectStu = document.getElementById('select-ucenec');
-            document.getElementById('btn-nov-ukrep').disabled = true;
-            
-            if (!selectedClassId) {
-                selectStu.innerHTML = '<option value="">-- Najprej izberi razred --</option>';
-                return;
-            }
-
-            selectStu.innerHTML = '<option value="">-- Izberi učenca --</option>';
-            const targetClass = mainDb.classes.find(c => c.id == selectedClassId);
-            
-            if (targetClass && targetClass.students) {
-                targetClass.students.forEach(s => {
-                    const opt = document.createElement('option');
-                    opt.value = s.id;
-                    opt.innerText = s.name.toUpperCase(); // Retro uppercase prikaz
-                    selectStu.appendChild(opt);
-                });
-            }
-            clearViewer();
-        }
-
-        function onStudentChanged() {
-            selectedStudentId = document.getElementById('select-ucenec').value;
-            if (selectedStudentId) {
-                document.getElementById('btn-nov-ukrep').disabled = false;
-                renderStudentProfile();
-            } else {
-                document.getElementById('btn-nov-ukrep').disabled = true;
-                clearViewer();
-            }
-        }
-
-        function clearViewer() {
-            document.getElementById('viewer-content').innerHTML = `
-                <div style="text-align: center; color: #808080; margin-top: 100px;">
-                    <h3>Izberite razred in učenca na levi strani za pregled dokumentov in ukrepov.</h3>
-                </div>`;
-        }
-
-        // --- IZRIS DOKUMENTOV IN UKREPOV ---
-        function renderStudentProfile() {
-            const classObj = mainDb.classes.find(c => c.id == selectedClassId);
-            const studentObj = classObj.students.find(s => s.id == selectedStudentId);
-            
-            // Filtriraj ukrepe za izbranega študenta iz skupne baze
-            const studentUkrepi = mainDb.ukrepi.filter(u => u.studentId == selectedStudentId);
-
-            let html = `
-                <div style="border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 15px;">
-                    <h2 style="margin:0; text-transform: uppercase;">Učenec: ${studentObj.name}</h2>
-                    <p style="margin:5px 0 0 0; font-weight:bold; color:#555;">Razred: ${classObj.name} | Status: Aktiven dijak</p>
-                </div>
-                
-                <h3>Uradno zabeleženi vzgojni ukrepi in dokumenti</h3>
-            `;
-
-            if (studentUkrepi.length === 0) {
-                html += `<p style="font-style:italic; color: green;">Učenec nima izrečenih vzgojnih ukrepov.</p>`;
-            } else {
-                html += `
-                    <table class="retro-table">
-                        <thead>
-                            <tr>
-                                <th>Datum</th>
-                                <th>Tip dokumenta</th>
-                                <th>Obrazložitev / Opis</th>
-                                <th>Izdajatelj</th>
-                                <th style="width:100px; text-align:center;">Dejanje</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-                
-                studentUkrepi.forEach((u, index) => {
-                    html += `
-                        <tr>
-                            <td class="bold">${u.date}</td>
-                            <td class="bold" style="color: #0a246a;">${u.type}</td>
-                            <td>${u.reason}</td>
-                            <td style="text-transform: uppercase;">${u.authorName}</td>
-                            <td style="text-align:center;">
-                                <button class="win-btn" onclick="generateUkrepPDF(${u.id})">PDF</button>
-                            </td>
-                        </tr>
-                    `;
+                // Generiramo ID in shranimo metapodatke dokumenta
+                const docId = Date.now();
+                db.documents.push({
+                    id: docId,
+                    studentId: studentId,
+                    type: 'UKREP',
+                    title: `Sklep o izreku ukrepa: ${measure}`,
+                    date: new Date().toLocaleDateString('sl-SI'),
+                    details: {
+                        measureName: measure,
+                        reason: reasonText,
+                        issuer: currentState.user.name
+                    }
                 });
 
-                html += `</tbody></table>`;
+                await saveDB();
+                loadStudentProfile(studentId); // Osvežimo profil, da se obarva rdeče in posodobi seznam
+                closeModal();
+
+                // Takoj odpremo zgeneriran PDF v novem zavihku
+                viewPDFDocument(docId);
+            },
+            shouldClose: false
+        },
+        { label: "Prekliči", onClick: closeModal }
+    ]);
+}
+
+// --- GENERIRANJE OBVESTILA O USPEHU IN POLLETJU ---
+async function issueReportCard(type) {
+    const studentId = currentState.selectedStudentId;
+    if (!studentId) return;
+
+    const titleStr = type === 'USPEH' ? "Obvestilo o uspehu (Konec leta)" : "Obvestilo o uspehu ob polletju";
+    const docId = Date.now();
+
+    db.documents.push({
+        id: docId,
+        studentId: studentId,
+        type: type,
+        title: titleStr,
+        date: new Date().toLocaleDateString('sl-SI'),
+        details: {
+            issuer: currentState.user.name
+        }
+    });
+
+    await saveDB();
+    renderStudentCertificates(studentId);
+    viewPDFDocument(docId);
+}
+
+// --- PRIKAZ TABELE IZDANIH POTRDIL ---
+function renderStudentCertificates(studentId) {
+    const container = document.getElementById('certificates-list-container');
+    container.innerHTML = '';
+
+    const certs = db.documents.filter(d => d.studentId === studentId);
+
+    if (certs.length === 0) {
+        container.innerHTML = '<p style="color: #666; font-style: italic; font-size: 13px; margin-top: 10px;">Za tega učenca še ni bil zgeneriran noben uradni dokument.</p>';
+        return;
+    }
+
+    let html = `
+        <table class="gradebook-table">
+            <thead>
+                <tr>
+                    <th width="55%">Naziv uradnega dokumenta</th>
+                    <th width="20%">Datum izdaje</th>
+                    <th width="25%">Upravljanje</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    certs.forEach(c => {
+        html += `
+            <tr>
+                <td style="text-align: left; padding-left: 10px;" class="bold">${c.title}</td>
+                <td>${c.date}</td>
+                <td>
+                    <button class="win-btn mini-btn" onclick="viewPDFDocument(${c.id})" style="font-weight:bold;">Prikaži PDF</button>
+                    <button class="win-btn mini-btn" onclick="deleteDocument(${c.id})" style="background:#ffcccc;">Briši</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+// --- BRISANJE DOKUMENTA ---
+function deleteDocument(docId) {
+    customConfirm("Ali res želite trajno izbrusiti ta dokument iz evidence?", async () => {
+        const docToDelete = db.documents.find(d => d.id === docId);
+        if (docToDelete && docToDelete.type === 'UKREP') {
+            // Če brišemo ukrep, preverimo ali moramo odstraniti tudi rdeče obarvano stanje
+            const measureName = docToDelete.details.measureName;
+            const studentId = docToDelete.studentId;
+            
+            // Če ni več nobenega drugega dokumenta za ta isti ukrep, ponastavimo stanje na zeleno
+            const remainingSameMeasures = db.documents.filter(d => d.id !== docId && d.studentId === studentId && d.type === 'UKREP' && d.details.measureName === measureName);
+            if (remainingSameMeasures.length === 0) {
+                db.issuedMeasures = db.issuedMeasures.filter(m => !(m.studentId === studentId && m.measureType === measureName));
+            }
+        }
+
+        db.documents = db.documents.filter(d => d.id !== docId);
+        await saveDB();
+        loadStudentProfile(currentState.selectedStudentId);
+        closeModal();
+    });
+}
+
+// --- URADNA GENERACIJA IN PRIKAZ PDF PREKO JSPD KNJIŽNICE ---
+function viewPDFDocument(docId) {
+    const documentObj = db.documents.find(d => d.id === docId);
+    if (!documentObj) {
+        customAlert("Napaka: Dokumenta ni mogoče najti!");
+        return;
+    }
+
+    const classObj = db.classes.find(c => c.id === currentState.selectedClassId);
+    const studentObj = classObj.students.find(s => s.id === documentObj.studentId);
+
+    // Inicializacija jsPDF
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    let yOffset = 25;
+
+    // Glava dokumenta (Očiščena države/ministrstva, ostaja le šola)
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text(cleanTextForPDF("SOLSKI CENTER MINDEX (E-DNEVNIK MODUL)"), 20, yOffset); yOffset += 20;
+
+    // --- GENERACIJA SKLEPA O UKREPU ---
+    if (documentObj.type === 'UKREP') {
+        doc.setFontSize(15);
+        doc.setFont("Helvetica", "bold");
+        doc.text(cleanTextForPDF("SKLEP O IZREKU VZGOJNEGA UKREPA"), 20, yOffset); yOffset += 12;
+
+        doc.setFontSize(11);
+        doc.setFont("Helvetica", "normal");
+        
+        let uvodnik = `Na podlagi določil Zakona o osnovni šoli ter veljavnega Pravilnika o šolskem redu, ravnatelj oziroma pooblaščeni razrednik šolskega centra Mindex, za učenca:`;
+        let splitUvod = doc.splitTextToSize(cleanTextForPDF(uvodnik), 170);
+        doc.text(splitUvod, 20, yOffset);
+        yOffset += (splitUvod.length * 6) + 8;
+
+        doc.setFont("Helvetica", "bold");
+        doc.text(cleanTextForPDF(`Ime in priimek: ${studentObj.name}`), 25, yOffset); yOffset += 6;
+        doc.text(cleanTextForPDF(`Razred: ${classObj.name}`), 25, yOffset); yOffset += 12;
+
+        doc.setFont("Helvetica", "normal");
+        doc.text(cleanTextForPDF("izreka naslednji uradni vzgojni oziroma disciplinski ukrep:"), 20, yOffset); yOffset += 10;
+
+        doc.setFont("Helvetica", "bold");
+        doc.setFontSize(14);
+        doc.setTextColor(200, 0, 0); // rdeča barva za ukrep v PDF-ju
+        doc.text(cleanTextForPDF(documentObj.details.measureName), 30, yOffset); yOffset += 12;
+        
+        doc.setTextColor(0, 0, 0); // nazaj na črno
+        doc.setFontSize(12);
+        doc.text(cleanTextForPDF("OBRAZLOZITEV"), 20, yOffset); yOffset += 8;
+
+        doc.setFont("Helvetica", "normal");
+        doc.setFontSize(10);
+        let splitReason = doc.splitTextToSize(cleanTextForPDF(documentObj.details.reason), 170);
+        doc.text(splitReason, 20, yOffset);
+        yOffset += (splitReason.length * 5) + 15;
+
+        doc.setFontSize(10);
+        doc.text(cleanTextForPDF("Pravni pouk: Zoper ta sklep je mogoča pritožba na svet šole v roku 8 dni od prejetja."), 20, yOffset);
+        yOffset += 20;
+    } 
+
+    // --- GENERACIJA OBVESTILA O USPEHU (KONEC LETA) ---
+    else if (documentObj.type === 'USPEH') {
+        doc.setFontSize(16);
+        doc.text(cleanTextForPDF("OBVESTILO O USPEHU"), 20, yOffset); yOffset += 12;
+
+        doc.setFontSize(11);
+        doc.setFont("Helvetica", "normal");
+        doc.text(cleanTextForPDF(`Ucenec/učenka: ${studentObj.name}`), 20, yOffset); yOffset += 6;
+        doc.text(cleanTextForPDF(`Razred: ${classObj.name}`), 20, yOffset); yOffset += 15;
+
+        // Tabela ocen
+        doc.setFont("Helvetica", "bold");
+        doc.text(cleanTextForPDF("Predmet"), 20, yOffset);
+        doc.text(cleanTextForPDF("Zakljucna ocena"), 120, yOffset);
+        yOffset += 4;
+        doc.line(20, yOffset, 190, yOffset);
+        yOffset += 8;
+
+        doc.setFont("Helvetica", "normal");
+        
+        let imaNeocenjenoAliNezadostno = false;
+
+        db.subjects.forEach(sub => {
+            // Iščemo končno oceno učenca pri tem predmetu
+            const končnaOcenaObj = db.grades.find(g => g.studentId === studentObj.id && g.subjectId === sub.id && g.isFinal === true);
+            let ocenaTekst = "NE OCENJEN";
+
+            if (končnaOcenaObj) {
+                const val = končnaOcenaObj.value.toString().trim().toUpperCase();
+                if (val === '1') { ocenaTekst = "nezadostno (1)"; imaNeocenjenoAliNezadostno = true; }
+                else if (val === '2') ocenaTekst = "zadostno (2)";
+                else if (val === '3') ocenaTekst = "dobro (3)";
+                else if (val === '4') ocenaTekst = "prav dobro (4)";
+                else if (val === '5') ocenaTekst = "odlicno (5)";
+                else if (val === 'N') { ocenaTekst = "NE OCENJEN"; imaNeocenjenoAliNezadostno = true; }
+                else { ocenaTekst = val; }
+            } else {
+                imaNeocenjenoAliNezadostno = true;
             }
 
-            document.getElementById('viewer-content').innerHTML = html;
+            doc.text(cleanTextForPDF(sub.name), 20, yOffset);
+            doc.text(cleanTextForPDF(ocenaTekst), 120, yOffset);
+            yOffset += 7;
+
+            if (yOffset > 260) { doc.addPage(); yOffset = 25; }
+        });
+
+        yOffset += 8;
+        doc.line(20, yOffset, 190, yOffset);
+        yOffset += 12;
+
+        // Izračun in izpis uradnega sklepa napredovanja
+        doc.setFont("Helvetica", "bold");
+        doc.text(cleanTextForPDF("SKLEP O NAPREDOVANJU:"), 20, yOffset);
+        yOffset += 8;
+
+        doc.setFont("Helvetica", "normal");
+        let končniSklepTekst = "";
+        if (imaNeocenjenoAliNezadostno) {
+            končniSklepTekst = "Na podlagi zbranih ocen je ugotovljeno, da učenec NEUSPESNO opravlja svoje šolske dolžnosti, zato na koncu tega ocenjevalnega obdobja NE NAPREDUJE v naslednji razred.";
+        } else {
+            končniSklepTekst = "Na podlagi zbranih ocen je ugotovljeno, da je učenec USPESNO opravil vse šolske dolžnosti, zato NAPREDUJE v naslednji razred šolskega centra.";
         }
 
-        // --- MODAL DIALOG ZA VNOS ---
-        function openNewUkrepModal() {
-            document.getElementById('form-datum').value = new Date().toLocaleDateString('sl-SI');
-            document.getElementById('form-razlog').value = '';
-            document.getElementById('modal-wrapper').classList.remove('hidden');
-        }
+        let splitSklep = doc.splitTextToSize(cleanTextForPDF(končniSklepTekst), 170);
+        doc.text(splitSklep, 20, yOffset);
+        yOffset += (splitSklep.length * 6) + 15;
+    }
 
-        function closeModal() {
-            document.getElementById('modal-wrapper').classList.add('hidden');
-        }
+    // --- GENERACIJA OBVESTILA OB POLLETJU (VSE OCENE) ---
+    else if (documentObj.type === 'POLLETJE') {
+        doc.setFontSize(16);
+        doc.text(cleanTextForPDF("OBVESTILO O USPEHU OB POLLETJU"), 20, yOffset); yOffset += 12;
 
-        // --- SHRANJEVANJE V FIREBASE (Brez brisanja ostalih modulov) ---
-        function saveUkrepData() {
-            const type = document.getElementById('form-tip').value;
-            const date = document.getElementById('form-datum').value.trim();
-            const reason = document.getElementById('form-razlog').value.trim();
+        doc.setFontSize(11);
+        doc.setFont("Helvetica", "normal");
+        doc.text(cleanTextForPDF(`Ucenec/učenka: ${studentObj.name}`), 20, yOffset); yOffset += 6;
+        doc.text(cleanTextForPDF(`Razred: ${classObj.name}`), 20, yOffset); yOffset += 15;
 
-            if (!reason) {
-                alert("Prosimo, vnesite razlog oz. obrazložitev vzgojnega ukrepa.");
-                return;
-            }
+        // Tabela vseh ocen
+        doc.setFont("Helvetica", "bold");
+        doc.text(cleanTextForPDF("Predmet"), 20, yOffset);
+        doc.text(cleanTextForPDF("Vse tekoce ocene v obdobju"), 95, yOffset);
+        yOffset += 4;
+        doc.line(20, yOffset, 190, yOffset);
+        yOffset += 8;
 
-            const novUkrep = {
-                id: Date.now() + Math.floor(Math.random() * 1000),
-                studentId: parseInt(selectedStudentId),
-                classId: parseInt(selectedClassId),
-                type: type,
-                date: date,
-                reason: reason,
-                authorId: currentUser.id,
-                authorName: `${currentUser.name} ${currentUser.surname}`
-            };
+        doc.setFont("Helvetica", "normal");
 
-            // Dodaj v lokalno polje in potisni v specifično Firebase vejo mindex_db/ukrepi
-            mainDb.ukrepi.push(novUkrep);
+        db.subjects.forEach(sub => {
+            // Pridobimo vse ocene, ki niso končne
+            const vseTekoceOcene = db.grades.filter(g => g.studentId === studentObj.id && g.subjectId === sub.id && !g.isFinal);
+            let stringOcen = vseTekoceOcene.map(g => g.value).join(", ");
+            if (!stringOcen) stringOcen = "/"; // Če nima ocen
 
-            database.ref('mindex_db/ukrepi').set(mainDb.ukrepi)
-                .then(() => {
-                    closeModal();
-                    renderStudentProfile();
-                })
-                .catch(err => {
-                    alert("Napaka pri shranjevanju v bazo: " + err.message);
-                });
-        }
-
-        // --- FUNKCIJA ZA ČIŠČENJE ŠUMNIKOV V STANDARDNEM PDF POGLEDU ---
-        function stripSumniki(str) {
-            if (!str) return "";
-            return str
-                .replace(/[čČ]/g, 'c')
-                .replace(/[šŠ]/g, 's')
-                .replace(/[žŽ]/g, 'z')
-                .replace(/[ćĆ]/g, 'c')
-                .replace(/[đĐ]/g, 'd');
-        }
-
-        // --- GENERIRANJE URADNEGA PDF-a (Popravljena šolska glava) ---
-        function generateUkrepPDF(ukrepId) {
-            const ukrep = mainDb.ukrepi.find(u => u.id == ukrepId);
-            if (!ukrep) return;
-
-            const classObj = mainDb.classes.find(c => c.id == ukrep.classId);
-            const studentObj = classObj.students.find(s => s.id == ukrep.studentId);
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            // Uradna glava - SAMO šola in modul (Brez Republike ali Ministrstva)
-            doc.setFont("Helvetica", "bold");
-            doc.setFontSize(14);
-            doc.text(stripSumniki("SOLSKI CENTER MINDEX"), 20, 25);
-            doc.setFont("Helvetica", "normal");
-            doc.setFontSize(10);
-            doc.text(stripSumniki("E-DNEVNIK MODUL - URADNI DOKUMENTI IN VZGOJNI UKREPI"), 20, 31);
+            doc.text(cleanTextForPDF(sub.name), 20, yOffset);
             
-            // Ločilna črta
-            doc.setLineWidth(0.5);
-            doc.line(20, 35, 190, 35);
-
-            // Podatki o izdaji
-            doc.setFontSize(10);
-            doc.text("Kraj: Ljubljana", 20, 45);
-            doc.text("Datum izdaje: " + stripSumniki(ukrep.date), 20, 51);
-
-            // Naslov dokumenta
-            doc.setFont("Helvetica", "bold");
-            doc.setFontSize(16);
-            doc.text(stripSumniki("SKLEP O IZREKU VZGOJNEGA UKREPA"), 20, 70);
+            let splitOcen = doc.splitTextToSize(cleanTextForPDF(stringOcen), 90);
+            doc.text(splitOcen, 95, yOffset);
             
-            doc.setFontSize(12);
-            doc.text(stripSumniki(ukrep.type), 20, 78);
+            yOffset += Math.max(7, splitOcen.length * 5);
 
-            // Podatki o dijaku
-            doc.setLineWidth(0.2);
-            doc.line(20, 84, 190, 84);
-            
-            doc.setFont("Helvetica", "normal");
-            doc.setFontSize(11);
-            doc.text("Ucenec / dijak: ", 20, 93);
-            doc.setFont("Helvetica", "bold");
-            doc.text(stripSumniki(studentObj.name.toUpperCase()), 60, 93);
+            if (yOffset > 260) { doc.addPage(); yOffset = 25; }
+        });
 
-            doc.setFont("Helvetica", "normal");
-            doc.text("Razred: ", 20, 100);
-            doc.setFont("Helvetica", "bold");
-            doc.text(stripSumniki(classObj.name), 60, 100);
-            doc.setLineWidth(0.2);
-            doc.line(20, 105, 190, 105);
+        yOffset += 15;
+        doc.setFont("Helvetica", "italic");
+        doc.text(cleanTextForPDF("Opomba: Polletno obvestilo je informativne narave in ne vsebuje končnega sklepa o napredovanju."), 20, yOffset);
+        yOffset += 10;
+    }
 
-            // Obrazložitev / Razlog
-            doc.setFont("Helvetica", "bold");
-            doc.text("Obrazlozitev krsitve oz. razlog za izdajo:", 20, 115);
-            
-            doc.setFont("Helvetica", "normal");
-            // Razdelitev dolgega besedila za varne robove v PDF-ju
-            const splitReason = doc.splitTextToSize(stripSumniki(ukrep.reason), 160);
-            doc.text(splitReason, 20, 123);
+    // Zaključni podpisi na dnu dokumenta
+    if (yOffset > 250) { doc.addPage(); yOffset = 30; }
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(10);
+    doc.line(20, yOffset, 190, yOffset);
+    yOffset += 10;
+    doc.text(cleanTextForPDF(`Uradno izdal: ${documentObj.details.issuer || 'Sistem Mindex'}`), 20, yOffset);
+    doc.text(cleanTextForPDF(`Datum izdaje dokumenta: ${documentObj.date}`), 20, yOffset + 6);
+    doc.text(cleanTextForPDF("Uradni podpis / Pecat: _________________________"), 110, yOffset + 3);
 
-            // Podpisnik spodaj desno
-            const ySign = 200;
-            doc.line(120, ySign, 180, ySign);
-            doc.setFontSize(10);
-            doc.text(stripSumniki("Izdajatelj / Razrednik:"), 120, ySign + 5);
-            doc.setFont("Helvetica", "bold");
-            doc.text(stripSumniki(ukrep.authorName.toUpperCase()), 120, ySign + 10);
+    // KLJUČNO: Ustvarimo začasni Blob URL in ga odpremo v novem oknu brskalnika (se ne prenaša avtomatsko)
+    const blobPdf = doc.output('bloburl');
+    window.open(blobPdf, '_blank');
+}
 
-            // Prenos datoteke
-            doc.save(`Sklep_Ukrep_${studentObj.name.replace(/\s+/g, '_')}.pdf`);
-        }
-
-        // Zagon celotnega sistema ob naložitvi
-        window.onload = init;
-    </script>
-</body>
-</html>
+init();
+</script>
+</body></html>
