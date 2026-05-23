@@ -10,121 +10,196 @@
 
     <style>
         :root {
-            --win-gray: #d4d0c8;
+            --win-gray: #f0f2f5;
             --win-blue: #0a246a;
+            --dark-blue: #061640;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-radius: 8px;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         body {
-            font-family: 'Tahoma', 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--win-gray);
-            margin: 0; padding: 0; height: 100vh;
+            color: var(--text-color);
+            margin: 0; padding: 0;
+            min-height: 100vh;
         }
 
         .hidden { display: none !important; }
         .bold { font-weight: bold; }
         
-        .win-btn {
-            background: #e0e0e0; border: 2px solid; border-color: #fff #808080 #808080 #fff;
-            padding: 4px 15px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: bold;
+        /* Moderen gumb */
+        .modern-btn {
+            background: var(--win-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s, transform 0.1s;
         }
-        .win-btn:active { border-style: inset; }
+        .modern-btn:hover { background: var(--dark-blue); }
+        .modern-btn:active { transform: scale(0.98); }
 
-        .top-header {
-            background: var(--win-blue); color: white; height: 40px; 
-            display: flex; align-items: center; justify-content: space-between; padding: 0 15px;
-            font-weight: bold; font-size: 16px;
+        /* Navigacijski Meni */
+        .navbar {
+            background: var(--win-blue);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
         }
-        
-        .main-container { padding: 20px; max-width: 900px; margin: 0 auto; }
-
-        /* Login */
-        .login-frame { 
-            background: #c0c0c0; border: 2px solid #808080; padding: 20px; 
-            width: 300px; margin: 100px auto; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        .nav-brand { font-size: 24px; font-weight: bold; letter-spacing: 1px; }
+        .nav-links { display: flex; gap: 15px; }
+        .nav-btn {
+            background: transparent; color: white; border: 1px solid rgba(255,255,255,0.4);
+            padding: 8px 16px; border-radius: var(--border-radius); cursor: pointer; font-weight: 500;
         }
-        .login-inp { width: 90%; margin-bottom: 10px; padding: 5px; border: 2px inset white; }
+        .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.2); border-color: white; }
+        .nav-btn.logout { background: #ff4d4d; border: none; }
+        .nav-btn.logout:hover { background: #cc0000; }
 
-        /* Videz tabel */
-        .data-box { background: white; border: 2px solid #808080; margin-bottom: 20px; padding: 15px; }
-        h2 { font-size: 18px; margin-top: 0; border-bottom: 2px solid black; padding-bottom: 5px; }
+        /* Login Okno */
+        .login-wrapper {
+            display: flex; justify-content: center; align-items: center; min-height: 80vh;
+        }
+        .login-card {
+            background: var(--card-bg); padding: 35px; border-radius: var(--border-radius);
+            box-shadow: var(--shadow); width: 100%; max-width: 360px; text-align: center;
+        }
+        .login-card h2 { margin-top: 0; color: var(--win-blue); font-size: 28px; margin-bottom: 25px; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
+        .modern-input {
+            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: var(--border-radius);
+            box-sizing: border-box; font-size: 15px;
+        }
+        .modern-input:focus { border-color: var(--win-blue); outline: none; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-        th, td { border: 1px solid #a0a0a0; padding: 6px; text-align: center; }
-        th { background: #e0e0e0; font-weight: bold; }
+        /* Glavni vsebnik */
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+        .card {
+            background: var(--card-bg); border-radius: var(--border-radius);
+            padding: 25px; box-shadow: var(--shadow); margin-bottom: 25px;
+        }
+        .card h2 { margin-top: 0; border-bottom: 2px solid var(--win-blue); padding-bottom: 10px; color: var(--win-blue); }
+
+        /* Tabele */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        th, td { padding: 12px 15px; text-align: center; border-bottom: 1px solid #e0e0e0; }
+        th { background: #f8f9fa; color: var(--win-blue); font-weight: 600; }
+        tr:hover { background: #fdfdfd; }
         
-        .grade-pisno { color: red; font-weight: bold; }
-        .grade-ustno { color: black; font-weight: bold; }
-        .grade-izdelek { color: blue; font-weight: bold; }
+        /* Ocene */
+        .grade-span { margin: 0 5px; font-size: 16px; }
+        .grade-pisno { color: #d9534f; font-weight: bold; }
+        .grade-ustno { color: #333333; font-weight: bold; }
+        .grade-izdelek { color: #0275d8; font-weight: bold; }
+        .grade-correction { font-size: 0.75em; vertical-align: sub; margin-right: 2px; opacity: 0.8; }
         
-        .stat-green { color: green; font-weight: bold; }
-        .stat-red { color: red; font-weight: bold; }
+        /* Statusi Izostankov */
+        .status-o { background: #dff0d8; color: #3c763d; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+        .status-n { background: #f2dede; color: #a94442; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+        .status-open { background: #fcf8e3; color: #8a6d3b; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+
+        /* Ikone za graje */
+        .icon-img { height: 20px; width: auto; vertical-align: middle; }
+
+        /* Statistika izostankov */
+        .stat-banner {
+            display: flex; gap: 20px; margin-bottom: 15px; background: #f8f9fa; padding: 12px; border-radius: 6px;
+        }
+        .stat-item { font-size: 15px; font-weight: 500; }
     </style>
 </head>
 <body>
 
-    <div id="page-loader" style="text-align: center; padding-top: 100px;">
-        <h2>Nalaganje podatkov...</h2>
+    <div id="page-loader" style="text-align: center; padding-top: 150px;">
+        <h2 style="color: var(--win-blue);">MINDEX - Nalaganje portala...</h2>
     </div>
 
     <div id="page-login" class="hidden">
-        <div class="login-frame">
-            <h2 style="border:none; margin-bottom:15px;">MINDEX Učenec</h2>
-            <input type="text" id="login-u" class="login-inp" placeholder="Uporabniško ime"><br>
-            <input type="password" id="login-p" class="login-inp" placeholder="Geslo"><br>
-            <button class="win-btn" onclick="tryLogin()">PRIJAVA</button>
+        <div class="login-wrapper">
+            <div class="login-card">
+                <h2>MINDEX Učenec</h2>
+                <div class="input-group">
+                    <label>Ime in priimek:</label>
+                    <input type="text" id="login-u" class="modern-input" placeholder="npr. jan novak">
+                </div>
+                <div class="input-group">
+                    <label>Geslo:</label>
+                    <input type="password" id="login-p" class="modern-input" placeholder="Vnesite geslo">
+                </div>
+                <button class="modern-btn" style="width: 100%; margin-top: 10px;" onclick="tryLogin()">PRIJAVA</button>
+            </div>
         </div>
     </div>
 
     <div id="page-app" class="hidden">
-        <div class="top-header">
-            <span>MINDEX - Portal za učence</span>
-            <div>
-                <span id="user-name-display" style="margin-right: 15px;"></span>
-                <button class="win-btn" style="padding: 2px 10px;" onclick="location.reload()">Odjava</button>
+        <nav class="navbar">
+            <div class="nav-brand">MINDEX Portal</div>
+            <div class="nav-links">
+                <button id="btn-nav-redovalnica" class="nav-btn active" onclick="switchTab('redovalnica')">REDOVALNICA</button>
+                <button id="btn-nav-izostanki" class="nav-btn" onclick="switchTab('izostanki')">IZOSTANKI</button>
+                <button class="nav-btn logout" onclick="location.reload()">ODJAVA</button>
             </div>
-        </div>
+        </nav>
 
-        <div class="main-container">
-            
-            <div class="data-box">
-                <h2>Moje Ocene</h2>
-                <table id="grades-table">
-                    <thead>
-                        <tr>
-                            <th style="text-align: left; width: 30%;">Predmet</th>
-                            <th>1. Obdobje</th>
-                            <th>2. Obdobje</th>
-                            <th style="width: 15%;">Končna</th>
-                        </tr>
-                    </thead>
-                    <tbody id="grades-body"></tbody>
-                </table>
+        <div class="container">
+            <div style="margin-bottom: 20px; font-size: 18px;">
+                Pozdravljen/a, <span id="user-name-display" class="bold" style="color: var(--win-blue);"></span>!
             </div>
 
-            <div class="data-box">
-                <h2>Moji Izostanki</h2>
-                <div style="margin-bottom: 10px; background: #f0f0f0; padding: 10px; border: 1px solid #ccc;">
-                    Skupaj opravičeno: <span class="stat-green" id="stat-o">0</span> | 
-                    Skupaj neopravičeno: <span class="stat-red" id="stat-n">0</span>
+            <div id="tab-redovalnica" class="view-tab">
+                <div class="card">
+                    <h2>Moje Ocene</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; width: 30%;">Predmet</th>
+                                <th width="25%">1. Ocenjevalno obdobje</th>
+                                <th width="8%">Graje (1.)</th>
+                                <th width="25%">2. Ocenjevalno obdobje</th>
+                                <th width="8%">Graje (2.)</th>
+                                <th width="12%">Končna ocena</th>
+                            </tr>
+                        </thead>
+                        <tbody id="grades-body"></tbody>
+                    </table>
                 </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width: 15%;">Datum</th>
-                            <th style="width: 25%;">Ure</th>
-                            <th style="width: 20%;">Status</th>
-                            <th>Opomba</th>
-                        </tr>
-                    </thead>
-                    <tbody id="abs-body"></tbody>
-                </table>
             </div>
 
+            <div id="tab-izostanki" class="view-tab hidden">
+                <div class="card">
+                    <h2>Moji Izostanki</h2>
+                    <div class="stat-banner">
+                        <div class="stat-item">Opravičene ure: <span class="bold" style="color: #3c763d;" id="stat-o">0</span></div>
+                        <div class="stat-item">Neopravičene ure: <span class="bold" style="color: #a94442;" id="stat-n">0</span></div>
+                        <div class="stat-item">Neobdelane/Odprte ure: <span class="bold" style="color: #8a6d3b;" id="stat-open">0</span></div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 15%;">Datum</th>
+                                <th style="width: 20%;">Ura / Perioda</th>
+                                <th style="width: 20%;">Status izostanka</th>
+                                <th style="text-align: left;">Opomba / Razlog</th>
+                            </tr>
+                        </thead>
+                        <tbody id="abs-body"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
 <script>
-// Povezava na isto Firebase bazo
+// --- Povezava na Firebase bazo ---
 const firebaseConfig = { databaseURL: "https://mindex-b92ed-default-rtdb.europe-west1.firebasedatabase.app/" };
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
@@ -132,39 +207,58 @@ const database = firebase.database();
 let db = {};
 let currentUser = null;
 
-// Branje baze ob zagonu
+// Funkcija za čiščenje šumnikov in pretvorbo v male črke (za uporabniško ime)
+function cleanUsername(str) {
+    if (!str) return "";
+    return str.toLowerCase()
+              .replace(/\s/g, "")
+              .replace(/[čć]/g, "c")
+              .replace(/[š]/g, "s")
+              .replace(/[ž]/g, "z");
+}
+
+// Prenos baze ob zagonu
 database.ref('mindex_db').once('value').then(snapshot => {
     if(snapshot.exists()) db = snapshot.val();
     
-    // Zaščita pred praznimi podatki
+    // Zaščita pred praznimi strukturami
     if(!db.users) db.users = [];
     if(!db.classes) db.classes = [];
     if(!db.subjects) db.subjects = [];
     if(!db.grades) db.grades = [];
+    if(!db.warnings) db.warnings = [];
     if(!db.entries) db.entries = [];
 
     document.getElementById('page-loader').classList.add('hidden');
     document.getElementById('page-login').classList.remove('hidden');
+}).catch(err => {
+    alert("Napaka pri nalaganju podatkov: " + err);
 });
 
 function tryLogin() {
-    const u = document.getElementById('login-u').value.trim();
-    const p = document.getElementById('login-p').value.trim();
+    const uInput = document.getElementById('login-u').value.trim();
+    const pInput = document.getElementById('login-p').value.trim();
     
-    // 1. Preveri, če je učenec v db.users (iz EWI)
-    let student = db.users.find(x => x.username === u && x.password === p && x.role === 'student');
+    const targetUsername = cleanUsername(uInput);
+    let foundStudent = null;
     
-    // 2. Če ga ni tam, preveri še v db.classes (iz Redovalnice)
-    if (!student) {
-        for (let c of db.classes) {
-            if (!c.students) continue;
-            let s = c.students.find(st => st.username === u && st.password === p);
-            if (s) { student = s; break; }
+    // 1. Iskanje učenca v db.classes (kjer so vpisani preko Redovalnice)
+    for (let c of db.classes) {
+        if (!c.students) continue;
+        let s = c.students.find(st => cleanUsername(st.name) === targetUsername && st.password === pInput);
+        if (s) { foundStudent = s; break; }
+    }
+    
+    // 2. Iskanje učenca v db.users (za vsak primer, če so vpisani preko EWI aplikacije)
+    if (!foundStudent) {
+        foundStudent = db.users.find(x => x.role === 'student' && cleanUsername(x.username) === targetUsername && x.password === pInput);
+        if (foundStudent && !foundStudent.name && foundStudent.surname) {
+            foundStudent.name = foundStudent.name + " " + foundStudent.surname;
         }
     }
 
-    if (student) {
-        currentUser = student;
+    if (foundStudent) {
+        currentUser = foundStudent;
         document.getElementById('page-login').classList.add('hidden');
         document.getElementById('page-app').classList.remove('hidden');
         document.getElementById('user-name-display').innerText = currentUser.name;
@@ -172,36 +266,64 @@ function tryLogin() {
         renderGrades();
         renderAbsences();
     } else {
-        alert("Napačno uporabniško ime ali geslo!");
+        alert("Napačni podatki za prijavo! Poskusite z vnosom 'ime priimek' (vse z malimi črkami) in ustreznim geslom.");
     }
+}
+
+function switchTab(tabId) {
+    document.querySelectorAll('.view-tab').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+    
+    document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+    document.getElementById(`btn-nav-${tabId}`).classList.add('active');
 }
 
 function renderGrades() {
     const tbody = document.getElementById('grades-body');
     tbody.innerHTML = '';
     
-    db.subjects.forEach(subject => {
-        // Najdi vse ocene za tega učenca pri tem predmetu
-        const myGrades = db.grades.filter(g => g.studentId === currentUser.id && g.subjectId === subject.id);
-        
-        if (myGrades.length === 0) return; // Ne prikaži predmeta, če ni ocen
-        
-        // Loči po obdobjih in končni
-        const grades1 = myGrades.filter(g => g.period === 1 && !g.isFinal);
-        const grades2 = myGrades.filter(g => g.period === 2 && !g.isFinal);
-        const final = myGrades.find(g => g.isFinal);
+    if (db.subjects.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6">Trenutno ni vnesenih predmetov.</td></tr>';
+        return;
+    }
 
-        const formatGrades = (arr) => arr.map(g => {
-            let cls = g.type === 'PISNO' ? 'grade-pisno' : (g.type === 'IZDELEK' ? 'grade-izdelek' : 'grade-ustno');
-            return `<span class="${cls}" style="margin: 0 4px;" title="Vpisal: ${g.authorName || '?'}">${g.value}</span>`;
-        }).join('');
+    db.subjects.forEach(subject => {
+        // Filtracija ocen za trenutnega učenca in predmet
+        const myAllGrades = db.grades.filter(g => g.studentId === currentUser.id && g.subjectId === subject.id);
+        
+        // Razvrščanje ocen po obdobjih
+        const grades1 = myAllGrades.filter(g => g.period === 1 && !g.isFinal);
+        const grades2 = myAllGrades.filter(g => g.period === 2 && !g.isFinal);
+        const finalGrade = myAllGrades.find(g => g.isFinal);
+
+        // Graje / Opomniki
+        const warn1 = db.warnings.find(w => w.studentId === currentUser.id && w.subjectId === subject.id && w.period === 1);
+        const warn2 = db.warnings.find(w => w.studentId === currentUser.id && w.subjectId === subject.id && w.period === 2);
+
+        const formatGrades = (gradesArr) => {
+            if (gradesArr.length === 0) return `<span style="color:#aaa;">-</span>`;
+            return gradesArr.map(g => {
+                let cls = g.type === 'PISNO' ? 'grade-pisno' : (g.type === 'IZDELEK' ? 'grade-izdelek' : 'grade-ustno');
+                if (g.correction) {
+                    return `<span class="grade-span ${cls}"><span class="grade-correction">${g.value}</span>${g.correction}</span>`;
+                }
+                return `<span class="grade-span ${cls}">${g.value}</span>`;
+            }).join(' ');
+        };
+
+        const formatWarning = (warnObj) => {
+            if (!warnObj) return '-';
+            return warnObj.type === 'x' ? '<span style="color:red; font-weight:bold; font-size:18px;">X</span>' : '<span style="color:green; font-weight:bold; font-size:18px;">✓</span>';
+        };
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td style="text-align: left; font-weight: bold;">${subject.name}</td>
+            <td style="text-align: left; font-weight: 600; color: var(--win-blue);">${subject.name}</td>
             <td>${formatGrades(grades1)}</td>
+            <td>${formatWarning(warn1)}</td>
             <td>${formatGrades(grades2)}</td>
-            <td style="font-weight: bold; font-size: 16px;">${final ? final.value : ''}</td>
+            <td>${formatWarning(warn2)}</td>
+            <td style="font-weight: bold; font-size: 18px; color: var(--win-blue); background: #fdfdfd;">${finalGrade ? finalGrade.value : '-'}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -211,52 +333,63 @@ function renderAbsences() {
     const tbody = document.getElementById('abs-body');
     tbody.innerHTML = '';
     
-    let absencesByDate = {};
-    let countO = 0, countN = 0;
+    let absCountO = 0;
+    let absCountN = 0;
+    let absCountOpen = 0;
+    let studentAbsences = [];
 
-    // Preiščemo vse ure v dnevniku
+    // Pregledamo vse vpise ur iz EWI aplikacije
     db.entries.forEach(entry => {
         if (!entry.absentees) return;
-        const abs = entry.absentees.find(a => parseInt(a.studentId) === parseInt(currentUser.id));
         
-        if (abs) {
-            if(abs.status === 'O') countO++;
-            if(abs.status === 'N') countN++;
+        // Preverimo, če je trenutni učenec na seznamu odsotnih za to uro
+        const absRecord = entry.absentees.find(a => parseInt(a.studentId) === parseInt(currentUser.id));
+        
+        if (absRecord) {
+            studentAbsences.push({
+                date: entry.date,
+                period: entry.period,
+                status: absRecord.status || '?',
+                note: absRecord.note || '/'
+            });
 
-            if (!absencesByDate[entry.date]) absencesByDate[entry.date] = { periods: [], statuses: new Set(), notes: new Set() };
-            
-            absencesByDate[entry.date].periods.push(entry.period);
-            absencesByDate[entry.date].statuses.add(abs.status);
-            if (abs.note) absencesByDate[entry.date].notes.add(abs.note);
+            if (absRecord.status === 'O') absCountO++;
+            else if (absRecord.status === 'N') absCountN++;
+            else absCountOpen++;
         }
     });
 
-    document.getElementById('stat-o').innerText = countO;
-    document.getElementById('stat-n').innerText = countN;
+    // Izpis števcev na vrhu
+    document.getElementById('stat-o').innerText = absCountO;
+    document.getElementById('stat-n').innerText = absCountN;
+    document.getElementById('stat-open').innerText = absCountOpen;
 
-    // Razvrsti datume padajoče
-    const parseDate = (dStr) => {
+    if (studentAbsences.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="color:#777; padding: 20px;">Nimaš zabeleženih izostankov. Odlično!</td></tr>';
+        return;
+    }
+
+    // Razvrstimo izostanke po datumu (novejši zgoraj)
+    const parseDateStr = (dStr) => {
+        if(!dStr) return 0;
         const p = dStr.replace(/\s/g, '').split('.');
-        return new Date(p[2], p[1]-1, p[0]).getTime();
+        return new Date(p[2], p[1] - 1, p[0]).getTime();
     };
-    let dates = Object.keys(absencesByDate).sort((a, b) => parseDate(b) - parseDate(a));
+    studentAbsences.sort((a, b) => parseDateStr(b.date) - parseDateStr(a.date));
 
-    dates.forEach(date => {
-        let data = absencesByDate[date];
-        let periodsStr = data.periods.sort((a,b)=>a-b).join('. ') + '.';
-        let statusesStr = Array.from(data.statuses).join(', ');
-        let notesStr = Array.from(data.notes).join('; ');
-        
-        let statColor = 'black';
-        if (statusesStr.includes('N')) statColor = 'red';
-        else if (statusesStr.includes('O')) statColor = 'green';
+    // Izris v tabelo
+    studentAbsences.forEach(abs => {
+        let statusHtml = '';
+        if (abs.status === 'O') statusHtml = '<span class="status-o">Opravičeno</span>';
+        else if (abs.status === 'N') statusHtml = '<span class="status-n">Neopravičeno</span>';
+        else statusHtml = '<span class="status-open">Odprto / Čaka</span>';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${date}</td>
-            <td class="bold">${periodsStr}</td>
-            <td style="color: ${statColor}; font-weight: bold;">${statusesStr === '?' ? 'Odprto' : statusesStr}</td>
-            <td style="font-size: 12px; text-align: left;">${notesStr}</td>
+            <td class="bold">${abs.date}</td>
+            <td>${abs.period}. ura</td>
+            <td>${statusHtml}</td>
+            <td style="text-align: left; font-size: 14px; color: #555;">${abs.note}</td>
         `;
         tbody.appendChild(tr);
     });
