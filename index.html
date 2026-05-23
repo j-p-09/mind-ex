@@ -3,6 +3,10 @@
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MINDEX - E-Dnevnik</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
     <style>
         /* --- STIL (WINDOWS RETRO) --- */
         :root {
@@ -374,8 +378,13 @@
 
 <script>
 /**
- * MINDEX APLIKACIJA - SPREMENJENA LOGIKA (Split View + Tooltips + Authors)
+ * MINDEX APLIKACIJA - SPREMENJENA LOGIKA ZA FIREBASE
  */
+
+// --- FIREBASE SETUP ---
+const firebaseConfig = { databaseURL: "https://mindex-b92ed-default-rtdb.europe-west1.firebasedatabase.app/" };
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
 
 const DEFAULT_ADMIN = { id: 1, name: 'Administrator', username: 'ADMIN', password: 'ADMIN', role: 'admin', sessionTimeout: 30 };
 let db = {
@@ -464,23 +473,38 @@ function customPrompt(message, onResult) {
     ]);
 }
 
-// --- INIT ---
+// --- INIT & FIREBASE SYNC ---
 function init() {
-    const saved = localStorage.getItem('mindex_db');
-    if (saved) db = JSON.parse(saved);
-    else saveDB();
-    
-    updateClock();
-    setInterval(updateClock, 1000);
-    
-    if(db.lastLogin.user) {
-        document.getElementById('last-login-user').innerText = db.lastLogin.user;
-        document.getElementById('last-login-time').innerText = db.lastLogin.time;
-    }
+    database.ref('mindex_db').once('value').then(snapshot => {
+        if(snapshot.exists()) {
+            let data = snapshot.val();
+            // Združimo podatke, da ohranimo ewi urnike in vnose
+            db = { ...db, ...data };
+            if(!db.users) db.users = [DEFAULT_ADMIN];
+            if(!db.classes) db.classes = [];
+            if(!db.subjects) db.subjects = [];
+            if(!db.grades) db.grades = [];
+            if(!db.warnings) db.warnings = [];
+            if(!db.lastLogin) db.lastLogin = { user: '', time: '' };
+        } else {
+            saveDB();
+        }
+        
+        updateClock();
+        setInterval(updateClock, 1000);
+        
+        if(db.lastLogin && db.lastLogin.user) {
+            document.getElementById('last-login-user').innerText = db.lastLogin.user;
+            document.getElementById('last-login-time').innerText = db.lastLogin.time;
+        }
+    }).catch(err => {
+        alert("Napaka pri povezavi s Firebase: " + err);
+    });
 }
 
 function saveDB() {
-    localStorage.setItem('mindex_db', JSON.stringify(db));
+    // Shrani v Firebase namesto v localStorage
+    database.ref('mindex_db').set(db);
 }
 
 // --- CLOCK & SESSION ---
@@ -754,12 +778,14 @@ function manageClass(classId) {
     
     function renderClassModalContent() {
         let html = `<ul class="admin-list" style="max-height: 200px;">`;
-        cls.students.forEach(s => {
-            html += `<li>
-                <span onclick="showStudentDetails(${classId}, ${s.id})" style="cursor:pointer; text-decoration:underline;">${s.name}</span> 
-                <button class="win-btn mini-btn" onclick="removeStudent(${classId}, ${s.id})">X</button>
-            </li>`;
-        });
+        if (cls.students) {
+            cls.students.forEach(s => {
+                html += `<li>
+                    <span onclick="showStudentDetails(${classId}, ${s.id})" style="cursor:pointer; text-decoration:underline;">${s.name}</span> 
+                    <button class="win-btn mini-btn" onclick="removeStudent(${classId}, ${s.id})">X</button>
+                </li>`;
+            });
+        }
         html += `</ul>`;
         return html;
     }
@@ -773,6 +799,7 @@ function manageClass(classId) {
                     customPrompt("Ime in priimek učenca:", (sName) => {
                         if (sName) {
                             const cleanName = sName.toLowerCase().replace(/\s/g, '');
+                            if (!cls.students) cls.students = [];
                             cls.students.push({
                                 id: Date.now(), name: sName, username: cleanName, password: cleanName, access: true
                             });
@@ -790,9 +817,11 @@ function manageClass(classId) {
                 closeModal();
                 setTimeout(() => {
                     customConfirm("Izbrišem vse ocene tega razreda?", () => {
-                        const studentIds = cls.students.map(s => s.id);
-                        db.grades = db.grades.filter(g => !studentIds.includes(g.studentId));
-                        db.warnings = db.warnings.filter(w => !studentIds.includes(w.studentId));
+                        if (cls.students) {
+                            const studentIds = cls.students.map(s => s.id);
+                            db.grades = db.grades.filter(g => !studentIds.includes(g.studentId));
+                            db.warnings = db.warnings.filter(w => !studentIds.includes(w.studentId));
+                        }
                         saveDB();
                         manageClass(classId);
                     });
@@ -805,7 +834,9 @@ function manageClass(classId) {
     
     window.removeStudent = function(cId, sId) {
         const c = db.classes.find(x => x.id === cId);
-        c.students = c.students.filter(x => x.id !== sId);
+        if(c.students) {
+            c.students = c.students.filter(x => x.id !== sId);
+        }
         saveDB();
         closeModal();
         setTimeout(() => manageClass(cId), 50);
@@ -836,8 +867,9 @@ function manageClass(classId) {
 
 function resetAllData() {
     customConfirm("POZOR! To bo izbrisalo VSE podatke. Nadaljujem?", () => {
-        localStorage.removeItem('mindex_db');
-        location.reload();
+        database.ref('mindex_db').remove().then(() => {
+            location.reload();
+        });
     });
 }
 
@@ -872,6 +904,8 @@ function renderGradebook() {
     currentState.selectedSubjectId = subjectId;
     const cls = db.classes.find(c => c.id === classId);
     
+    if(!cls.students) return;
+
     cls.students.forEach(student => {
         const tr = document.createElement('tr');
         const tdName = `<td>${student.name}</td>`;
@@ -1104,6 +1138,8 @@ function openBulkEntry() {
         return;
     }
     const cls = db.classes.find(c => c.id === currentState.selectedClassId);
+    if(!cls.students) return;
+
     let rows = cls.students.map(s => 
         `<div class="bulk-list-item" style="display:flex; justify-content:space-between; margin-bottom:5px;">
             <span>${s.name}</span>
@@ -1155,6 +1191,5 @@ function openBulkEntry() {
 
 init();
 </script>
-
 
 </body></html>
