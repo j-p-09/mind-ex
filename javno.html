@@ -107,9 +107,6 @@
         .status-n { background: #f2dede; color: #a94442; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
         .status-open { background: #fcf8e3; color: #8a6d3b; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
 
-        /* Ikone za graje */
-        .icon-img { height: 20px; width: auto; vertical-align: middle; }
-
         /* Statistika izostankov */
         .stat-banner {
             display: flex; gap: 20px; margin-bottom: 15px; background: #f8f9fa; padding: 12px; border-radius: 6px;
@@ -129,7 +126,7 @@
                 <h2>MINDEX Učenec</h2>
                 <div class="input-group">
                     <label>Ime in priimek:</label>
-                    <input type="text" id="login-u" class="modern-input" placeholder="npr. jan novak">
+                    <input type="text" id="login-u" class="modern-input" placeholder="npr. matej vidmar">
                 </div>
                 <div class="input-group">
                     <label>Geslo:</label>
@@ -239,24 +236,50 @@ function tryLogin() {
     const uInput = document.getElementById('login-u').value.trim();
     const pInput = document.getElementById('login-p').value.trim();
     
+    // Pretvorimo vnos v obliko brez presledkov in šumnikov (npr. "Matej Vidmar" -> "matejvidmar")
     const targetUsername = cleanUsername(uInput);
     let foundStudent = null;
     
-    // 1. Iskanje učenca v db.classes (kjer so vpisani preko Redovalnice)
-    for (let c of db.classes) {
-        if (!c.students) continue;
-        let s = c.students.find(st => cleanUsername(st.name) === targetUsername && st.password === pInput);
-        if (s) { foundStudent = s; break; }
+    console.log("Poskus prijave za uporabnika:", targetUsername);
+
+    // 1. Iskanje učenca v db.classes (vsi razredi in njihovi seznami students)
+    if (db.classes && Array.isArray(db.classes)) {
+        for (let c of db.classes) {
+            if (!c.students || !Array.isArray(c.students)) continue;
+            
+            // Poiščemo učenca, kjer se očiščeno ime ali nastavljen username ujema z vpisanim
+            let s = c.students.find(st => {
+                const dbUserFromName = cleanUsername(st.name);
+                const dbUserFromUsername = st.username ? cleanUsername(st.username) : "";
+                
+                return (dbUserFromName === targetUsername || dbUserFromUsername === targetUsername);
+            });
+            
+            if (s) {
+                // Prilagodljiva primerjava gesla (ignorira morebitne velike začetnice in razmake)
+                const dbPassword = s.password ? s.password.trim() : "";
+                if (cleanUsername(dbPassword) === cleanUsername(pInput)) {
+                    foundStudent = s;
+                    break;
+                }
+            }
+        }
     }
     
-    // 2. Iskanje učenca v db.users (za vsak primer, če so vpisani preko EWI aplikacije)
-    if (!foundStudent) {
-        foundStudent = db.users.find(x => x.role === 'student' && cleanUsername(x.username) === targetUsername && x.password === pInput);
+    // 2. Iskanje učenca v db.users (varnostna kopija, če so vpisani drugje v bazi)
+    if (!foundStudent && db.users && Array.isArray(db.users)) {
+        foundStudent = db.users.find(x => {
+            if (x.role !== 'student') return false;
+            const dbUser = x.username ? cleanUsername(x.username) : cleanUsername(x.name + (x.surname || ""));
+            return dbUser === targetUsername && cleanUsername(x.password) === cleanUsername(pInput);
+        });
+        
         if (foundStudent && !foundStudent.name && foundStudent.surname) {
             foundStudent.name = foundStudent.name + " " + foundStudent.surname;
         }
     }
 
+    // Preverjanje rezultata prijave
     if (foundStudent) {
         currentUser = foundStudent;
         document.getElementById('page-login').classList.add('hidden');
@@ -266,7 +289,7 @@ function tryLogin() {
         renderGrades();
         renderAbsences();
     } else {
-        alert("Napačni podatki za prijavo! Poskusite z vnosom 'ime priimek' (vse z malimi črkami) in ustreznim geslom.");
+        alert("Prijava ni uspela!\n\nPreverite:\n1. Da ste vpisali pravilno Ime in Priimek.\n2. Da je geslo v bazi točno takšno (ali enako imenu), kot ga vpisujete.");
     }
 }
 
@@ -288,15 +311,12 @@ function renderGrades() {
     }
 
     db.subjects.forEach(subject => {
-        // Filtracija ocen za trenutnega učenca in predmet
         const myAllGrades = db.grades.filter(g => g.studentId === currentUser.id && g.subjectId === subject.id);
         
-        // Razvrščanje ocen po obdobjih
         const grades1 = myAllGrades.filter(g => g.period === 1 && !g.isFinal);
         const grades2 = myAllGrades.filter(g => g.period === 2 && !g.isFinal);
         const finalGrade = myAllGrades.find(g => g.isFinal);
 
-        // Graje / Opomniki
         const warn1 = db.warnings.find(w => w.studentId === currentUser.id && w.subjectId === subject.id && w.period === 1);
         const warn2 = db.warnings.find(w => w.studentId === currentUser.id && w.subjectId === subject.id && w.period === 2);
 
@@ -338,28 +358,27 @@ function renderAbsences() {
     let absCountOpen = 0;
     let studentAbsences = [];
 
-    // Pregledamo vse vpise ur iz EWI aplikacije
-    db.entries.forEach(entry => {
-        if (!entry.absentees) return;
-        
-        // Preverimo, če je trenutni učenec na seznamu odsotnih za to uro
-        const absRecord = entry.absentees.find(a => parseInt(a.studentId) === parseInt(currentUser.id));
-        
-        if (absRecord) {
-            studentAbsences.push({
-                date: entry.date,
-                period: entry.period,
-                status: absRecord.status || '?',
-                note: absRecord.note || '/'
-            });
+    if (db.entries && Array.isArray(db.entries)) {
+        db.entries.forEach(entry => {
+            if (!entry.absentees) return;
+            
+            const absRecord = entry.absentees.find(a => parseInt(a.studentId) === parseInt(currentUser.id));
+            
+            if (absRecord) {
+                studentAbsences.push({
+                    date: entry.date,
+                    period: entry.period,
+                    status: absRecord.status || '?',
+                    note: absRecord.note || '/'
+                });
 
-            if (absRecord.status === 'O') absCountO++;
-            else if (absRecord.status === 'N') absCountN++;
-            else absCountOpen++;
-        }
-    });
+                if (absRecord.status === 'O') absCountO++;
+                else if (absRecord.status === 'N') absCountN++;
+                else absCountOpen++;
+            }
+        });
+    }
 
-    // Izpis števcev na vrhu
     document.getElementById('stat-o').innerText = absCountO;
     document.getElementById('stat-n').innerText = absCountN;
     document.getElementById('stat-open').innerText = absCountOpen;
@@ -369,7 +388,6 @@ function renderAbsences() {
         return;
     }
 
-    // Razvrstimo izostanke po datumu (novejši zgoraj)
     const parseDateStr = (dStr) => {
         if(!dStr) return 0;
         const p = dStr.replace(/\s/g, '').split('.');
@@ -377,7 +395,6 @@ function renderAbsences() {
     };
     studentAbsences.sort((a, b) => parseDateStr(b.date) - parseDateStr(a.date));
 
-    // Izris v tabelo
     studentAbsences.forEach(abs => {
         let statusHtml = '';
         if (abs.status === 'O') statusHtml = '<span class="status-o">Opravičeno</span>';
