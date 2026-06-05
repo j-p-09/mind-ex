@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MINDEX - E-Redovalnica za učence</title>
+    <title>MINDEX Sola - E-Redovalnica za učence</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
@@ -39,193 +39,232 @@
             font-size: 24px;
             font-weight: bold;
             background-color: #e0e0e0;
-            border: 3px solid #808080;
+            border: 2px solid #808080;
             cursor: pointer;
-            box-shadow: 4px 4px 0px #000;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+        }
+        .login-btn-large:hover { background-color: #d0d0d0; }
+        .login-btn-large:active { transform: translateY(2px); box-shadow: none; }
+
+        /* --- GLAVNI ZASLON --- */
+        #main-page {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
 
-        .login-btn-large:active {
-            transform: translate(2px, 2px);
-            box-shadow: 2px 2px 0px #000;
-        }
-
-        /* --- GLAVNA STRAN --- */
-        .header {
+        .top-bar {
             background-color: #e0e0e0;
-            padding: 15px 20px;
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid #808080;
-        }
-
-        .student-info {
+            border-bottom: 2px solid #999;
             font-size: 18px;
-            font-weight: bold;
         }
 
         .logout-btn {
-            padding: 6px 15px;
-            background-color: #f0f0f0;
-            border: 2px solid #808080;
+            padding: 5px 15px;
+            background: #ffcccc;
+            border: 1px solid #999;
             cursor: pointer;
             font-weight: bold;
         }
 
-        .main-container {
+        .content-container {
             display: flex;
             flex: 1;
+            padding: 10px;
+            gap: 15px;
             overflow: hidden;
         }
 
-        /* --- LEVA STRAN: PREDMETI --- */
-        .sidebar {
-            width: 250px;
-            background-color: #f8f8f8;
-            border-right: 2px solid #808080;
+        /* LEVA STRAN: Tabela ocen */
+        .left-panel {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
             overflow-y: auto;
-            padding: 10px;
         }
 
-        .subject-item {
-            padding: 12px 15px;
-            margin-bottom: 5px;
-            background-color: #ffffff;
-            border: 1px solid #ccc;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-
-        .subject-item:hover {
-            background-color: #e8e8e8;
-        }
-
-        .subject-item.active {
-            background-color: #d0d0d0;
-            border-color: #808080;
-        }
-
-        /* --- DESNA STRAN: PODATKI --- */
-        .content {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            background-color: #ffffff;
-        }
-
-        /* --- REDOVALNICA TABELA --- */
-        .grade-table {
+        .gradebook-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
+            font-size: 14px;
+            border: 1px solid #999;
         }
 
-        .grade-table th, .grade-table td {
-            border: 1px solid #808080;
-            padding: 10px;
+        .gradebook-table th, .gradebook-table td {
+            border: 1px solid #999;
             text-align: center;
             vertical-align: middle;
+            height: 35px;
         }
 
-        .grade-table th {
-            background-color: #e0e0e0;
+        .gradebook-table th {
+            background-color: #ffffcc; /* Rumena podlaga kot na sliki */
+            font-weight: normal;
+        }
+        
+        .gradebook-table .subj-cell {
+            text-align: left;
+            padding-left: 10px;
+            background-color: #ffffff;
+            width: 20%;
+        }
+
+        .grade-cell {
+            min-width: 40px;
+            background-color: #ffffff;
         }
 
         .disabled-sector {
             background-color: #e0e0e0 !important;
-            opacity: 0.5;
         }
 
-        /* --- BARVE OCEN --- */
-        .grade-span {
-            margin: 0 5px;
-            font-weight: bold;
-            font-size: 16px;
+        /* DESNA STRAN: Zgodovina ocen */
+        .right-panel {
+            flex: 1;
+            border: 1px solid #999;
+            display: flex;
+            flex-direction: column;
+            background-color: #ffffff;
+            min-width: 250px;
         }
 
-        .grade-pisno { color: red; }
-        .grade-ustno { color: black; }
-        .grade-izdelek { color: blue; }
-        .grade-correction { font-size: 0.7em; vertical-align: sub; margin-right: 2px; }
+        .history-table-container {
+            overflow-y: auto;
+            flex: 1;
+        }
 
-        /* --- ZGODOVINA VPISOV --- */
         .history-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            font-size: 13px;
         }
-
-        .history-table th, .history-table td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: left;
-        }
-
+        
         .history-table th {
-            background-color: #f2f2f2;
+            background-color: #ffffcc;
+            border: 1px solid #999;
+            position: sticky;
+            top: 0;
+            padding: 4px;
+            z-index: 10;
+        }
+
+        .history-table td {
+            border: 1px solid #999;
+            padding: 4px;
+            text-align: center;
+        }
+
+        /* OBLIKOVANJE OCEN */
+        .grade-span { margin: 0 3px; position: relative; display: inline-block; font-size: 15px;}
+        .grade-pisno { color: red; font-weight: bold; }
+        .grade-ustno { color: black; font-weight: bold; }
+        .grade-izdelek { color: blue; font-weight: bold; }
+        .grade-correction { font-size: 0.7em; vertical-align: sub; margin-right: 2px; }
+
+        .warn-x { color: red; font-weight: bold; }
+        .warn-check { color: green; font-weight: bold; }
+
+        /* LEGENDA */
+        .legend-container {
+            margin-top: 20px;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: #f5f5f5;
+            padding: 5px;
+            border: 1px solid #ddd;
+        }
+        .legend-box {
+            display: flex;
+            gap: 20px;
+            justify-content: space-around;
+            width: 100%;
+        }
+        .legend-item {
+            border: 1px solid black;
+            padding: 2px 20px;
+            flex: 1;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* --- MODAL (POGOVORNO OKNO) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex; justify-content: center; align-items: center; z-index: 2000;
+        }
+        .modal-window {
+            background: #fff;
+            border: 2px solid #808080;
+            padding: 20px;
+            width: 350px;
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.5);
+        }
+        .modal-header {
+            font-size: 18px; font-weight: bold; margin-bottom: 15px;
+        }
+        .modal-select {
+            width: 100%; padding: 8px; margin-bottom: 15px; font-size: 16px;
+        }
+        .modal-btn {
+            width: 100%; padding: 10px; background: #e0e0e0; border: 1px solid #808080;
+            font-weight: bold; cursor: pointer; font-size: 16px;
         }
     </style>
 </head>
 <body>
 
     <div id="login-page">
-        <h1 style="font-size: 42px; margin-bottom: 30px; font-family: sans-serif; letter-spacing: 2px;">MINDEX</h1>
-        <button class="login-btn-large" onclick="openLoginPrompt()">PRIJAVA UČENCA</button>
+        <h1 style="margin-bottom: 40px; font-size: 36px;">E-Dnevnik Učenec</h1>
+        <button class="login-btn-large" onclick="openLoginModal()">PRIJAVA</button>
     </div>
 
-    <div id="student-dashboard" class="hidden" style="display: flex; flex-direction: column; height: 100vh;">
-        <div class="header">
-            <div class="student-info">
-                Učenec: <span id="display-student-name" class="bold">---</span> | 
-                Razred: <span id="display-class-name" class="bold">---</span> |
-                Vzgojni ukrep: <span id="display-ukrep" class="bold" style="color: red;">BREZ</span> |
-                Splošni uspeh: <span id="display-splosni" class="bold">še ni zaključen</span>
+    <div id="main-page" class="hidden">
+        <div class="top-bar">
+            <div>
+                Prijavljen: <span id="display-student-name" class="bold" style="text-transform: uppercase;"></span>
+                <span id="display-class-name" style="margin-left: 10px; color: #555;"></span>
             </div>
-            <button class="logout-btn" onclick="handleLogout()">ODJAVA</button>
+            <button class="logout-btn" onclick="handleLogout()">Odjava</button>
         </div>
 
-        <div class="main-container">
-            <div class="sidebar" id="subjects-sidebar">
-                </div>
-
-            <div class="content" id="subject-detail-content">
-                <h2 id="current-subject-title">Izberite predmet na levi strani</h2>
+        <div class="content-container">
+            <div class="left-panel">
+                <div id="table-container"></div>
                 
-                <div id="detail-data-area" class="hidden">
-                    <h3>Pregled redovalnice</h3>
-                    <table class="grade-table">
-                        <thead>
-                            <tr>
-                                <th width="14%">A</th><th width="3%">Graja</th>
-                                <th width="14%">B</th><th width="3%">Graja</th>
-                                <th width="14%">C</th><th width="3%">Graja</th>
-                                <th width="14%">D</th><th width="3%">Graja</th>
-                                <th width="14%">E (Izpit)</th><th width="3%">Graja</th>
-                                <th width="10%">Konec leta</th>
-                                <th width="10%">Po izpitu</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td id="cell-A"></td><td id="warn-A"></td>
-                                <td id="cell-B"></td><td id="warn-B"></td>
-                                <td id="cell-C"></td><td id="warn-C"></td>
-                                <td id="cell-D"></td><td id="warn-D"></td>
-                                <td id="cell-E"></td><td id="warn-E"></td>
-                                <td id="cell-final-konec" style="font-weight: bold; font-size: 16px;"></td>
-                                <td id="cell-final-izpit" style="font-weight: bold; font-size: 16px;"></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="legend-container">
+                    <div class="legend-row">
+                        <span><img src="nok.png" alt="✘" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> ni opravil vseh obveznosti sklopa pozitivno</span>
+                        <span><img src="ok.png" alt="✔" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"> naknadno opravil vse obveznosti sklopa pozitivno</span>
+                    </div>
+                    <div class="legend-box">
+                        <div class="legend-item" style="color: black;">ustno</div>
+                        <div class="legend-item" style="color: red;">pisno</div>
+                        <div class="legend-item" style="color: blue;">izdelek</div>
+                    </div>
+                </div>
+            </div>
 
-                    <h3>Kronološki dnevnik vpisov</h3>
+            <div class="right-panel">
+                <div class="history-table-container">
                     <table class="history-table">
                         <thead>
                             <tr>
-                                <th width="20%">Datum</th>
-                                <th width="20%">Tip vpisa</th>
-                                <th>Vsebina / Ocena / Podrobnosti</th>
+                                <th width="40%">Datum</th>
+                                <th width="30%">Predmet</th>
+                                <th width="30%">Ocena</th>
                             </tr>
                         </thead>
                         <tbody id="history-tbody">
@@ -236,257 +275,266 @@
         </div>
     </div>
 
+    <div id="modal-container"></div>
+
 <script>
-// --- FIREBASE NASTAVITVE KOT V PREJŠNJI KODI ---
+// --- FIREBASE SETUP ---
 const firebaseConfig = { databaseURL: "https://mindex-b92ed-default-rtdb.europe-west1.firebasedatabase.app/" };
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-let db = {
-    classes: [],
-    subjects: [],
-    grades: [],
-    warnings: []
+let db = { classes: [], subjects: [], grades: [], warnings: [], sectorSettings: {} };
+
+let currentSession = {
+    classId: null,
+    studentId: null,
+    studentName: null,
+    className: null
 };
 
-let currentStudent = null;
-let currentClass = null;
-let activeSubjectId = null;
-
-// --- INITIALIZATION ---
-function init() {
-    database.ref('mindex_db').on('value', snapshot => {
-        if(snapshot.exists()) {
-            db = snapshot.val();
-            if(!db.classes) db.classes = [];
-            if(!db.subjects) db.subjects = [];
-            if(!db.grades) db.grades = [];
-            if(!db.warnings) db.warnings = [];
-            
-            // Če je učenec že prijavljen, osveži podatke na ekranu
-            if(currentStudent) {
-                refreshStudentData();
-            }
-        }
-    });
-}
-
-// --- PRIJAVA ---
-function openLoginPrompt() {
-    const usernameInput = prompt("Vnesite vaše uporabniško ime (ime.priimek):");
-    if(!usernameInput) return;
-
-    const cleanUser = usernameInput.trim().toLowerCase().replace(/\s/g, '');
-    
-    let foundStudent = null;
-    let foundClass = null;
-
-    // Iskanje študenta po vseh razredih
-    for(let c of db.classes) {
-        if(c.students) {
-            let s = c.students.find(stu => stu.username === cleanUser);
-            if(s) {
-                foundStudent = s;
-                foundClass = c;
-                break;
-            }
-        }
-    }
-
-    if(foundStudent) {
-        currentStudent = foundStudent;
-        currentClass = foundClass;
+// Nastavitev "poslušalca" - ob vsaki spremembi baze se podatki in UI osvežijo
+database.ref('mindex_db').on('value', snapshot => {
+    if(snapshot.exists()) {
+        const data = snapshot.val();
+        db = { ...db, ...data };
+        if(!db.classes) db.classes = [];
+        if(!db.subjects) db.subjects = [];
+        if(!db.grades) db.grades = [];
+        if(!db.warnings) db.warnings = [];
+        if(!db.sectorSettings) db.sectorSettings = {};
         
-        document.getElementById('login-page').classList.add('hidden');
-        document.getElementById('student-dashboard').classList.remove('hidden');
-        
-        refreshStudentData();
-        loadSubjectsSidebar();
-    } else {
-        alert("Uporabnik s tem uporabniškim imenom ne obstaja!");
-    }
-}
-
-function handleLogout() {
-    currentStudent = null;
-    currentClass = null;
-    activeSubjectId = null;
-    document.getElementById('student-dashboard').classList.add('hidden');
-    document.getElementById('login-page').classList.remove('hidden');
-    document.getElementById('detail-data-area').classList.add('hidden');
-    document.getElementById('current-subject-title').innerText = "Izberite predmet na levi strani";
-}
-
-// --- OSVEŽEVANJE PODATKOV ---
-function refreshStudentData() {
-    // Ponovno poiščemo svež objekt študenta iz baze
-    let updatedClass = db.classes.find(c => c.id === currentClass.id);
-    if(updatedClass && updatedClass.students) {
-        let updatedStu = updatedClass.students.find(s => s.id === currentStudent.id);
-        if(updatedStu) {
-            currentStudent = updatedStu;
-            currentClass = updatedClass;
+        // Če je učenec prijavljen, osveži njegov pogled takoj
+        if(currentSession.studentId) {
+            renderStudentView();
         }
     }
+});
 
-    document.getElementById('display-student-name').innerText = currentStudent.name;
-    document.getElementById('display-class-name').innerText = currentClass.name;
-    document.getElementById('display-ukrep').innerText = currentStudent.ukrep || 'BREZ';
-    document.getElementById('display-splosni').innerText = currentStudent.splosniUspeh || 'še ni zaključen';
-
-    if(activeSubjectId) {
-        showSubjectDetails(activeSubjectId);
-    }
-}
-
-function loadSubjectsSidebar() {
-    const sidebar = document.getElementById('subjects-sidebar');
-    sidebar.innerHTML = '';
-
-    if(!db.subjects || db.subjects.length === 0) {
-        sidebar.innerHTML = '<p style="padding:10px; font-size:12px;">Ni najdenih predmetov.</p>';
-        return;
-    }
-
-    db.subjects.forEach(sub => {
-        let btn = document.createElement('div');
-        btn.className = 'subject-item';
-        btn.id = `sub-item-${sub.id}`;
-        btn.innerText = sub.name;
-        btn.onclick = () => {
-            document.querySelectorAll('.subject-item').forEach(el => el.classList.remove('active'));
-            btn.classList.add('active');
-            showSubjectDetails(sub.id);
-        };
-        sidebar.appendChild(btn);
-    });
-}
-
+// --- POMOŽNA FUNKCIJA ZA PREVERJANJE POZITIVNE OCENE ---
 function isPassingGrade(val) {
     if(!val) return false;
     const v = val.toLowerCase().trim();
-    // Vsi ti vnosi veljajo za pozitivne/opravljene ocene
     const pass = ['o', '2', 'zadostno (2)', 'zd (2)', '3', 'dobro (3)', 'db (3)', '4', 'pdb (4)', 'prav dobro (4)', '5', 'odlično (5)', 'odl (5)'];
     return pass.includes(v);
 }
 
-function isFailGrade(val) {
-    if(!val) return false;
-    const v = val.toLowerCase().trim();
-    // Vsi ti vnosi pomenijo negativno oceno (1)
-    const fail = ['1', 'ne zadostno (1)', 'nzd (1)', 'nezadostno (1)'];
-    return fail.includes(v);
+// --- LOGIKA PRIJAVE (MODAL) ---
+function openLoginModal() {
+    if(db.classes.length === 0) {
+        alert("Baza šole še ni vzpostavljena (ni razredov).");
+        return;
+    }
+
+    let classOpts = '<option value="">-- Izberi razred --</option>';
+    db.classes.forEach(c => {
+        classOpts += `<option value="${c.id}">${c.name}</option>`;
+    });
+
+    const html = `
+        <div class="modal-overlay" id="login-modal-bg">
+            <div class="modal-window">
+                <div class="modal-header">Prijava učenca</div>
+                
+                <select id="login-class-sel" class="modal-select" onchange="updateStudentList()">
+                    ${classOpts}
+                </select>
+                
+                <select id="login-student-sel" class="modal-select" disabled>
+                    <option value="">-- Najprej izberi razred --</option>
+                </select>
+
+                <button class="modal-btn" onclick="confirmLogin()">NADALJUJ</button>
+                <button class="modal-btn" onclick="closeModal()" style="margin-top:10px; background:#f99;">PREKLIČI</button>
+            </div>
+        </div>
+    `;
+    document.getElementById('modal-container').innerHTML = html;
 }
 
-function showSubjectDetails(subjectId) {
-    activeSubjectId = subjectId;
-    const sub = db.subjects.find(s => s.id === subjectId);
-    document.getElementById('current-subject-title').innerText = sub.name;
-    document.getElementById('detail-data-area').classList.remove('hidden');
-
-    const sectors = ['A', 'B', 'C', 'D', 'E'];
+function updateStudentList() {
+    const classId = parseInt(document.getElementById('login-class-sel').value);
+    const studentSel = document.getElementById('login-student-sel');
     
-    // Pridobimo končni oceni
-    const finalGradeKonec = db.grades.find(g => g.studentId === currentStudent.id && g.subjectId === subjectId && g.isFinal && (!g.finalType || g.finalType === 'konec'));
-    const finalGradeIzpit = db.grades.find(g => g.studentId === currentStudent.id && g.subjectId === subjectId && g.isFinal && g.finalType === 'izpit');
-
-    // Pogoj: Če je končna ocena ob koncu leta negativna (1), se pojavi E obdobje in možnost po izpitu
-    const hasFailKonec = finalGradeKonec && isFailGrade(finalGradeKonec.value);
-
-    sectors.forEach(sec => {
-        const cell = document.getElementById(`cell-${sec}`);
-        const warnCell = document.getElementById(`warn-${sec}`);
-        
-        // Če gre za sektor E in učenec nima negativne ocene 1, se ta zaklene/skrije
-        if(sec === 'E' && !hasFailKonec) {
-            cell.innerHTML = '';
-            cell.className = 'disabled-sector';
-            warnCell.innerHTML = '';
-            warnCell.className = 'disabled-sector';
-        } else {
-            cell.className = '';
-            warnCell.className = '';
-            cell.innerHTML = renderCellContent(currentStudent.id, subjectId, sec);
-            warnCell.innerHTML = getWarnHtml(currentStudent.id, subjectId, sec);
-        }
-    });
-
-    // Prikaz končne ocene ob koncu leta
-    const cellKonec = document.getElementById('cell-final-konec');
-    if(finalGradeKonec) {
-        cellKonec.innerText = finalGradeKonec.value;
-    } else {
-        cellKonec.innerText = '';
+    if(!classId) {
+        studentSel.innerHTML = '<option value="">-- Najprej izberi razred --</option>';
+        studentSel.disabled = true;
+        return;
     }
 
-    // Prikaz končne ocene po izpitu (sivo če učenec nima popravnega/dopolnilnega izpita, tj. nima 1)
-    const cellIzpit = document.getElementById('cell-final-izpit');
-    if(!hasFailKonec) {
-        cellIzpit.innerText = '';
-        cellIzpit.className = 'disabled-sector';
+    const cls = db.classes.find(c => c.id === classId);
+    if(cls && cls.students && cls.students.length > 0) {
+        let stuOpts = '<option value="">-- Izberi svoje ime --</option>';
+        cls.students.forEach(s => {
+            stuOpts += `<option value="${s.id}">${s.name}</option>`;
+        });
+        studentSel.innerHTML = stuOpts;
+        studentSel.disabled = false;
     } else {
-        cellIzpit.className = '';
-        if(finalGradeIzpit) {
-            cellIzpit.innerText = finalGradeIzpit.value;
-        } else {
-            cellIzpit.innerText = '';
-        }
+        studentSel.innerHTML = '<option value="">-- V tem razredu ni učencev --</option>';
+        studentSel.disabled = true;
     }
-
-    buildChronologicalHistory(subjectId, hasFailKonec);
 }
 
-function buildChronologicalHistory(subjectId, hasFailKonec) {
-    let rows = '';
+function confirmLogin() {
+    const classId = parseInt(document.getElementById('login-class-sel').value);
+    const studentId = parseInt(document.getElementById('login-student-sel').value);
 
-    // 1. Zberemo navadne ocene
-    let sGrades = db.grades.filter(g => g.studentId === currentStudent.id && g.subjectId === subjectId && !g.isFinal);
-    sGrades.forEach(g => {
-        // Izločimo izpitne ocene (E), če učenec nima pogoja za izpit
-        if(g.period === 'E' && !hasFailKonec) return;
+    if(!classId || !studentId) {
+        alert("Prosimo, izberite razred in ime.");
+        return;
+    }
 
-        let typeStr = `Ocena (${g.type || 'USTNO'}) - Sektor ${g.period}`;
-        let content = `<span class="bold">${g.value}</span>`;
-        if(g.correction) content += ` (Popravek: ${g.correction})`;
+    const cls = db.classes.find(c => c.id === classId);
+    const student = cls.students.find(s => s.id === studentId);
+
+    currentSession.classId = classId;
+    currentSession.studentId = studentId;
+    currentSession.studentName = student.name;
+    currentSession.className = cls.name;
+
+    document.getElementById('display-student-name').innerText = student.name;
+    document.getElementById('display-class-name').innerText = `(${cls.name})`;
+
+    closeModal();
+    document.getElementById('login-page').classList.add('hidden');
+    document.getElementById('main-page').classList.remove('hidden');
+
+    renderStudentView();
+}
+
+function handleLogout() {
+    currentSession = { classId: null, studentId: null, studentName: null, className: null };
+    document.getElementById('main-page').classList.add('hidden');
+    document.getElementById('login-page').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('modal-container').innerHTML = '';
+}
+
+// --- IZRIS ZASLONA ---
+function renderStudentView() {
+    renderGradeTable();
+    renderHistoryTable();
+}
+
+// 1. Tabela Ocen (Leva stran)
+function renderGradeTable() {
+    const sId = currentSession.studentId;
+    const cId = currentSession.classId;
+
+    let thead = `
+        <tr>
+            <th rowspan="2" class="subj-cell" style="width: 20%;">Predmet</th>
+            <th colspan="10">Ocene po sklopih</th>
+            <th rowspan="2" style="width: 10%;">Konec<br>leta</th>
+            <th rowspan="2" style="width: 10%;">Po<br>izpitu</th>
+        </tr>
+        <tr>
+            <th style="width: 9%;">A</th><th style="width: 3%;">✘/✔</th>
+            <th style="width: 9%;">B</th><th style="width: 3%;">✘/✔</th>
+            <th style="width: 9%;">C</th><th style="width: 3%;">✘/✔</th>
+            <th style="width: 9%;">D</th><th style="width: 3%;">✘/✔</th>
+            <th style="width: 9%;">E (Izpit)</th><th style="width: 3%;">✘/✔</th>
+        </tr>
+    `;
+
+    let tbody = '';
+    const sectors = ['A', 'B', 'C', 'D'];
+
+    db.subjects.forEach(sub => {
+        let row = `<tr><td class="subj-cell">${sub.name}</td>`;
         
-        rows += `<tr>
-            <td>${g.date || '---'}</td>
-            <td>${typeStr}</td>
-            <td>${content}</td>
-        </tr>`;
-    });
+        // Sektorji A-D
+        sectors.forEach(sec => {
+            const key = `${cId}_${sub.id}`;
+            let disabled = false;
+            // Preveri ali je sektor sivo obarvan v nastavitvah razreda
+            if (db.sectorSettings[key] && db.sectorSettings[key][sec] === false) {
+                disabled = true;
+            }
 
-    // 2. Zberemo graje
-    let sWarns = db.warnings.filter(w => w.studentId === currentStudent.id && w.subjectId === subjectId);
-    sWarns.forEach(w => {
-        if(w.period === 'E' && !hasFailKonec) return;
-
-        let typeStr = `Vzgojna beležka - Sektor ${w.period}`;
-        let content = w.type === 'x' 
-            ? '<span style="color:red; font-weight:bold;">Graja (Negativna usmeritev / Neizpolnjevanje obveznosti)</span>' 
-            : '<span style="color:green; font-weight:bold;">Opravljeno / Popravljeno</span>';
+            const classStr = disabled ? 'grade-cell disabled-sector' : 'grade-cell';
             
-        rows += `<tr>
-            <td>---</td>
-            <td>${typeStr}</td>
-            <td>${content}</td>
-        </tr>`;
+            // Pridobi ocene in graje za ta sklop
+            const gradesHtml = renderCellContent(sId, sub.id, sec);
+            const warnHtml = getWarnHtml(sId, sub.id, sec);
+
+            row += `<td class="${classStr}">${gradesHtml}</td>`;
+            row += `<td class="${classStr}">${warnHtml}</td>`;
+        });
+
+        // Preverjanje za logiko Izpita (Obdobje E)
+        const konecGrade = db.grades.find(g => g.studentId === sId && g.subjectId === sub.id && g.isFinal && (!g.finalType || g.finalType === 'konec'));
+        const passedKonec = konecGrade ? isPassingGrade(konecGrade.value) : false;
+        const showIzpit = konecGrade && !passedKonec;
+
+        // Renderiranje Sektorja E
+        const eClassStr = showIzpit ? 'grade-cell' : 'grade-cell disabled-sector';
+        row += `<td class="${eClassStr}">${showIzpit ? renderCellContent(sId, sub.id, 'E') : ''}</td>`;
+        row += `<td class="${eClassStr}">${showIzpit ? getWarnHtml(sId, sub.id, 'E') : ''}</td>`;
+
+        // Zaključna ocena (Konec leta)
+        row += `<td class="grade-cell">${getFinalHtml(sId, sub.id, 'konec')}</td>`;
+        
+        // Zaključna ocena (Po izpitu)
+        row += `<td class="${showIzpit ? 'grade-cell' : 'grade-cell disabled-sector'}">${showIzpit ? getFinalHtml(sId, sub.id, 'izpit') : ''}</td></tr>`;
+        
+        tbody += row;
     });
 
-    // 3. Zberemo končne ocene
-    let fGrades = db.grades.filter(g => g.studentId === currentStudent.id && g.subjectId === subjectId && g.isFinal);
-    fGrades.forEach(g => {
-        let finalTypeLabel = (g.finalType === 'izpit') ? 'PO IZPITU' : 'OB KONCU LETA';
-        if(g.finalType === 'izpit' && !hasFailKonec) return;
+    document.getElementById('table-container').innerHTML = `
+        <table class="gradebook-table">
+            <thead>${thead}</thead>
+            <tbody>${tbody}</tbody>
+        </table>
+    `;
+}
 
-        rows += `<tr style="background-color: #ffffcc;">
-            <td>${g.date || '---'}</td>
-            <td class="bold">ZAKLJUČNA OCENA (${finalTypeLabel})</td>
-            <td class="bold" style="font-size:15px; color: navy;">${g.value}</td>
-        </tr>`;
-    });
+// 2. Zgodovina Datumska (Desna stran)
+function renderHistoryTable() {
+    const sId = currentSession.studentId;
+    
+    // Filtriraj redne ocene (brez zaključnih)
+    let myGrades = db.grades.filter(g => g.studentId === sId && !g.isFinal).map(g => ({ ...g, isWarning: false }));
+    
+    // Filtriraj graje (tip 'x'), ki se štejejo kot ocena za stransko tabelo
+    let myWarnings = db.warnings.filter(w => w.studentId === sId && w.type === 'x').map(w => ({ ...w, isWarning: true }));
+    
+    // Združi oboje skupaj
+    let combinedHistory = [...myGrades, ...myWarnings];
+    
+    // Razvrsti padajoče glede na id (timestamp vnosa)
+    combinedHistory.sort((a, b) => b.id - a.id);
 
-    if(rows == '') {
+    let rows = combinedHistory.map(item => {
+        let sub = db.subjects.find(s => s.id === item.subjectId);
+        let subName = sub ? sub.name.substring(0,3).toUpperCase() : '???';
+        
+        let valHtml = '';
+        if (item.isWarning) {
+            // Če je graja (x), prikaži sliko nok.png
+            valHtml = `<img src="nok.png" alt="✘" style="width:16px; height:16px; vertical-align:middle;">`;
+        } else {
+            // Izbira barve glede na tip ocene
+            let cls = item.type === 'PISNO' ? 'grade-pisno' : (item.type === 'IZDELEK' ? 'grade-izdelek' : 'grade-ustno');
+            
+            // Izpis ocene s popravkom, če obstaja
+            valHtml = item.correction 
+                ? `<span class="${cls}"><span class="grade-correction">${item.value}</span>${item.correction}</span>` 
+                : `<span class="${cls}">${item.value}</span>`;
+        }
+
+        return `
+            <tr>
+                <td>${item.date || ''}</td>
+                <td>${subName}</td>
+                <td>${valHtml}</td>
+            </tr>
+        `;
+    }).join('');
+
+    if (rows === '') {
         rows = `<tr><td colspan="3" style="color:#777;">Ni vpisanih ocen ali graj.</td></tr>`;
     }
 
@@ -513,8 +561,12 @@ function getWarnHtml(studentId, subjectId, period) {
         : '<img src="ok.png" alt="✔" style="width:16px; height:16px; vertical-align:middle;">';
 }
 
-init();
-</script>
+function getFinalHtml(studentId, subjectId, finalType) {
+    const g = db.grades.find(x => x.studentId === studentId && x.subjectId === subjectId && x.isFinal && (x.finalType === finalType || (!x.finalType && finalType === 'konec')));
+    if(!g) return '';
+    return `<span style="font-weight:bold;">${g.value}</span>`;
+}
 
+</script>
 </body>
 </html>
