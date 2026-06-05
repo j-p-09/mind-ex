@@ -15,7 +15,8 @@
             --win-light: #ffffff;
             --win-text: #000000;
             --win-blue: #0a246a;
-            --split-gray: #b0b0b0; /* Temnejša siva za spodnji del celice */
+            --split-gray: #b0b0b0; 
+            --pastel-yellow: #fffacd;
         }
 
         body {
@@ -31,6 +32,7 @@
         /* Utility */
         .hidden { display: none !important; }
         .bold { font-weight: bold; }
+        .pastel-yellow { background-color: var(--pastel-yellow) !important; }
         
         /* Gumbi */
         .win-btn {
@@ -80,6 +82,14 @@
         }
         .sidebar-btn img:active { transform: translate(1px, 1px); }
 
+        .btn-razrednik-box {
+            width: 150px; height: 50px; background: var(--pastel-yellow); 
+            border: 1px solid #999; display: flex; align-items: center; 
+            justify-content: center; font-weight: bold; color: black;
+            box-shadow: 2px 2px 0px #ccc;
+        }
+        .btn-razrednik-box:active { transform: translate(1px, 1px); box-shadow: none; }
+
         .main-content { flex-grow: 1; display: flex; flex-direction: column; }
 
         /* Header */
@@ -92,13 +102,16 @@
             padding: 0 20px;
             border-bottom: 1px solid #999;
         }
-        .app-title { font-size: 48px; font-family: 'Arial', sans-serif; letter-spacing: 2px; }
-        .time-info, .session-info { font-weight: bold; font-size: 14px; }
+        .app-title { font-size: 48px; font-family: 'Arial', sans-serif; letter-spacing: 2px; font-weight: bold; }
+        .time-info, .session-info { font-weight: bold; font-size: 14px; text-align: center;}
 
         .content-body { padding: 20px; overflow-y: auto; background: white; height: 100%; }
 
         /* Login page elements */
         #login-page { display: flex; width: 100%; height: 100%; background: white; }
+        .login-left { width: 50%; padding: 20px; }
+        .login-right { width: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #f0f0f0; border-left: 2px solid #ccc; }
+        
         .login-box {
             background: #c0c0c0; padding: 20px; width: 350px;
             margin-top: 20px; border: 2px solid #808080;
@@ -108,6 +121,9 @@
             background: #dcdcdc; padding: 10px; margin-top: 20px; width: 350px;
             border: 1px solid #999; display: flex; justify-content: space-between; align-items: center;
         }
+
+        .login-clock-display { font-size: 80px; font-weight: bold; color: #333; font-family: 'Courier New', Courier, monospace; text-shadow: 2px 2px 4px #aaa; }
+        .login-date-display { font-size: 24px; color: #555; margin-top: 10px; }
 
         /* Info bar */
         .info-bar {
@@ -119,62 +135,31 @@
         .logout-icon-btn:hover { opacity: 0.8; }
 
         /* Gradebook Table */
-        .gradebook-table { width: 100%; border-collapse: collapse; margin-top: 20px; border: 2px solid black; }
-        /* Odstranjen padding na td, da split-view deluje pravilno. Padding dodamo v notranje div-e */
+        .gradebook-table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 2px solid black; font-size: 13px; }
         .gradebook-table th { border: 1px solid black; padding: 5px; text-align: center; vertical-align: middle; height: 30px; background: #eee; }
         .gradebook-table td { border: 1px solid black; text-align: center; vertical-align: middle; height: 40px; padding: 0; }
         
-        .grade-cell { cursor: pointer; min-width: 50px; height: 100%; position: relative; }
-        .grade-cell:hover { background-color: #ffffcc; }
+        .grade-cell { cursor: pointer; min-width: 35px; height: 100%; position: relative; }
+        .grade-cell:hover:not(.disabled-sector) { background-color: #ffffcc; }
         
-        /* NOVO: Split View Styles */
+        .disabled-sector { background-color: #e0e0e0 !important; pointer-events: none; opacity: 0.5; }
+
+        /* Split View Styles */
         .split-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            min-height: 46px; /* Da je celica dovolj visoka */
-            width: 100%;
+            display: flex; flex-direction: column; height: 100%; min-height: 46px; width: 100%;
         }
-        .split-top {
-            flex: 1;
-            background-color: white;
-            border-bottom: 1px dotted #999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            padding: 2px;
-        }
-        .split-bottom {
-            flex: 1;
-            background-color: var(--split-gray);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            padding: 2px;
-        }
-        /* Če ni split view, uporabimo to za poravnavo */
         .single-view {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            height: 100%;
-            width: 100%;
-            padding: 5px;
-            box-sizing: border-box;
+            display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+            height: 100%; width: 100%; padding: 5px; box-sizing: border-box; position: relative;
         }
 
         /* Grade Styles */
-        .grade-span { margin: 0 3px; position: relative; display: inline-block; }
+        .grade-span { margin: 0 3px; position: relative; display: inline-block; cursor: pointer; font-size: 14px; }
         .grade-pisno { color: red; font-weight: bold; }
         .grade-ustno { color: black; font-weight: bold; }
         .grade-izdelek { color: blue; font-weight: bold; }
         .grade-correction { font-size: 0.7em; vertical-align: sub; margin-right: 3px; }
         
-        .icon-img { height: 24px; width: auto; vertical-align: middle; }
-
         .grade-type-btn { margin: 10px 5px; font-size: 13px; padding: 3px 10px; }
         .selected-type { background-color: #a0a0a0; border-style: inset; }
 
@@ -192,11 +177,13 @@
             width: 450px;
             box-shadow: 4px 4px 10px rgba(0,0,0,0.5);
             display: flex; flex-direction: column;
+            position: relative; 
         }
         .win-header {
             background: var(--win-blue); color: white; padding: 4px 6px;
             font-weight: bold; font-size: 14px;
             display: flex; justify-content: space-between; align-items: center;
+            cursor: move; 
         }
         .win-close {
             background: var(--win-gray); color: black; border: 1px outset white;
@@ -207,9 +194,10 @@
         .win-body {
             padding: 15px;
             font-size: 14px;
+            max-height: 400px; overflow-y: auto;
         }
-        .win-body label { display: block; margin-top: 10px; margin-bottom: 2px; }
-        .win-body input, .win-body select { width: 95%; padding: 3px; border: 2px inset #fff; }
+        .win-body label { display: block; margin-top: 10px; margin-bottom: 2px; font-weight: bold; }
+        .win-body input[type="text"], .win-body input[type="password"], .win-body input[type="number"], .win-body select { width: 95%; padding: 3px; border: 2px inset #fff; }
         
         .win-footer {
             padding: 10px;
@@ -220,67 +208,99 @@
             gap: 10px;
         }
 
-        /* Seznami za admina */
         .admin-list { list-style: none; padding: 0; border: 2px inset white; background: white; max-height: 150px; overflow-y: auto; margin-bottom: 10px; }
         .admin-list li { padding: 3px; border-bottom: 1px dotted #ccc; display: flex; justify-content: space-between; align-items: center; }
         .admin-list li:hover { background: #e0e0ff; }
         .mini-btn { font-size: 11px; padding: 1px 4px; margin-left: 3px; }
 
+        .top-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #e0e0e0; padding: 5px; border: 1px solid #999; }
+        
+        .class-btn-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .class-btn-grid button { padding: 10px 20px; font-size: 14px; font-weight: bold; }
+
+        .inline-grade-input {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 16px;
+            height: 16px;
+            background-color: #b0b0b0;
+            border: none;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+            font-size: 11px;
+            font-weight: bold;
+            outline: none;
+        }
+        .inline-grade-input:focus {
+            background-color: #fff;
+        }
+        .grade-highlight {
+            background-color: #c8f7c5 !important;
+            padding: 2px;
+            border-radius: 2px;
+        }
     </style>
 </head>
 <body>
 
     <div id="login-page">
         <div class="sidebar">
-            <button class="sidebar-btn"><img src="redovalnica_sivo.png" onmouseover="this.src='redovalnica_barve.png'" onmouseout="this.src='redovalnica_sivo.png'"></button>
-            <button class="sidebar-btn"><img src="profil_sivo.png" onmouseover="this.src='profil_barve.png'" onmouseout="this.src='profil_sivo.png'"></button>
-            <button class="sidebar-btn"><img src="podatki_sivo.png" onmouseover="this.src='podatki_barve.png'" onmouseout="this.src='podatki_sivo.png'"></button>
-            <button class="sidebar-btn"><img src="odjava_sivo.png" onmouseover="this.src='odjava_barve.png'" onmouseout="this.src='odjava_sivo.png'"></button>
-            <button class="sidebar-btn"><img src="domov_sivo.png" onmouseover="this.src='domov_barve.png'" onmouseout="this.src='domov_sivo.png'"></button>
+            <button class="sidebar-btn"><img src="redovalnica_sivo.png" onmouseover="this.src='redovalnica_barve.png'" onmouseout="this.src='redovalnica_sivo.png'" alt="Redovalnica"></button>
+            <button class="sidebar-btn"><img src="profil_sivo.png" onmouseover="this.src='profil_barve.png'" onmouseout="this.src='profil_sivo.png'" alt="Profil"></button>
+            <button class="sidebar-btn"><img src="podatki_sivo.png" onmouseover="this.src='podatki_barve.png'" onmouseout="this.src='podatki_sivo.png'" alt="Podatki"></button>
+            <button class="sidebar-btn"><img src="odjava_sivo.png" onmouseover="this.src='odjava_barve.png'" onmouseout="this.src='odjava_sivo.png'" alt="Odjava"></button>
+            <button class="sidebar-btn"><img src="domov_sivo.png" onmouseover="this.src='domov_barve.png'" onmouseout="this.src='domov_sivo.png'" alt="Domov"></button>
         </div>
-        <div class="main-content">
-            <div class="top-header">
-                <div></div> <div class="app-title">MINDEX</div> <div></div>
+        
+        <div class="login-left">
+            <h1 class="app-title" style="margin-top:0;">MINDEX</h1>
+            <h2>Podatki:</h2>
+            <div style="background: #dcdcdc; padding: 10px; margin-bottom: 20px; width: 350px; border: 1px solid gray;">
+                Številka licence: <span class="bold">MINDEX-shop</span><br>
+                IP naslov naprave: <span class="bold" id="login-ip">192.168.1.100</span>
             </div>
-            <div class="content-body">
-                <h2>Podatki:</h2>
-                <div style="background: #dcdcdc; padding: 10px; margin-bottom: 20px; width: 350px; border: 1px solid gray;">
-                    Številka licence: <span class="bold">avtomatsko vnese</span><br>
-                    IP naslov naprave: <span class="bold">avtomatsko vnese</span>
-                </div>
 
-                <h2>Prijava v sistem:</h2>
-                <div class="login-box">
-                    <input type="text" id="login-username" class="login-input" placeholder="Uporabniško ime"><br>
-                    <input type="password" id="login-password" class="login-input" placeholder="Geslo"><br>
-                    <div style="text-align: center; margin-top: 10px;">
-                        <button class="win-btn bold" onclick="handleLogin()">POTRDI</button>
-                    </div>
-                </div>
-
-                <h2>Zadnja prijava kot:</h2>
-                <div class="last-login-box">
-                    <div style="font-size: 13px;">
-                        Uporabnik: <span id="last-login-user" class="bold"></span><br>
-                        Datum: <span id="last-login-time" class="bold"></span>
-                    </div>
-                    <button class="win-btn bold" onclick="fillLastLogin()">Uporabi</button>
+            <h2>Prijava v sistem:</h2>
+            <div class="login-box">
+                <input type="text" id="login-username" class="login-input" placeholder="Uporabniško ime"><br>
+                <input type="password" id="login-password" class="login-input" placeholder="Geslo"><br>
+                <div style="text-align: center; margin-top: 10px;">
+                    <button class="win-btn bold" onclick="handleLogin()">POTRDI</button>
                 </div>
             </div>
+
+            <h2>Zadnja prijava kot:</h2>
+            <div class="last-login-box">
+                <div style="font-size: 13px;">
+                    Uporabnik: <span id="last-login-user" class="bold"></span><br>
+                    Datum: <span id="last-login-time" class="bold"></span>
+                </div>
+                <button class="win-btn bold" onclick="fillLastLogin()">Uporabi</button>
+            </div>
+        </div>
+        
+        <div class="login-right">
+            <div id="login-clock" class="login-clock-display">00:00:00</div>
+            <div id="login-date" class="login-date-display">1. 1. 2024</div>
         </div>
     </div>
 
     <div id="dashboard-page" class="layout-container hidden">
         <div class="sidebar">
-            <button class="sidebar-btn" onclick="showPage('redovalnica')"><img src="redovalnica_sivo.png" onmouseover="this.src='redovalnica_barve.png'" onmouseout="this.src='redovalnica_sivo.png'"></button>
-            <button class="sidebar-btn" onclick="showProfile()"><img src="profil_sivo.png" onmouseover="this.src='profil_barve.png'" onmouseout="this.src='profil_sivo.png'"></button>
-            <button class="sidebar-btn" onclick="checkAdminAndShowData()"><img src="podatki_sivo.png" onmouseover="this.src='podatki_barve.png'" onmouseout="this.src='podatki_sivo.png'"></button>
-            <button class="sidebar-btn" onclick="handleLogout()"><img src="odjava_sivo.png" onmouseover="this.src='odjava_barve.png'" onmouseout="this.src='odjava_sivo.png'"></button>
-            <button class="sidebar-btn" onclick="showPage('home')"><img src="domov_sivo.png" onmouseover="this.src='domov_barve.png'" onmouseout="this.src='domov_sivo.png'"></button>
+            <button class="sidebar-btn" onclick="openRedovalnicaMenu()"><img src="redovalnica_sivo.png" onmouseover="this.src='redovalnica_barve.png'" onmouseout="this.src='redovalnica_sivo.png'" alt="Redovalnica"></button>
+            <button class="sidebar-btn hidden" id="nav-razrednik" onclick="showPage('razrednik')">
+                <div class="btn-razrednik-box">RAZREDNIK</div>
+            </button>
+            <button class="sidebar-btn" onclick="showProfile()"><img src="profil_sivo.png" onmouseover="this.src='profil_barve.png'" onmouseout="this.src='profil_sivo.png'" alt="Profil"></button>
+            <button class="sidebar-btn" onclick="checkAdminAndShowData()"><img src="podatki_sivo.png" onmouseover="this.src='podatki_barve.png'" onmouseout="this.src='podatki_sivo.png'" alt="Podatki"></button>
+            <button class="sidebar-btn" onclick="handleLogout()"><img src="odjava_sivo.png" onmouseover="this.src='odjava_barve.png'" onmouseout="this.src='odjava_sivo.png'" alt="Odjava"></button>
+            <button class="sidebar-btn" onclick="showPage('home')"><img src="domov_sivo.png" onmouseover="this.src='domov_barve.png'" onmouseout="this.src='domov_sivo.png'" alt="Domov"></button>
         </div>
 
         <div class="main-content">
-            <div class="top-header">
+            <div class="top-header pastel-yellow">
                 <div class="session-info">
                     Seja poteče čez:<br>
                     <span id="session-timer" class="bold"></span>
@@ -292,82 +312,67 @@
                 </div>
             </div>
 
-            <div class="info-bar">
+            <div class="info-bar pastel-yellow">
                 <div>
                     Pozdravljeni, <br>
                     <span id="teacher-name-display" style="text-transform: uppercase;"></span>
                 </div>
-                <img src="odjava_ikona_barvno.png" class="logout-icon-btn" onclick="handleLogout()" alt="Odjava">
+                <img src="odjava_ikona_barvno.png" class="logout-icon-btn" onclick="handleLogout()" alt="Odjava" onerror="this.style.display='none'">
             </div>
 
             <div id="content-area" class="content-body">
                 <div id="view-home" class="view-section hidden">
                     <div style="text-align: center; margin-top: 50px;">
-                        <img src="redovalnica_barve.png" style="height: 50px; margin: 10px;"> REDOVALNICA<br>
-                        <img src="podatki_barve.png" style="height: 50px; margin: 10px;"> PODATKI<br>
-                        <img src="profil_barve.png" style="height: 50px; margin: 10px;"> PROFIL
+                        <h2>Dobrodošli v e-dnevnik MINDEX</h2>
+                        <p>Izberite akcijo v levem meniju.</p>
                     </div>
                 </div>
 
-                <div id="view-redovalnica" class="view-section">
-                    <h3>Redovalnica</h3>
-                    <div style="margin-bottom: 20px;">
-                        <label>Razred:</label>
-                        <select id="sel-class" onchange="renderGradebook()" style="padding: 3px;"><option value="">Izberi razred</option></select>
-                        
-                        <label style="margin-left: 20px;">Predmet:</label>
-                        <select id="sel-subject" onchange="renderGradebook()" style="padding: 3px;"><option value="">Izberi predmet</option></select>
-
-                        <label style="margin-left: 20px;">Pogled:</label>
-                        <select id="sel-view" onchange="renderGradebook()" style="padding: 3px;">
-                            <option value="TEACHERS" selected>UČITELJI</option>
-                            <option value="STUDENTS">UČENCI</option>
-                        </select>
+                <div id="view-redovalnica" class="view-section hidden">
+                    <div class="top-toolbar">
+                        <div>
+                            <button class="win-btn" onclick="showPage('home')" title="Nazaj domov"><span style="font-size:16px;">&#11013;</span> NAZAJ</button>
+                            <span id="redovalnica-naslov" style="font-weight:bold; margin-left:15px; font-size:18px;"></span>
+                        </div>
+                        <button class="win-btn" onclick="openSectorSettings()" title="Nastavitve sektorjev"><span style="font-size:16px;">&#9881;</span> NASTAVITVE</button>
                     </div>
 
-                    <table class="gradebook-table">
-                        <thead>
-                            <tr>
-                                <th width="20%">Učenec</th>
-                                <th width="25%">1. Ocenjevalno obdobje</th>
-                                <th width="5%"><img src="graja.png" alt="Graja" style="height:20px;"></th>
-                                <th width="25%">2. Ocenjevalno obdobje</th>
-                                <th width="5%"><img src="graja.png" alt="Graja" style="height:20px;"></th>
-                                <th width="10%">Končna</th>
-                            </tr>
-                        </thead>
-                        <tbody id="gradebook-body">
-                            </tbody>
-                    </table>
+                    <div id="redovalnica-container">
+                    </div>
 
-                    <div style="margin-top: 10px;">
+                    <div id="redovalnica-controls" style="margin-top: 10px;" class="hidden">
                         Izberi način vnosa:
                         <button class="win-btn btn-pisno grade-type-btn" onclick="setGradeType('PISNO')">PISNO</button>
                         <button class="win-btn btn-ustno grade-type-btn" onclick="setGradeType('USTNO')">USTNO</button>
                         <button class="win-btn btn-izdelek grade-type-btn" onclick="setGradeType('IZDELEK')">IZDELEK</button>
+                        <hr>
+                        <button class="win-btn" onclick="openBulkEntry()">MNOŽIČNO VPIŠI</button>
                     </div>
-                    
-                    <hr>
-                    <button class="win-btn" onclick="openBulkEntry()">MNOŽIČNO VPIŠI</button>
+                </div>
+
+                <div id="view-razrednik" class="view-section hidden">
+                    <h3 class="pastel-yellow" style="padding:10px; border:1px solid #999;">Nadzorna plošča razrednika</h3>
+                    <div id="razrednik-content"></div>
                 </div>
 
                 <div id="view-podatki" class="view-section hidden">
                     <h3>Administracija podatkov</h3>
-                    <div class="win-border" style="padding: 10px; margin-bottom: 10px;">
+                    <div class="win-border" style="padding: 10px; margin-bottom: 10px; border: 2px inset white; background: #e8e8e8;">
                         <h4>SEZNAM UČITELJEV</h4>
                         <ul id="list-teachers" class="admin-list"></ul>
                         <button class="win-btn" onclick="addTeacher()">Dodaj učitelja</button>
                     </div>
-                    <div class="win-border" style="padding: 10px; margin-bottom: 10px;">
-                        <h4>SEZNAM RAZREDOV</h4>
-                        <ul id="list-classes" class="admin-list"></ul>
-                        <button class="win-btn" onclick="addClass()">Dodaj razred</button>
-                    </div>
-                    <div class="win-border" style="padding: 10px; margin-bottom: 10px;">
+                    <div class="win-border" style="padding: 10px; margin-bottom: 10px; border: 2px inset white; background: #e8e8e8;">
                         <h4>SEZNAM PREDMETOV</h4>
                         <ul id="list-subjects" class="admin-list"></ul>
                         <button class="win-btn" onclick="addSubject()">Dodaj predmet</button>
                     </div>
+                    <div class="win-border" style="padding: 10px; margin-bottom: 10px; border: 2px inset white; background: #e8e8e8;">
+                        <h4>SEZNAM RAZREDOV</h4>
+                        <ul id="list-classes" class="admin-list"></ul>
+                        <button class="win-btn" onclick="addClass()">Dodaj razred</button>
+                    </div>
+                    
                     <button class="win-btn" style="background: #ffcccc;" onclick="resetAllData()">PONASTAVI VSE (Reset)</button>
                 </div>
             </div>
@@ -378,7 +383,7 @@
 
 <script>
 /**
- * MINDEX APLIKACIJA - SPREMENJENA LOGIKA ZA FIREBASE
+ * MINDEX APLIKACIJA
  */
 
 // --- FIREBASE SETUP ---
@@ -393,7 +398,8 @@ let db = {
     subjects: [], 
     grades: [], 
     warnings: [], 
-    lastLogin: { user: '', time: '' }
+    lastLogin: { user: '', time: '' },
+    sectorSettings: {} 
 };
 
 let currentState = {
@@ -401,11 +407,12 @@ let currentState = {
     selectedGradeType: 'USTNO', 
     selectedClassId: null,
     selectedSubjectId: null,
+    viewMode: 'RAZREDNI',
     sessionInterval: null,
     sessionTime: 0 
 };
 
-// --- MODALNI SISTEM ---
+// --- MODALNI SISTEM Z MOŽNOSTJO PREMIKANJA ---
 function closeModal() {
     document.getElementById('modal-container').innerHTML = '';
 }
@@ -423,9 +430,9 @@ function showModal(title, htmlContent, buttons = []) {
     });
 
     container.innerHTML = `
-        <div class="modal-overlay">
-            <div class="win-window">
-                <div class="win-header">
+        <div class="modal-overlay" id="modal-bg">
+            <div class="win-window" id="draggable-window">
+                <div class="win-header" id="draggable-header">
                     <span>${title}</span>
                     <span class="win-close" id="modal-x-close">X</span>
                 </div>
@@ -440,12 +447,31 @@ function showModal(title, htmlContent, buttons = []) {
     `;
 
     document.getElementById('modal-x-close').onclick = closeModal;
+
     buttons.forEach((btn, index) => {
         document.getElementById(`modal-btn-${index}`).onclick = function() {
             if (btn.onClick) btn.onClick();
             if (btn.shouldClose !== false) closeModal();
         };
     });
+
+    makeDraggable(document.getElementById('draggable-window'), document.getElementById('draggable-header'));
+}
+
+function makeDraggable(win, header) {
+    let isDragging = false, offsetX = 0, offsetY = 0;
+    header.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        offsetX = e.clientX - win.getBoundingClientRect().left;
+        offsetY = e.clientY - win.getBoundingClientRect().top;
+        win.style.position = 'absolute';
+    });
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        win.style.left = (e.clientX - offsetX) + 'px';
+        win.style.top = (e.clientY - offsetY) + 'px';
+    });
+    document.addEventListener('mouseup', () => { isDragging = false; });
 }
 
 function customAlert(message) {
@@ -471,6 +497,7 @@ function customPrompt(message, onResult) {
         },
         { label: 'Prekliči', onClick: closeModal }
     ]);
+    setTimeout(() => document.getElementById('prompt-input').focus(), 100);
 }
 
 // --- INIT & FIREBASE SYNC ---
@@ -478,13 +505,13 @@ function init() {
     database.ref('mindex_db').once('value').then(snapshot => {
         if(snapshot.exists()) {
             let data = snapshot.val();
-            // Združimo podatke, da ohranimo ewi urnike in vnose
             db = { ...db, ...data };
             if(!db.users) db.users = [DEFAULT_ADMIN];
             if(!db.classes) db.classes = [];
             if(!db.subjects) db.subjects = [];
             if(!db.grades) db.grades = [];
             if(!db.warnings) db.warnings = [];
+            if(!db.sectorSettings) db.sectorSettings = {};
             if(!db.lastLogin) db.lastLogin = { user: '', time: '' };
         } else {
             saveDB();
@@ -498,20 +525,27 @@ function init() {
             document.getElementById('last-login-time').innerText = db.lastLogin.time;
         }
     }).catch(err => {
-        alert("Napaka pri povezavi s Firebase: " + err);
+        console.error("Firebase napaka:", err);
     });
 }
 
 function saveDB() {
-    // Shrani v Firebase namesto v localStorage
     database.ref('mindex_db').set(db);
 }
 
 // --- CLOCK & SESSION ---
 function updateClock() {
     const now = new Date();
+    const tStr = now.toLocaleTimeString('sl-SI');
+    const dStr = now.toLocaleDateString('sl-SI');
+    
     const clockEl = document.getElementById('clock');
-    if (clockEl) clockEl.innerText = now.toLocaleTimeString('sl-SI');
+    if (clockEl) clockEl.innerText = tStr;
+
+    const loginClock = document.getElementById('login-clock');
+    if (loginClock) loginClock.innerText = tStr;
+    const loginDate = document.getElementById('login-date');
+    if (loginDate) loginDate.innerText = dStr;
 }
 
 function startSessionTimer() {
@@ -524,13 +558,7 @@ function startSessionTimer() {
         currentState.sessionTime--;
         if (currentState.sessionTime <= 0) {
             handleLogout();
-            const html = `
-                <div style="display:flex; align-items:center; justify-content:center;">
-                    <img src="odjava_ikona_barvno.png" style="height:50px; width:auto; margin-right:15px;">
-                    <span>Seja je potekla, potrebna je ponovna prijava.</span>
-                </div>
-            `;
-            showModal("Obvestilo", html, [{label: 'V redu', onClick: closeModal}]);
+            showModal("Obvestilo", `<span>Seja je potekla, potrebna je ponovna prijava.</span>`, [{label: 'V redu', onClick: closeModal}]);
         } else {
             const h = Math.floor(currentState.sessionTime / 3600);
             const m = Math.floor((currentState.sessionTime % 3600) / 60);
@@ -557,6 +585,7 @@ function handleLogin() {
         document.getElementById('dashboard-page').classList.remove('hidden');
         document.getElementById('teacher-name-display').innerText = user.name;
         
+        updateSidebarVisibility();
         startSessionTimer();
         showPage('home');
     } else {
@@ -579,21 +608,30 @@ function fillLastLogin() {
     if(db.lastLogin.user) document.getElementById('login-username').value = db.lastLogin.user;
 }
 
+function updateSidebarVisibility() {
+    if (!currentState.user) return;
+    const isRazrednik = db.classes.some(c => c.razrednikId == currentState.user.id) || currentState.user.role === 'admin';
+    if(isRazrednik) document.getElementById('nav-razrednik').classList.remove('hidden');
+    else document.getElementById('nav-razrednik').classList.add('hidden');
+}
+
 // --- NAVIGATION ---
 function showPage(pageId) {
     document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
     if (pageId === 'home') document.getElementById('view-home').classList.remove('hidden');
     if (pageId === 'redovalnica') {
         document.getElementById('view-redovalnica').classList.remove('hidden');
-        loadRedovalnicaDropdowns();
     }
     if (pageId === 'podatki') {
         document.getElementById('view-podatki').classList.remove('hidden');
         renderAdminLists();
     }
+    if (pageId === 'razrednik') {
+        document.getElementById('view-razrednik').classList.remove('hidden');
+        renderRazrednikView();
+    }
 }
 
-// --- PROFIL ---
 function showProfile() {
     if (!currentState.user) return;
     const u = currentState.user;
@@ -604,7 +642,7 @@ function showProfile() {
             Uporabniško ime: <span class="bold">${u.username}</span><br>
             Geslo: <span class="bold"><input type="text" id="profile-pass" value="${u.password}" style="width:120px"></span><br>
             Zadnja prijava: <span class="bold">${db.lastLogin.time}</span><br>
-            Številka licence: <span class="bold">SI-882190</span><br>
+            Številka licence: <span class="bold">MINDEX-shop</span><br>
             Dovoljen čas seje: <span class="bold">${u.sessionTimeout || 15} min</span>
         </div>
     `;
@@ -658,40 +696,28 @@ function renderAdminLists() {
          </li>`
     ).join('');
 
-    const cList = document.getElementById('list-classes');
-    cList.innerHTML = db.classes.map(c => 
-        `<li>${c.name} <div><button class="win-btn mini-btn" onclick="manageClass(${c.id})">Uredi</button> <button class="win-btn mini-btn" onclick="deleteClass(${c.id})">X</button></div></li>`
-    ).join('');
-
     const sList = document.getElementById('list-subjects');
     sList.innerHTML = db.subjects.map(s => 
         `<li>${s.name} <button class="win-btn mini-btn" onclick="deleteSubject(${s.id})">X</button></li>`
     ).join('');
+
+    const cList = document.getElementById('list-classes');
+    cList.innerHTML = db.classes.map(c => 
+        `<li>${c.name} <div><button class="win-btn mini-btn" onclick="manageClass(${c.id})">Uredi</button> <button class="win-btn mini-btn" onclick="deleteClass(${c.id})">X</button></div></li>`
+    ).join('');
 }
 
 function addTeacher() { openTeacherModal(); }
-
-function editTeacher(id) {
-    const user = db.users.find(u => u.id === id);
-    if(user) openTeacherModal(user);
-}
-
+function editTeacher(id) { const user = db.users.find(u => u.id === id); if(user) openTeacherModal(user); }
 function openTeacherModal(user = null) {
     const isEdit = !!user;
-    const title = isEdit ? "Urejanje učitelja" : "Dodajanje učitelja";
-    
     const html = `
-        <label>Ime in priimek:</label>
-        <input type="text" id="t-name" value="${isEdit ? user.name : ''}">
-        <label>Uporabniško ime:</label>
-        <input type="text" id="t-user" value="${isEdit ? user.username : ''}">
-        <label>Geslo:</label>
-        <input type="text" id="t-pass" value="${isEdit ? user.password : ''}">
-        <label>Čas seje (min):</label>
-        <input type="number" id="t-time" value="${isEdit ? (user.sessionTimeout || 15) : '15'}">
+        <label>Ime in priimek:</label><input type="text" id="t-name" value="${isEdit ? user.name : ''}">
+        <label>Uporabniško ime:</label><input type="text" id="t-user" value="${isEdit ? user.username : ''}">
+        <label>Geslo:</label><input type="text" id="t-pass" value="${isEdit ? user.password : ''}">
+        <label>Čas seje (min):</label><input type="number" id="t-time" value="${isEdit ? (user.sessionTimeout || 15) : '15'}">
     `;
-
-    showModal(title, html, [
+    showModal(isEdit ? "Urejanje učitelja" : "Dodajanje učitelja", html, [
         {
             label: 'Shrani',
             onClick: () => {
@@ -699,11 +725,7 @@ function openTeacherModal(user = null) {
                 const username = document.getElementById('t-user').value;
                 const password = document.getElementById('t-pass').value;
                 const timeout = parseInt(document.getElementById('t-time').value) || 15;
-
-                if(!name || !username || !password) {
-                    customAlert("Vsa polja so obvezna!");
-                    return;
-                }
+                if(!name || !username || !password) return customAlert("Vsa polja so obvezna!");
 
                 if (isEdit) {
                     const idx = db.users.findIndex(u => u.id === user.id);
@@ -711,174 +733,213 @@ function openTeacherModal(user = null) {
                 } else {
                     db.users.push({ id: Date.now(), name, username, password, sessionTimeout: timeout, role: 'teacher' });
                 }
-                saveDB();
-                renderAdminLists();
-                closeModal();
+                saveDB(); renderAdminLists(); closeModal();
             },
             shouldClose: false
         },
         { label: 'Prekliči', onClick: closeModal }
     ]);
 }
-
 function deleteUser(id) {
     const u = db.users.find(x => x.id === id);
-    if(u.role === 'admin') { customAlert("Admina ni mogoče izbrisati!"); return; }
-    
-    customConfirm("Res želiš izbrisati tega uporabnika?", () => {
-        db.users = db.users.filter(x => x.id !== id);
-        saveDB();
-        renderAdminLists();
-        closeModal();
-    });
+    if(u.role === 'admin') return customAlert("Admina ni mogoče izbrisati!");
+    customConfirm("Res želiš izbrisati tega uporabnika?", () => { db.users = db.users.filter(x => x.id !== id); saveDB(); renderAdminLists(); closeModal(); });
 }
 
 function addClass() {
     customPrompt("Ime razreda (npr. 1.A):", (name) => {
-        if(name) {
-            db.classes.push({ id: Date.now(), name, students: [] });
-            saveDB();
-            renderAdminLists();
-            closeModal();
-        }
+        if(name) { db.classes.push({ id: Date.now(), name, students: [], assignments: [], razrednikId: null }); saveDB(); renderAdminLists(); closeModal(); }
     });
 }
-
-function deleteClass(id) {
-    customConfirm("Izbrišem razred?", () => {
-        db.classes = db.classes.filter(c => c.id !== id);
-        saveDB();
-        renderAdminLists();
-        closeModal();
-    });
-}
+function deleteClass(id) { customConfirm("Izbrišem razred?", () => { db.classes = db.classes.filter(c => c.id !== id); saveDB(); renderAdminLists(); closeModal(); }); }
 
 function addSubject() {
     customPrompt("Ime predmeta:", (name) => {
-        if(name) {
-            db.subjects.push({ id: Date.now(), name });
-            saveDB();
-            renderAdminLists();
-            closeModal();
-        }
+        if(name) { db.subjects.push({ id: Date.now(), name }); saveDB(); renderAdminLists(); closeModal(); }
     });
 }
-
-function deleteSubject(id) {
-    customConfirm("Izbrišem predmet?", () => {
-        db.subjects = db.subjects.filter(s => s.id !== id);
-        saveDB();
-        renderAdminLists();
-        closeModal();
-    });
-}
+function deleteSubject(id) { customConfirm("Izbrišem predmet?", () => { db.subjects = db.subjects.filter(s => s.id !== id); saveDB(); renderAdminLists(); closeModal(); }); }
 
 function manageClass(classId) {
     const cls = db.classes.find(c => c.id === classId);
-    
-    function renderClassModalContent() {
-        let html = `<ul class="admin-list" style="max-height: 200px;">`;
-        if (cls.students) {
-            cls.students.forEach(s => {
-                html += `<li>
-                    <span onclick="showStudentDetails(${classId}, ${s.id})" style="cursor:pointer; text-decoration:underline;">${s.name}</span> 
-                    <button class="win-btn mini-btn" onclick="removeStudent(${classId}, ${s.id})">X</button>
-                </li>`;
-            });
-        }
-        html += `</ul>`;
-        return html;
-    }
+    if(!cls.assignments) cls.assignments = [];
+    if(!cls.students) cls.students = [];
 
-    showModal(`Urejanje: ${cls.name}`, renderClassModalContent(), [
-        { 
-            label: 'Dodaj učenca', 
-            onClick: () => {
-                closeModal();
-                setTimeout(() => {
-                    customPrompt("Ime in priimek učenca:", (sName) => {
-                        if (sName) {
-                            const cleanName = sName.toLowerCase().replace(/\s/g, '');
-                            if (!cls.students) cls.students = [];
-                            cls.students.push({
-                                id: Date.now(), name: sName, username: cleanName, password: cleanName, access: true
-                            });
-                            saveDB();
-                        }
-                        manageClass(classId);
-                    });
-                }, 100);
-            },
-            shouldClose: false
-        },
-        {
-            label: 'Ponastavi ocene',
-            onClick: () => {
-                closeModal();
-                setTimeout(() => {
-                    customConfirm("Izbrišem vse ocene tega razreda?", () => {
-                        if (cls.students) {
-                            const studentIds = cls.students.map(s => s.id);
-                            db.grades = db.grades.filter(g => !studentIds.includes(g.studentId));
-                            db.warnings = db.warnings.filter(w => !studentIds.includes(w.studentId));
-                        }
-                        saveDB();
-                        manageClass(classId);
-                    });
-                }, 100);
-            },
-            shouldClose: false
-        },
+    const razrednikiOpts = db.users.filter(u=>u.role!=='admin').map(u=>
+        `<option value="${u.id}" ${cls.razrednikId == u.id ? 'selected' : ''}>${u.name}</option>`
+    ).join('');
+
+    let sHtml = cls.students.map(s => `<li>${s.name} <button class="win-btn mini-btn" onclick="removeStudent(${classId}, ${s.id})">X</button></li>`).join('');
+    
+    let aHtml = cls.assignments.map((a, idx) => {
+        const t = db.users.find(u => u.id === a.teacherId)?.name || 'Neznan učitelj';
+        const p = db.subjects.find(sub => sub.id === a.subjectId)?.name || 'Neznan predmet';
+        return `<li>${t} -> ${p} <button class="win-btn mini-btn" onclick="removeAssignment(${classId}, ${idx})">X</button></li>`;
+    }).join('');
+
+    const html = `
+        <h5>Razrednik</h5>
+        <select id="sel-razrednik" onchange="setRazrednik(${classId}, this.value)">
+           <option value="">-- Ni določen --</option>
+           ${razrednikiOpts}
+        </select>
+        <hr>
+        <h5>Seznam učencev</h5>
+        <ul class="admin-list">${sHtml}</ul>
+        <button class="win-btn mini-btn" onclick="addStudent(${classId})">Dodaj učenca</button>
+        <hr>
+        <h5>Dodeljeni učitelji in predmeti</h5>
+        <ul class="admin-list">${aHtml}</ul>
+        <button class="win-btn mini-btn" onclick="addAssignment(${classId})">Dodaj dodelitev</button>
+    `;
+
+    showModal(`Urejanje: ${cls.name}`, html, [
         { label: 'Zapri', onClick: closeModal }
     ]);
-    
-    window.removeStudent = function(cId, sId) {
-        const c = db.classes.find(x => x.id === cId);
-        if(c.students) {
-            c.students = c.students.filter(x => x.id !== sId);
-        }
-        saveDB();
-        closeModal();
-        setTimeout(() => manageClass(cId), 50);
-    };
-    
-    window.showStudentDetails = function(cId, sId) {
-        const c = db.classes.find(x => x.id === cId);
-        const s = c.students.find(x => x.id === sId);
-        const subjectList = db.subjects.map(sub => sub.name).join(", ");
-        
-        const info = `
-            <p>Ime in priimek: <span class="bold">${s.name}</span></p>
-            <p>Vpisan v razred: <span class="bold">${c.name}</span></p>
-            <p>Pri predmetih: ${subjectList}</p>
-            <p>Uporabniško ime: <span class="bold">${s.username}</span></p>
-            <p>Geslo: <span class="bold">${s.password}</span></p>
-            <p>Dostopnost: <span class="bold">${s.access ? 'DA' : 'NE'}</span></p>
-        `;
-        closeModal();
-        setTimeout(() => {
-            showModal("Podatki o učencu", info, [
-                { label: 'Nazaj', onClick: () => { closeModal(); manageClass(cId); } }
-            ]);
-        }, 100);
-    };
 }
 
+window.setRazrednik = function(cId, rId) {
+    const cls = db.classes.find(c => c.id === cId);
+    cls.razrednikId = rId ? parseInt(rId) : null;
+    saveDB();
+};
+
+window.addStudent = function(cId) {
+    customPrompt("Ime in priimek učenca:", (sName) => {
+        if (sName) {
+            const cls = db.classes.find(c => c.id === cId);
+            cls.students.push({ id: Date.now(), name: sName, username: sName.toLowerCase().replace(/\s/g, ''), password: '123', access: true, ukrep: 'BREZ', splosniUspeh: '' });
+            saveDB();
+        }
+        manageClass(cId);
+    });
+};
+window.removeStudent = function(cId, sId) {
+    const c = db.classes.find(x => x.id === cId);
+    c.students = c.students.filter(x => x.id !== sId);
+    saveDB(); manageClass(cId);
+};
+
+window.addAssignment = function(cId) {
+    const tOpts = db.users.filter(u=>u.role!=='admin').map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+    const sOpts = db.subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    
+    const html = `
+        <label>Učitelj:</label><select id="as-teacher">${tOpts}</select>
+        <label>Predmet:</label><select id="as-subject">${sOpts}</select>
+    `;
+    closeModal();
+    setTimeout(() => {
+        showModal("Nova dodelitev", html, [
+            {
+                label: 'Dodaj',
+                onClick: () => {
+                    const tId = parseInt(document.getElementById('as-teacher').value);
+                    const sId = parseInt(document.getElementById('as-subject').value);
+                    if(tId && sId) {
+                        const cls = db.classes.find(c => c.id === cId);
+                        cls.assignments.push({ teacherId: tId, subjectId: sId });
+                        saveDB();
+                    }
+                    manageClass(cId);
+                },
+                shouldClose: false
+            },
+            { label: 'Prekliči', onClick: () => manageClass(cId) }
+        ]);
+    }, 100);
+};
+window.removeAssignment = function(cId, index) {
+    const cls = db.classes.find(c => c.id === cId);
+    cls.assignments.splice(index, 1);
+    saveDB(); manageClass(cId);
+};
 
 function resetAllData() {
     customConfirm("POZOR! To bo izbrisalo VSE podatke. Nadaljujem?", () => {
-        database.ref('mindex_db').remove().then(() => {
-            location.reload();
-        });
+        database.ref('mindex_db').remove().then(() => location.reload());
     });
 }
 
-// --- REDOVALNICA ---
-function loadRedovalnicaDropdowns() {
-    const cSel = document.getElementById('sel-class');
-    const sSel = document.getElementById('sel-subject');
-    cSel.innerHTML = '<option value="">Izberi razred</option>' + db.classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-    sSel.innerHTML = '<option value="">Izberi predmet</option>' + db.subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+// --- REDOVALNICA POMOŽNE ---
+function isPassingGrade(val) {
+    if(!val) return false;
+    const v = val.toLowerCase().trim();
+    const pass = ['o', '2', 'zadostno (2)', 'zd (2)', '3', 'dobro (3)', 'db (3)', '4', 'pdb (4)', 'prav dobro (4)', '5', 'odlično (5)', 'odl (5)'];
+    return pass.includes(v);
+}
+
+function getGradeValue(val) {
+    if (!val) return 0;
+    const v = val.toLowerCase().trim();
+    if (['5', 'odl (5)', 'odlično (5)'].includes(v)) return 5;
+    if (['4', 'prav dobro (4)', 'pdb (4)'].includes(v)) return 4;
+    if (['3', 'dobro (3)', 'db (3)'].includes(v)) return 3;
+    if (['2', 'zadostno (2)', 'zd (2)'].includes(v)) return 2;
+    if (['1', 'ne zadostno (1)', 'nzd (1)', 'nezadostno (1)'].includes(v)) return 1;
+    return 0;
+}
+
+function getAverage(studentId, subjectId) {
+    let allGrades = db.grades.filter(g => g.studentId === studentId && g.subjectId === subjectId && !g.isFinal);
+    let sum = 0, count = 0;
+    allGrades.forEach(g => {
+        let match = g.value.match(/\d+/);
+        if(match) {
+            let num = parseInt(match[0]);
+            if(num >= 1 && num <= 5) { sum += num; count++; }
+        }
+    });
+    return count > 0 ? (sum / count).toFixed(2) : 'ni ocen';
+}
+
+function openRedovalnicaMenu() {
+    if(db.classes.length === 0) return customAlert("Ni vnesenih razredov!");
+    
+    let classBtns = db.classes.map(c => `<button class="win-btn" onclick="selectClassForRedovalnica(${c.id})">${c.name}</button>`).join('');
+    let html = `
+        <label>Pogled:</label>
+        <select id="redovalnica-pogled" style="margin-bottom:15px; padding:5px; font-size:14px; font-weight:bold;">
+            <option value="RAZREDNI">RAZREDNI (Urejanje določenega predmeta za vse učence)</option>
+            <option value="OSEBNI">OSEBNI (Pogled vseh predmetov za izbranega učenca)</option>
+        </select>
+        <hr>
+        <label>Izberi razred:</label>
+        <div class="class-btn-grid">${classBtns}</div>
+    `;
+    showModal("Redovalnica - Izbira", html, [{label: 'Prekliči', onClick: closeModal}]);
+}
+
+function selectClassForRedovalnica(classId) {
+    const mode = document.getElementById('redovalnica-pogled').value;
+    currentState.selectedClassId = classId;
+    currentState.viewMode = mode;
+    const cls = db.classes.find(c => c.id === classId);
+    closeModal();
+    
+    if (mode === 'RAZREDNI') {
+        const assignments = cls.assignments || [];
+        const mySubjects = assignments.filter(a => a.teacherId === currentState.user.id);
+        
+        if (mySubjects.length === 0 && currentState.user.role !== 'admin') {
+            return customAlert(`V razredu ${cls.name} ne učite nobenega predmeta.`);
+        }
+        
+        const subjectsToShow = currentState.user.role === 'admin' ? db.subjects : mySubjects.map(a => db.subjects.find(s=>s.id===a.subjectId));
+        
+        if (subjectsToShow.length === 0) return customAlert("Ni predmetov na voljo.");
+
+        let subBtns = subjectsToShow.map(s => {
+            if(!s) return '';
+            return `<button class="win-btn" onclick="openGradebookRazredni(${s.id})">${s.name}</button>`;
+        }).join('');
+        
+        showModal(`Izberi predmet (${cls.name})`, `<div class="class-btn-grid">${subBtns}</div>`, [
+            {label: 'Nazaj', onClick: openRedovalnicaMenu}
+        ]);
+    } else {
+        openGradebookOsebni();
+    }
 }
 
 function setGradeType(type) {
@@ -887,142 +948,278 @@ function setGradeType(type) {
     document.querySelector(`.btn-${type.toLowerCase()}`).classList.add('selected-type');
 }
 
-/**
- * GLAVNA FUNKCIJA ZA PRIKAZ OCEN
- * Vključuje logiko za deljen pogled (Split View) in Tooltipe
- */
-function renderGradebook() {
-    const classId = parseInt(document.getElementById('sel-class').value);
-    const subjectId = parseInt(document.getElementById('sel-subject').value);
-    const viewMode = document.getElementById('sel-view').value; // 'TEACHERS' ali 'STUDENTS'
-    const tbody = document.getElementById('gradebook-body');
-    tbody.innerHTML = '';
-    
-    if (!classId || !subjectId) return;
-    
-    currentState.selectedClassId = classId;
-    currentState.selectedSubjectId = subjectId;
-    const cls = db.classes.find(c => c.id === classId);
-    
-    if(!cls.students) return;
-
-    cls.students.forEach(student => {
-        const tr = document.createElement('tr');
-        const tdName = `<td>${student.name}</td>`;
-        
-        // Funkcija za generiranje HTML-ja posameznih ocen
-        const generateGradesHtml = (gradeList) => {
-            let h = '';
-            gradeList.forEach(g => {
-                let cls = g.type === 'PISNO' ? 'grade-pisno' : (g.type === 'IZDELEK' ? 'grade-izdelek' : 'grade-ustno');
-                let val = g.correction ? `<span class="${cls}"><span class="grade-correction">${g.value}</span>${g.correction}</span>` : `<span class="${cls}">${g.value}</span>`;
-                
-                // TOOLTIP: Kdo in kdaj
-                const tooltip = `Vpisal: ${g.authorName || 'Neznano'}\nDatum: ${g.date || 'Neznano'}`;
-                
-                h += `<span class="grade-span" title="${tooltip}" onclick="editGrade(${g.id}); event.stopPropagation();">${val}</span>`;
-            });
-            return h;
-        };
-
-        const renderCellContent = (period) => {
-            const allGrades = db.grades.filter(g => g.studentId === student.id && g.subjectId === subjectId && g.period === period && !g.isFinal);
-            
-            if (viewMode === 'STUDENTS') {
-                // Enostaven pogled (vse skupaj)
-                return `<div class="single-view" onclick="addNewGrade(${student.id}, ${subjectId}, ${period})">
-                            ${generateGradesHtml(allGrades)}
-                        </div>`;
-            } else {
-                // Pogled UČITELJI: Razdeli na MOJE in OSTALE
-                const myGrades = allGrades.filter(g => g.authorId === currentState.user.id);
-                // Ocene drugih ali stare ocene brez ID-ja
-                const otherGrades = allGrades.filter(g => g.authorId !== currentState.user.id);
-
-                return `<div class="split-container">
-                            <div class="split-top" onclick="addNewGrade(${student.id}, ${subjectId}, ${period})">
-                                ${generateGradesHtml(myGrades)}
-                            </div>
-                            <div class="split-bottom" onclick="addNewGrade(${student.id}, ${subjectId}, ${period})">
-                                ${generateGradesHtml(otherGrades)}
-                            </div>
-                        </div>`;
-            }
-        };
-        
-        // Graje in končne ocene ostanejo enake
-        const getWarnHtml = (period) => {
-            const w = db.warnings.find(x => x.studentId === student.id && x.subjectId === subjectId && x.period === period);
-            if(!w) return '';
-            return w.type === 'x' ? '<img src="nok.png" class="icon-img" alt="X">' : '<img src="ok.png" class="icon-img" alt="OK">';
-        };
-
-        const getFinalHtml = () => {
-            const g = db.grades.find(x => x.studentId === student.id && x.subjectId === subjectId && x.isFinal);
-            if(!g) return '';
-            const tooltip = `Vpisal: ${g.authorName || 'Neznano'}\nDatum: ${g.date || 'Neznano'}`;
-            return `<span title="${tooltip}" onclick="editFinalGrade(${g.id}); event.stopPropagation();">${g.value}</span>`;
-        };
-
-        tr.innerHTML = `
-            ${tdName}
-            <td class="grade-cell">${renderCellContent(1)}</td>
-            <td class="grade-cell" onclick="handleWarning(${student.id}, ${subjectId}, 1)">${getWarnHtml(1)}</td>
-            <td class="grade-cell">${renderCellContent(2)}</td>
-            <td class="grade-cell" onclick="handleWarning(${student.id}, ${subjectId}, 2)">${getWarnHtml(2)}</td>
-            <td class="grade-cell" onclick="addFinalGrade(${student.id}, ${subjectId})">${getFinalHtml()}</td>
-        `;
-        tbody.appendChild(tr);
-    });
+function isSectorDisabled(classId, subjectId, sector) {
+    const key = `${classId}_${subjectId}`;
+    if (!db.sectorSettings) db.sectorSettings = {};
+    if (db.sectorSettings[key] && db.sectorSettings[key][sector] === false) return true;
+    return false;
 }
 
-function addNewGrade(studentId, subjectId, period) {
-    const html = `
-        <label>Vpiši oceno (${currentState.selectedGradeType}):</label>
-        <input type="text" id="new-grade-val" style="width: 60px;" autofocus>
-    `;
-    showModal("Vnos ocene", html, [
-        {
-            label: 'Potrdi',
-            onClick: () => {
-                const val = document.getElementById('new-grade-val').value;
-                if(val) {
-                    db.grades.push({ 
-                        id: Date.now(), 
-                        studentId, 
-                        subjectId, 
-                        period, 
-                        type: currentState.selectedGradeType, 
-                        value: val, 
-                        correction: null, 
-                        isFinal: false,
-                        // DODANO: Podatki o avtorju
-                        authorId: currentState.user.id,
-                        authorName: currentState.user.name,
-                        date: new Date().toLocaleDateString('sl-SI')
-                    });
-                    saveDB();
-                    renderGradebook();
-                    closeModal();
-                }
-            },
-            shouldClose: false
-        },
-        { label: 'Prekliči', onClick: closeModal }
-    ]);
+// -- POGLED RAZREDNI --
+function openGradebookRazredni(subjectId) {
+    currentState.selectedSubjectId = subjectId;
+    const cls = db.classes.find(c => c.id === currentState.selectedClassId);
+    const sub = db.subjects.find(s => s.id === subjectId);
     
-    setTimeout(() => {
-        document.getElementById('new-grade-val').addEventListener("keyup", (e) => {
-            if(e.key === "Enter") document.getElementById('modal-btn-0').click();
+    closeModal();
+    showPage('redovalnica');
+    document.getElementById('redovalnica-naslov').innerText = `RAZRED: ${cls.name} | PREDMET: ${sub.name}`;
+    document.getElementById('redovalnica-controls').classList.remove('hidden');
+    
+    renderRazredniTable();
+}
+
+function renderRazredniTable() {
+    const cls = db.classes.find(c => c.id === currentState.selectedClassId);
+    const subId = currentState.selectedSubjectId;
+    const container = document.getElementById('redovalnica-container');
+    
+    if(!cls.students || cls.students.length === 0) {
+        container.innerHTML = `<p>V tem razredu ni učencev.</p>`;
+        return;
+    }
+
+    let thead = `<tr>
+        <th width="12%" class="pastel-yellow">Učenec</th>
+        <th width="10%">A</th><th width="2%"><img src="graja.png" style="height:14px; vertical-align:middle;"></th>
+        <th width="10%">B</th><th width="2%"><img src="graja.png" style="height:14px; vertical-align:middle;"></th>
+        <th width="10%">C</th><th width="2%"><img src="graja.png" style="height:14px; vertical-align:middle;"></th>
+        <th width="10%">D</th><th width="2%"><img src="graja.png" style="height:14px; vertical-align:middle;"></th>
+        <th width="10%">E (Izpit)</th><th width="2%"><img src="graja.png" style="height:14px; vertical-align:middle;"></th>
+        <th width="14%" class="pastel-yellow">Konec leta</th>
+        <th width="14%" class="pastel-yellow">Po izpitu</th>
+    </tr>`;
+    
+    let tbody = '';
+    const basicSectors = ['A', 'B', 'C', 'D'];
+
+    cls.students.forEach(student => {
+        let row = `<tr><td>${student.name}</td>`;
+        
+        basicSectors.forEach(sec => {
+            const disabled = isSectorDisabled(cls.id, subId, sec);
+            const classStr = disabled ? 'grade-cell disabled-sector' : 'grade-cell';
+            const onclickWarn = disabled ? '' : `onclick="handleWarning(${student.id}, ${subId}, '${sec}')"`;
+            row += `<td class="${classStr}">${renderCellContent(student.id, subId, sec)}</td>`;
+            row += `<td class="${classStr}" ${onclickWarn}>${getWarnHtml(student.id, subId, sec)}</td>`;
         });
-    }, 100);
+
+        const konecGrade = db.grades.find(g => g.studentId === student.id && g.subjectId === subId && g.isFinal && (!g.finalType || g.finalType === 'konec'));
+        const passedKonec = konecGrade ? isPassingGrade(konecGrade.value) : false;
+        const showIzpit = konecGrade && !passedKonec;
+
+        // Sector E
+        const eClassStr = showIzpit ? 'grade-cell' : 'grade-cell disabled-sector';
+        const eWarnClick = showIzpit ? `onclick="handleWarning(${student.id}, ${subId}, 'E')"` : '';
+        row += `<td class="${eClassStr}">${showIzpit ? renderCellContent(student.id, subId, 'E') : ''}</td>`;
+        row += `<td class="${eClassStr}" ${eWarnClick}>${showIzpit ? getWarnHtml(student.id, subId, 'E') : ''}</td>`;
+
+        row += `<td class="grade-cell pastel-yellow" onclick="addFinalGrade(${student.id}, ${subId}, 'konec')">${getFinalHtml(student.id, subId, 'konec')}</td>`;
+        row += `<td class="${showIzpit ? 'grade-cell pastel-yellow' : 'grade-cell disabled-sector pastel-yellow'}" ${showIzpit ? `onclick="addFinalGrade(${student.id}, ${subId}, 'izpit')"` : ''}>${getFinalHtml(student.id, subId, 'izpit')}</td>`;
+        
+        row += `</tr>`;
+        tbody += row;
+    });
+
+    container.innerHTML = `<table class="gradebook-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+}
+
+// -- POGLED OSEBNI --
+function openGradebookOsebni() {
+    const cls = db.classes.find(c => c.id === currentState.selectedClassId);
+    closeModal();
+    showPage('redovalnica');
+    document.getElementById('redovalnica-naslov').innerText = `RAZRED: ${cls.name} | OSEBNI POGLED`;
+    document.getElementById('redovalnica-controls').classList.add('hidden'); 
+    
+    let stuOpts = (cls.students || []).map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    
+    let html = `
+        <div style="margin-bottom:10px;">
+            <label style="font-weight:bold; margin-right:10px;">Izberi učenca:</label>
+            <select id="osebni-student-sel" onchange="renderOsebniTable()" style="padding:5px; font-size:14px; min-width:200px;">
+                ${stuOpts}
+            </select>
+        </div>
+        <div id="osebni-table-container"></div>
+    `;
+    document.getElementById('redovalnica-container').innerHTML = html;
+    
+    if(cls.students && cls.students.length > 0) renderOsebniTable();
+}
+
+function renderOsebniTable() {
+    const cls = db.classes.find(c => c.id === currentState.selectedClassId);
+    const stuSel = document.getElementById('osebni-student-sel');
+    if(!stuSel || !stuSel.value) return;
+    const studentId = parseInt(stuSel.value);
+    const studentObj = cls.students.find(s => s.id === studentId);
+    
+    const container = document.getElementById('osebni-table-container');
+    
+    let thead = `<tr>
+        <th width="12%" class="pastel-yellow">Predmet</th>
+        <th width="10%">A</th><th width="2%"><img src="graja.png" style="height:14px; vertical-align:middle;"></th>
+        <th width="10%">B</th><th width="2%"><img src="graja.png" style="height:14px; vertical-align:middle;"></th>
+        <th width="10%">C</th><th width="2%"><img src="graja.png" style="height:14px; vertical-align:middle;"></th>
+        <th width="10%">D</th><th width="2%"><img src="graja.png" style="height:14px; vertical-align:middle;"></th>
+        <th width="10%">E (Izpit)</th><th width="2%"><img src="graja.png" style="height:14px; vertical-align:middle;"></th>
+        <th width="14%" class="pastel-yellow">Konec leta</th>
+        <th width="14%" class="pastel-yellow">Po izpitu</th>
+    </tr>`;
+    
+    let tbody = '';
+    const basicSectors = ['A', 'B', 'C', 'D'];
+
+    let tallies = {5:0, 4:0, 3:0, 2:0, 1:0};
+
+    db.subjects.forEach(sub => {
+        const assignments = cls.assignments || [];
+        const isMySubject = currentState.user.role === 'admin' || assignments.some(a => a.teacherId === currentState.user.id && a.subjectId === sub.id);
+        
+        let row = `<tr><td>${sub.name}</td>`;
+        
+        basicSectors.forEach(sec => {
+            const disabledGlobal = isSectorDisabled(cls.id, sub.id, sec);
+            const disabled = disabledGlobal || !isMySubject;
+            const classStr = disabled ? 'grade-cell disabled-sector' : 'grade-cell';
+            const onclickWarn = (!disabled && isMySubject) ? `onclick="handleWarning(${studentId}, ${sub.id}, '${sec}')"` : '';
+            row += `<td class="${classStr}">${renderCellContent(studentId, sub.id, sec)}</td>`;
+            row += `<td class="${classStr}" ${onclickWarn}>${getWarnHtml(studentId, sub.id, sec)}</td>`;
+        });
+
+        const konecGrade = db.grades.find(g => g.studentId === studentId && g.subjectId === sub.id && g.isFinal && (!g.finalType || g.finalType === 'konec'));
+        const izpitGrade = db.grades.find(g => g.studentId === studentId && g.subjectId === sub.id && g.isFinal && g.finalType === 'izpit');
+        
+        const passedKonec = konecGrade ? isPassingGrade(konecGrade.value) : false;
+        const showIzpit = konecGrade && !passedKonec;
+
+        // Tally
+        const effectiveFinal = izpitGrade ? izpitGrade.value : (konecGrade ? konecGrade.value : null);
+        const gVal = getGradeValue(effectiveFinal);
+        if(gVal > 0) tallies[gVal]++;
+
+        const eClassStr = (showIzpit && isMySubject) ? 'grade-cell' : 'grade-cell disabled-sector';
+        const eWarnClick = (showIzpit && isMySubject) ? `onclick="handleWarning(${studentId}, ${sub.id}, 'E')"` : '';
+        row += `<td class="${eClassStr}">${showIzpit ? renderCellContent(studentId, sub.id, 'E') : ''}</td>`;
+        row += `<td class="${eClassStr}" ${eWarnClick}>${showIzpit ? getWarnHtml(studentId, sub.id, 'E') : ''}</td>`;
+
+        const clickKonec = isMySubject ? `onclick="addFinalGrade(${studentId}, ${sub.id}, 'konec')"` : '';
+        row += `<td class="${isMySubject ? 'grade-cell pastel-yellow' : 'grade-cell disabled-sector pastel-yellow'}" ${clickKonec}>${getFinalHtml(studentId, sub.id, 'konec')}</td>`;
+        
+        const clickIzpit = (isMySubject && showIzpit) ? `onclick="addFinalGrade(${studentId}, ${sub.id}, 'izpit')"` : '';
+        row += `<td class="${(isMySubject && showIzpit) ? 'grade-cell pastel-yellow' : 'grade-cell disabled-sector pastel-yellow'}" ${clickIzpit}>${getFinalHtml(studentId, sub.id, 'izpit')}</td></tr>`;
+        
+        tbody += row;
+    });
+
+    let isRazrednik = (cls.razrednikId == currentState.user.id) || (currentState.user.role === 'admin');
+    let splosniUspehHtml = studentObj.splosniUspeh || 'še ni zaključen';
+
+    if (isRazrednik) {
+        splosniUspehHtml = `<input type="text" value="${studentObj.splosniUspeh || ''}" id="inp-splosni" style="width:150px; font-weight:bold;"> 
+                            <button class="win-btn mini-btn" onclick="saveSplošniUspeh(${cls.id}, ${studentId})">Shrani</button>`;
+    }
+
+    const tallyHtml = `
+        <div class="pastel-yellow" style="margin-top: 15px; padding: 15px; border: 2px solid black;">
+            <strong>Statistika zaključnih ocen:</strong> 
+            odl (5) - ${tallies[5]} &nbsp;|&nbsp; 
+            pdb (4) - ${tallies[4]} &nbsp;|&nbsp; 
+            db (3) - ${tallies[3]} &nbsp;|&nbsp; 
+            zd (2) - ${tallies[2]} &nbsp;|&nbsp; 
+            nzd (1) - ${tallies[1]} 
+            <hr style="border: 0; border-top: 1px dotted #888; margin: 10px 0;">
+            <div style="font-size:16px;"><strong>Splošni uspeh:</strong> ${splosniUspehHtml}</div>
+        </div>
+    `;
+
+    container.innerHTML = `<table class="gradebook-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table>` + tallyHtml;
+}
+
+window.saveSplošniUspeh = function(classId, studentId) {
+    let cls = db.classes.find(c => c.id === classId);
+    let stu = cls.students.find(s => s.id === studentId);
+    stu.splosniUspeh = document.getElementById('inp-splosni').value;
+    saveDB();
+    renderOsebniTable();
+};
+
+// -- POMOŽNE FUNKCIJE ZA IZRIS OCEN --
+function renderCellContent(studentId, subjectId, period) {
+    const allGrades = db.grades.filter(g => g.studentId === studentId && g.subjectId === subjectId && g.period === period && !g.isFinal);
+    let h = '';
+    allGrades.forEach(g => {
+        let cls = g.type === 'PISNO' ? 'grade-pisno' : (g.type === 'IZDELEK' ? 'grade-izdelek' : 'grade-ustno');
+        let hlClass = g.isUnsaved ? ' grade-highlight' : '';
+        let val = g.correction ? `<span class="${cls} ${hlClass}"><span class="grade-correction">${g.value}</span>${g.correction}</span>` : `<span class="${cls} ${hlClass}">${g.value}</span>`;
+        const tooltip = `Vpisal: ${g.authorName || 'Neznano'}\nDatum: ${g.date || 'Neznano'}`;
+        h += `<span class="grade-span" title="${tooltip}" onclick="editGrade(${g.id}); event.stopPropagation();">${val}</span>`;
+    });
+    
+    h += `<input type="text" class="inline-grade-input" onkeyup="handleInlineGradeSubmit(event, ${studentId}, ${subjectId}, '${period}')" onclick="event.stopPropagation();">`;
+    return `<div class="single-view">${h}</div>`;
+}
+
+function handleInlineGradeSubmit(event, studentId, subjectId, period) {
+    if (event.key === 'Enter') {
+        const val = event.target.value.trim();
+        if (!val) return;
+        
+        const type = currentState.selectedGradeType || 'USTNO';
+        const gradeId = Date.now() + Math.random();
+        
+        db.grades.push({ 
+            id: gradeId, 
+            studentId, 
+            subjectId, 
+            period, 
+            type, 
+            value: val, 
+            correction: null, 
+            isFinal: false,
+            authorId: currentState.user.id, 
+            authorName: currentState.user.name, 
+            date: new Date().toLocaleDateString('sl-SI'),
+            isUnsaved: true
+        });
+        
+        event.target.value = '';
+        refreshActiveTable();
+        
+        setTimeout(() => {
+            const idx = db.grades.findIndex(g => g.id === gradeId);
+            if (idx !== -1) {
+                delete db.grades[idx].isUnsaved;
+            }
+            saveDB();
+            refreshActiveTable();
+        }, 4000);
+    }
+}
+
+function getWarnHtml(studentId, subjectId, period) {
+    const w = db.warnings.find(x => x.studentId === studentId && x.subjectId === subjectId && x.period === period);
+    if(!w) return '';
+    return w.type === 'x' ? '<img src="nok.png" style="height:14px; vertical-align:middle;">' : '<img src="ok.png" style="height:14px; vertical-align:middle;">';
+}
+
+function getFinalHtml(studentId, subjectId, finalType) {
+    const g = db.grades.find(x => x.studentId === studentId && x.subjectId === subjectId && x.isFinal && (x.finalType === finalType || (!x.finalType && finalType === 'konec')));
+    if(!g) return '';
+    const tooltip = `Vpisal: ${g.authorName || 'Neznano'}\nDatum: ${g.date || 'Neznano'}`;
+    return `<span title="${tooltip}" onclick="editFinalGrade(${g.id}); event.stopPropagation();" style="cursor:pointer; font-weight:bold;">${g.value}</span>`;
+}
+
+// -- VNOS, UREJANJE OCEN IN GRAJ --
+function refreshActiveTable() {
+    if(currentState.viewMode === 'RAZREDNI') renderRazredniTable();
+    else renderOsebniTable();
 }
 
 function editGrade(gradeId) {
     const grade = db.grades.find(g => g.id === gradeId);
-    // Info o oceni v oknu za urejanje
     const info = `<div style="font-size:11px; margin-bottom:10px; color:#555;">Vpisal: ${grade.authorName || '?'}, dne: ${grade.date || '?'}</div>`;
-
     const html = `
         ${info}
         <label>Ocena:</label><input type="text" id="eg-val" value="${grade.value}" style="width:50px">
@@ -1036,13 +1233,8 @@ function editGrade(gradeId) {
                 const corr = document.getElementById('eg-corr').value;
                 const idx = db.grades.findIndex(g => g.id === gradeId);
                 if(!val) db.grades.splice(idx, 1);
-                else {
-                    db.grades[idx].value = val;
-                    db.grades[idx].correction = corr ? corr : null;
-                }
-                saveDB();
-                renderGradebook();
-                closeModal();
+                else { db.grades[idx].value = val; db.grades[idx].correction = corr ? corr : null; }
+                saveDB(); refreshActiveTable(); closeModal();
             },
             shouldClose: false
         }
@@ -1055,40 +1247,32 @@ function handleWarning(studentId, subjectId, period) {
     const existing = db.warnings.find(w => w.studentId === studentId && w.subjectId === subjectId && w.period === period);
 
     if (!existing) {
-        const msg = `Želite učencu <span class="bold">${student.name}</span> zabeležiti grajo <img src="nok.png" style="height:20px; vertical-align:middle;">?`;
+        const msg = `Želite učencu <span class="bold">${student.name}</span> zabeležiti grajo v sektorju ${period}?`;
         customConfirm(msg, () => {
             db.warnings.push({ studentId, subjectId, period, type: 'x' });
-            saveDB();
-            renderGradebook();
-            closeModal();
+            saveDB(); refreshActiveTable(); closeModal();
         });
     } else {
-        const html = `<p>Želite učencu <span class="bold">${student.name}</span> zabeležiti naknadno opravljene obveznosti <img src="ok.png" style="height:20px; vertical-align:middle;"> ali grajo izbrisati?</p>`;
-        showModal("Urejanje", html, [
-            { 
-                label: 'Spremeni', 
-                onClick: () => { 
-                    existing.type = 'check'; 
-                    saveDB(); renderGradebook(); closeModal(); 
-                } 
-            },
-            { 
-                label: 'Izbriši', 
-                onClick: () => { 
-                    db.warnings = db.warnings.filter(w => w !== existing); 
-                    saveDB(); renderGradebook(); closeModal(); 
-                } 
-            },
+        const html = `<p>Želite spremeniti v opravljeno ali grajo izbrisati?</p>`;
+        showModal("Urejanje graje", html, [
+            { label: 'Spremeni v OK', onClick: () => { existing.type = 'check'; saveDB(); refreshActiveTable(); closeModal(); } },
+            { label: 'Izbriši', onClick: () => { db.warnings = db.warnings.filter(w => w !== existing); saveDB(); refreshActiveTable(); closeModal(); } },
             { label: 'Zapri', onClick: closeModal }
         ]);
     }
 }
 
-function addFinalGrade(studentId, subjectId) {
-    const existing = db.grades.find(g => g.studentId === studentId && g.subjectId === subjectId && g.isFinal);
+// -- DODAJANJE KONČNE OCENE --
+function addFinalGrade(studentId, subjectId, finalType) {
+    const existing = db.grades.find(g => g.studentId === studentId && g.subjectId === subjectId && g.isFinal && (g.finalType === finalType || (!g.finalType && finalType === 'konec')));
     if(existing) return;
-    
-    const html = `<label>Končna ocena:</label><input type="text" id="final-val" style="width:50px">`;
+
+    const avg = getAverage(studentId, subjectId);
+    const html = `
+        <div style="font-size:12px; font-weight:bold; color:navy; margin-bottom:10px;">Povprečje ocen: ${avg}</div>
+        <label>Končna ocena (${finalType === 'konec' ? 'Konec leta' : 'Po izpitu'}):</label>
+        <input type="text" id="final-val" style="width:100px" autofocus>
+    `;
     showModal("Končna ocena", html, [
         {
             label: 'Potrdi',
@@ -1096,27 +1280,25 @@ function addFinalGrade(studentId, subjectId) {
                 const val = document.getElementById('final-val').value;
                 if(val) {
                     db.grades.push({ 
-                        id: Date.now(), 
-                        studentId, 
-                        subjectId, 
-                        isFinal: true, 
-                        value: val, 
-                        type: 'FINAL',
-                        authorId: currentState.user.id,
-                        authorName: currentState.user.name,
-                        date: new Date().toLocaleDateString('sl-SI')
+                        id: Date.now(), studentId, subjectId, isFinal: true, finalType: finalType, value: val, type: 'FINAL',
+                        authorId: currentState.user.id, authorName: currentState.user.name, date: new Date().toLocaleDateString('sl-SI')
                     });
-                    saveDB(); renderGradebook(); closeModal();
+                    saveDB(); refreshActiveTable(); closeModal();
                 }
             },
             shouldClose: false
         }
     ]);
+    setTimeout(() => { document.getElementById('final-val').addEventListener("keyup", (e) => { if(e.key === "Enter") document.getElementById('modal-btn-0').click(); }); }, 100);
 }
 
 function editFinalGrade(gradeId) {
     const g = db.grades.find(x => x.id === gradeId);
-    const html = `<label>Končna ocena:</label><input type="text" id="ef-val" value="${g.value}" style="width:50px">`;
+    const avg = getAverage(g.studentId, g.subjectId);
+    const html = `
+        <div style="font-size:12px; font-weight:bold; color:navy; margin-bottom:10px;">Povprečje ocen: ${avg}</div>
+        <label>Končna ocena:</label><input type="text" id="ef-val" value="${g.value}" style="width:100px">
+    `;
     showModal("Uredi končno", html, [
         {
             label: 'Shrani',
@@ -1125,34 +1307,75 @@ function editFinalGrade(gradeId) {
                 const idx = db.grades.findIndex(x => x.id === gradeId);
                 if(!val) db.grades.splice(idx, 1);
                 else db.grades[idx].value = val;
-                saveDB(); renderGradebook(); closeModal();
+                saveDB(); refreshActiveTable(); closeModal();
             },
             shouldClose: false
         }
     ]);
 }
 
-function openBulkEntry() {
-    if (!currentState.selectedClassId || !currentState.selectedSubjectId) {
-        customAlert("Najprej izberi razred in predmet!");
-        return;
+function openSectorSettings() {
+    if(!currentState.selectedClassId || currentState.viewMode !== 'RAZREDNI') {
+        return customAlert("Nastavitve so na voljo samo v razrednem pogledu za posamezen predmet.");
     }
+    const cId = currentState.selectedClassId;
+    const sId = currentState.selectedSubjectId;
+    const key = `${cId}_${sId}`;
+    
+    if(!db.sectorSettings) db.sectorSettings = {};
+    const sets = db.sectorSettings[key] || { A: true, B: true, C: true, D: true, E: true };
+
+    const checkHtml = (sec) => `
+        <label style="display:flex; align-items:center; font-weight:normal; margin-bottom:10px;">
+            <input type="checkbox" id="set-sec-${sec}" ${sets[sec] !== false ? 'checked' : ''} style="width:auto; margin-right:10px;">
+            Omogoči sektor ${sec}
+        </label>
+    `;
+
+    const html = `
+        <p>Izberite, kateri sektorji so aktivni in omogočeni za vpisovanje:</p>
+        ${checkHtml('A')}
+        ${checkHtml('B')}
+        ${checkHtml('C')}
+        ${checkHtml('D')}
+        ${checkHtml('E')}
+    `;
+
+    showModal("Nastavitve sektorjev", html, [
+        {
+            label: 'Shrani',
+            onClick: () => {
+                db.sectorSettings[key] = {
+                    A: document.getElementById('set-sec-A').checked,
+                    B: document.getElementById('set-sec-B').checked,
+                    C: document.getElementById('set-sec-C').checked,
+                    D: document.getElementById('set-sec-D').checked,
+                    E: document.getElementById('set-sec-E').checked
+                };
+                saveDB(); refreshActiveTable(); closeModal();
+            },
+            shouldClose: false
+        },
+        { label: 'Prekliči', onClick: closeModal }
+    ]);
+}
+
+function openBulkEntry() {
     const cls = db.classes.find(c => c.id === currentState.selectedClassId);
-    if(!cls.students) return;
+    if(!cls || !cls.students) return;
 
     let rows = cls.students.map(s => 
-        `<div class="bulk-list-item" style="display:flex; justify-content:space-between; margin-bottom:5px;">
-            <span>${s.name}</span>
-            <input type="text" class="bulk-inp" data-sid="${s.id}" style="width:50px;">
+        `<div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+            <span>${s.name}</span><input type="text" class="bulk-inp" data-sid="${s.id}" style="width:50px;">
          </div>`
     ).join('');
     
     const html = `
         <label>Tip:</label>
         <select id="bulk-type"><option value="USTNO">USTNO</option><option value="PISNO">PISNO</option><option value="IZDELEK">IZDELEK</option></select>
-        <label>Obdobje:</label>
-        <select id="bulk-per"><option value="1">1.</option><option value="2">2.</option></select>
-        <div style="max-height:150px; overflow-y:auto; border:1px solid #999; padding:5px; margin-top:10px;">${rows}</div>
+        <label>Sektor:</label>
+        <select id="bulk-per"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option></select>
+        <div style="max-height:200px; overflow-y:auto; border:1px solid #999; padding:5px; margin-top:10px; background:#fff;">${rows}</div>
     `;
 
     showModal("Množični vpis", html, [
@@ -1160,34 +1383,81 @@ function openBulkEntry() {
             label: 'Shrani',
             onClick: () => {
                 const type = document.getElementById('bulk-type').value;
-                const per = parseInt(document.getElementById('bulk-per').value);
+                const per = document.getElementById('bulk-per').value;
                 const now = new Date().toLocaleDateString('sl-SI');
+                
+                if(isSectorDisabled(currentState.selectedClassId, currentState.selectedSubjectId, per)) {
+                    customAlert(`Sektor ${per} je onemogočen v nastavitvah.`);
+                    return;
+                }
+
                 document.querySelectorAll('.bulk-inp').forEach(inp => {
                     const val = inp.value.trim();
                     const sid = parseInt(inp.getAttribute('data-sid'));
                     if(val) {
                         db.grades.push({ 
-                            id: Date.now() + Math.random(), 
-                            studentId: sid, 
-                            subjectId: currentState.selectedSubjectId, 
-                            period: per, 
-                            type, 
-                            value: val, 
-                            correction: null, 
-                            isFinal: false,
-                            authorId: currentState.user.id,
-                            authorName: currentState.user.name,
-                            date: now
+                            id: Date.now() + Math.random(), studentId: sid, subjectId: currentState.selectedSubjectId, 
+                            period: per, type, value: val, correction: null, isFinal: false,
+                            authorId: currentState.user.id, authorName: currentState.user.name, date: now
                         });
                     }
                 });
-                saveDB(); renderGradebook(); closeModal();
+                saveDB(); refreshActiveTable(); closeModal();
             },
             shouldClose: false
         },
         { label: 'Prekliči', onClick: closeModal }
     ]);
 }
+
+// --- RAZREDNIK POGLED ---
+function renderRazrednikView() {
+    const container = document.getElementById('razrednik-content');
+    const myClasses = db.classes.filter(c => c.razrednikId == currentState.user.id || currentState.user.role === 'admin');
+    
+    if(myClasses.length === 0) {
+        container.innerHTML = '<p style="padding:10px;">Niste razrednik nobenemu razredu.</p>';
+        return;
+    }
+
+    let html = '';
+    const ukrepiList = ['BREZ', 'OPOMIN', '1. UKOR', '2. UKOR', 'UKOR PRED IZKLJUČITVIJO', 'IZKLJUČITEV'];
+
+    myClasses.forEach(c => {
+        html += `<h4 style="margin-top:20px;">Razred: ${c.name}</h4>
+                 <table class="gradebook-table" style="width:600px;">
+                    <thead><tr>
+                        <th width="50%" class="pastel-yellow">Učenec</th>
+                        <th width="50%" class="pastel-yellow">Vzgojni ukrep</th>
+                    </tr></thead>
+                    <tbody>`;
+        
+        if(!c.students || c.students.length === 0) {
+            html += `<tr><td colspan="2">Ni učencev.</td></tr>`;
+        } else {
+            c.students.forEach(s => {
+                const val = s.ukrep || 'BREZ';
+                const opts = ukrepiList.map(o => `<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('');
+                html += `<tr>
+                            <td>${s.name}</td>
+                            <td><select style="width:90%; padding:3px;" onchange="setUkrep(${c.id}, ${s.id}, this.value)">${opts}</select></td>
+                         </tr>`;
+            });
+        }
+        html += `</tbody></table>`;
+    });
+
+    container.innerHTML = html;
+}
+
+window.setUkrep = function(classId, studentId, ukrepValue) {
+    let cls = db.classes.find(c => c.id === classId);
+    let stu = cls.students.find(s => s.id === studentId);
+    if(stu) {
+        stu.ukrep = ukrepValue;
+        saveDB();
+    }
+};
 
 init();
 </script>
