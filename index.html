@@ -6,6 +6,8 @@
     
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
         /* --- STIL (WINDOWS RETRO) --- */
@@ -1425,15 +1427,16 @@ function renderRazrednikView() {
 
     myClasses.forEach(c => {
         html += `<h4 style="margin-top:20px;">Razred: ${c.name}</h4>
-                 <table class="gradebook-table" style="width:600px;">
+                 <table class="gradebook-table" style="width:100%;">
                     <thead><tr>
-                        <th width="50%" class="pastel-yellow">Učenec</th>
-                        <th width="50%" class="pastel-yellow">Vzgojni ukrep</th>
+                        <th width="30%" class="pastel-yellow">Učenec</th>
+                        <th width="30%" class="pastel-yellow">Vzgojni ukrep</th>
+                        <th width="40%" class="pastel-yellow">Dokumenti</th>
                     </tr></thead>
                     <tbody>`;
         
         if(!c.students || c.students.length === 0) {
-            html += `<tr><td colspan="2">Ni učencev.</td></tr>`;
+            html += `<tr><td colspan="3">Ni učencev.</td></tr>`;
         } else {
             c.students.forEach(s => {
                 const val = s.ukrep || 'BREZ';
@@ -1441,6 +1444,10 @@ function renderRazrednikView() {
                 html += `<tr>
                             <td>${s.name}</td>
                             <td><select style="width:90%; padding:3px;" onchange="setUkrep(${c.id}, ${s.id}, this.value)">${opts}</select></td>
+                            <td>
+                                <button class="win-btn mini-btn" onclick="generatePotrdilo(${c.id}, ${s.id})">POTRDILO O USPEHU</button>
+                                <button class="win-btn mini-btn" onclick="generateSpricevalo(${c.id}, ${s.id})">SPRIČEVALO</button>
+                            </td>
                          </tr>`;
             });
         }
@@ -1457,6 +1464,121 @@ window.setUkrep = function(classId, studentId, ukrepValue) {
         stu.ukrep = ukrepValue;
         saveDB();
     }
+};
+
+// --- PDF DOKUMENTI (Razrednik) ---
+function removeSumniki(str) {
+    if (!str) return '';
+    const map = {
+        'č': 'c', 'Č': 'C',
+        'š': 's', 'Š': 'S',
+        'ž': 'z', 'Ž': 'Z',
+        'ć': 'c', 'Ć': 'C',
+        'đ': 'd', 'Đ': 'D'
+    };
+    return str.replace(/[čČšŠžŽćĆđĐ]/g, match => map[match]);
+}
+
+window.generatePotrdilo = function(classId, studentId) {
+    const doc = new window.jspdf.jsPDF();
+    const cls = db.classes.find(c => c.id === classId);
+    const stu = cls.students.find(s => s.id === studentId);
+    
+    doc.setFontSize(16);
+    doc.text(removeSumniki("POTRDILO O USPEHU"), 105, 20, { align: "center" });
+    
+    doc.setFontSize(12);
+    doc.text(removeSumniki(`Ucenec: ${stu.name}`), 20, 40);
+    doc.text(removeSumniki(`Razred: ${cls.name}`), 20, 48);
+    doc.text(removeSumniki(`Datum izpisa: ${new Date().toLocaleDateString('sl-SI')}`), 20, 56);
+    
+    let y = 75;
+    doc.setFont(undefined, 'bold');
+    doc.text(removeSumniki("Ocene med letom po predmetih:"), 20, y);
+    doc.setFont(undefined, 'normal');
+    y += 10;
+    
+    db.subjects.forEach(sub => {
+        const grades = db.grades.filter(g => g.studentId === studentId && g.subjectId === sub.id && !g.isFinal);
+        if(grades.length > 0) {
+            const gradeStrs = grades.map(g => g.value).join(', ');
+            doc.text(removeSumniki(`${sub.name}: ${gradeStrs}`), 25, y);
+            y += 8;
+            if(y > 270) { doc.addPage(); y = 20; }
+        }
+    });
+    
+    y += 15;
+    let uspeh = stu.splosniUspeh || "se ni zakljucen";
+    doc.setFont(undefined, 'bold');
+    doc.text(removeSumniki(`Koncni uspeh: ${uspeh}`), 20, y);
+    
+    window.open(doc.output('bloburl'), '_blank');
+};
+
+window.generateSpricevalo = function(classId, studentId) {
+    const doc = new window.jspdf.jsPDF();
+    const cls = db.classes.find(c => c.id === classId);
+    const stu = cls.students.find(s => s.id === studentId);
+    
+    doc.setFontSize(18);
+    doc.text(removeSumniki("SPRICEVALO"), 105, 20, { align: "center" });
+    
+    doc.setFontSize(12);
+    doc.text(removeSumniki(`Ucenec: ${stu.name}`), 20, 40);
+    doc.text(removeSumniki(`Razred: ${cls.name}`), 20, 48);
+    
+    let y = 65;
+    doc.setFont(undefined, 'bold');
+    doc.text(removeSumniki("Koncne ocene po predmetih:"), 20, y);
+    doc.setFont(undefined, 'normal');
+    y += 10;
+    
+    let hasNegative = false;
+    let hasGrades = false;
+
+    db.subjects.forEach(sub => {
+        const isAssigned = (cls.assignments || []).some(a => a.subjectId === sub.id);
+        const grades = db.grades.filter(g => g.studentId === studentId && g.subjectId === sub.id);
+        
+        if (!isAssigned && grades.length === 0) return;
+
+        const konecGrade = grades.find(g => g.isFinal && (!g.finalType || g.finalType === 'konec'));
+        const izpitGrade = grades.find(g => g.isFinal && g.finalType === 'izpit');
+        
+        let finalVal = izpitGrade ? izpitGrade.value : (konecGrade ? konecGrade.value : null);
+        
+        if(finalVal) {
+            hasGrades = true;
+            if(getGradeValue(finalVal) === 1) hasNegative = true;
+            doc.text(removeSumniki(`${sub.name}: ${finalVal}`), 25, y);
+        } else {
+            hasNegative = true;
+            doc.text(removeSumniki(`${sub.name}: neocenjeno`), 25, y);
+        }
+        
+        y += 8;
+        if(y > 270) { doc.addPage(); y = 20; }
+    });
+    
+    y += 15;
+    let uspeh = stu.splosniUspeh || "se ni zakljucen";
+    doc.setFont(undefined, 'bold');
+    doc.text(removeSumniki(`Splosni uspeh: ${uspeh}`), 20, y);
+    
+    y += 15;
+    let sklep = "";
+    if(!hasGrades && (!stu.splosniUspeh || stu.splosniUspeh.trim() === '')) {
+        sklep = "Sklep: Ocenjevanje se ni zakljuceno.";
+    } else if (hasNegative || String(uspeh).toLowerCase().includes('nzd') || String(uspeh).toLowerCase().includes('nezadostno')) {
+        sklep = "Sklep: Ucenec NE napreduje v visji letnik (Neuspesno).";
+    } else {
+        sklep = "Sklep: Ucenec napreduje v visji letnik (Uspesno).";
+    }
+    
+    doc.text(removeSumniki(sklep), 20, y);
+    
+    window.open(doc.output('bloburl'), '_blank');
 };
 
 init();
