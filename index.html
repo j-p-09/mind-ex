@@ -7,6 +7,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
     
+    <!-- Dodan jsPDF za generiranje PDF datotek -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
@@ -1479,39 +1480,121 @@ function removeSumniki(str) {
     return str.replace(/[čČšŠžŽćĆđĐ]/g, match => map[match]);
 }
 
+function formatGradeText(val) {
+    if (!val) return "neocenjen";
+    let v = String(val).trim().toLowerCase();
+    
+    if (v === '1' || v.includes('nezadostno') || v.includes('nzd')) return "nezadostno (1)";
+    if (v === '2' || v.includes('zadostno') || v.includes('zd')) return "zadostno (2)";
+    if (v === '3' || v.includes('dobro') || v.includes('db')) return "dobro (3)";
+    if (v === '4' || v.includes('prav dobro') || v.includes('pdb')) return "prav dobro (4)";
+    if (v === '5' || v.includes('odlično') || v.includes('odlicno') || v.includes('odl')) return "odlicno (5)";
+    if (v === 'o' || v === 'opravil') return "opravil";
+    if (v === 'n' || v === 'neocenjen') return "neocenjen";
+    if (v === 'no' || v === 'ni opravil') return "ni opravil";
+    
+    return val;
+}
+
+function drawOfficialTemplate(doc, titleText, stuName, className) {
+    // Zunanji rob
+    doc.setLineWidth(0.5);
+    doc.rect(10, 10, 190, 277);
+    // Notranji rob
+    doc.setLineWidth(0.2);
+    doc.rect(12, 12, 186, 273);
+
+    doc.setFontSize(14);
+    doc.text(removeSumniki("REPUBLIKA SLOVENIJA"), 105, 30, { align: "center" });
+    
+    doc.setFontSize(12);
+    doc.text(removeSumniki("E-DNEVNIK MINDEX"), 105, 38, { align: "center" });
+
+    doc.setFontSize(22);
+    doc.setFont(undefined, 'bold');
+    doc.text(removeSumniki(titleText), 105, 65, { align: "center" });
+    doc.setFont(undefined, 'normal');
+
+    doc.setFontSize(12);
+    doc.text(removeSumniki("Ime in priimek: " + stuName), 20, 85);
+    doc.text(removeSumniki("Razred: " + className), 20, 93);
+    doc.text(removeSumniki("Datum izpisa: " + new Date().toLocaleDateString('sl-SI')), 140, 85);
+    
+    // Tabela glava
+    doc.setLineWidth(0.5);
+    doc.line(20, 105, 190, 105);
+    doc.setFont(undefined, 'bold');
+    doc.text(removeSumniki("PREDMET"), 22, 111);
+    doc.text(removeSumniki("OCENA"), 140, 111);
+    doc.line(20, 115, 190, 115);
+    doc.setFont(undefined, 'normal');
+    
+    return 123;
+}
+
+function drawOfficialFooter(doc, uspeh, sklep, yPos) {
+    if (yPos > 210) {
+        doc.addPage();
+        doc.setLineWidth(0.5); doc.rect(10, 10, 190, 277); doc.setLineWidth(0.2); doc.rect(12, 12, 186, 273);
+        yPos = 30;
+    }
+    
+    yPos += 10;
+    doc.setFont(undefined, 'bold');
+    doc.text(removeSumniki(`Splosni uspeh: ${uspeh}`), 20, yPos);
+    
+    if (sklep) {
+        yPos += 10;
+        doc.text(removeSumniki(sklep), 20, yPos);
+    }
+    
+    yPos += 40;
+    if (yPos > 260) {
+        doc.addPage(); doc.setLineWidth(0.5); doc.rect(10, 10, 190, 277); doc.setLineWidth(0.2); doc.rect(12, 12, 186, 273); yPos = 40;
+    }
+    
+    doc.setFont(undefined, 'normal');
+    doc.text(removeSumniki(`V ______________, dne ______________`), 20, yPos);
+    
+    doc.text("M.P.", 100, yPos); // Žig
+    
+    doc.line(140, yPos - 10, 190, yPos - 10);
+    doc.text(removeSumniki("Razrednik"), 155, yPos);
+    
+    yPos += 20;
+    doc.line(140, yPos - 10, 190, yPos - 10);
+    doc.text(removeSumniki("Ravnatelj"), 155, yPos);
+}
+
 window.generatePotrdilo = function(classId, studentId) {
     const doc = new window.jspdf.jsPDF();
     const cls = db.classes.find(c => c.id === classId);
     const stu = cls.students.find(s => s.id === studentId);
     
-    doc.setFontSize(16);
-    doc.text(removeSumniki("POTRDILO O USPEHU"), 105, 20, { align: "center" });
-    
-    doc.setFontSize(12);
-    doc.text(removeSumniki(`Ucenec: ${stu.name}`), 20, 40);
-    doc.text(removeSumniki(`Razred: ${cls.name}`), 20, 48);
-    doc.text(removeSumniki(`Datum izpisa: ${new Date().toLocaleDateString('sl-SI')}`), 20, 56);
-    
-    let y = 75;
-    doc.setFont(undefined, 'bold');
-    doc.text(removeSumniki("Ocene med letom po predmetih:"), 20, y);
-    doc.setFont(undefined, 'normal');
-    y += 10;
+    let y = drawOfficialTemplate(doc, "POTRDILO O USPEHU", stu.name, cls.name);
     
     db.subjects.forEach(sub => {
         const grades = db.grades.filter(g => g.studentId === studentId && g.subjectId === sub.id && !g.isFinal);
         if(grades.length > 0) {
             const gradeStrs = grades.map(g => g.value).join(', ');
-            doc.text(removeSumniki(`${sub.name}: ${gradeStrs}`), 25, y);
-            y += 8;
-            if(y > 270) { doc.addPage(); y = 20; }
+            
+            doc.text(removeSumniki(sub.name), 22, y);
+            doc.text(removeSumniki(gradeStrs), 140, y);
+            
+            doc.setLineWidth(0.1);
+            doc.line(20, y + 3, 190, y + 3);
+            
+            y += 10;
+            if(y > 260) { 
+                doc.addPage(); 
+                doc.setLineWidth(0.5); doc.rect(10, 10, 190, 277); doc.setLineWidth(0.2); doc.rect(12, 12, 186, 273);
+                y = 30; 
+            }
         }
     });
     
-    y += 15;
     let uspeh = stu.splosniUspeh || "se ni zakljucen";
-    doc.setFont(undefined, 'bold');
-    doc.text(removeSumniki(`Koncni uspeh: ${uspeh}`), 20, y);
+    drawOfficialFooter(doc, uspeh, null, y);
     
     window.open(doc.output('bloburl'), '_blank');
 };
@@ -1521,18 +1604,7 @@ window.generateSpricevalo = function(classId, studentId) {
     const cls = db.classes.find(c => c.id === classId);
     const stu = cls.students.find(s => s.id === studentId);
     
-    doc.setFontSize(18);
-    doc.text(removeSumniki("SPRICEVALO"), 105, 20, { align: "center" });
-    
-    doc.setFontSize(12);
-    doc.text(removeSumniki(`Ucenec: ${stu.name}`), 20, 40);
-    doc.text(removeSumniki(`Razred: ${cls.name}`), 20, 48);
-    
-    let y = 65;
-    doc.setFont(undefined, 'bold');
-    doc.text(removeSumniki("Koncne ocene po predmetih:"), 20, y);
-    doc.setFont(undefined, 'normal');
-    y += 10;
+    let y = drawOfficialTemplate(doc, "SPRICEVALO", stu.name, cls.name);
     
     let hasNegative = false;
     let hasGrades = false;
@@ -1547,27 +1619,33 @@ window.generateSpricevalo = function(classId, studentId) {
         const izpitGrade = grades.find(g => g.isFinal && g.finalType === 'izpit');
         
         let finalVal = izpitGrade ? izpitGrade.value : (konecGrade ? konecGrade.value : null);
+        let formattedVal = formatGradeText(finalVal);
         
         if(finalVal) {
             hasGrades = true;
-            if(getGradeValue(finalVal) === 1) hasNegative = true;
-            doc.text(removeSumniki(`${sub.name}: ${finalVal}`), 25, y);
+            if(getGradeValue(finalVal) === 1 || formattedVal === "ni opravil") hasNegative = true;
+            doc.text(removeSumniki(sub.name), 22, y);
+            doc.text(removeSumniki(formattedVal), 140, y);
         } else {
             hasNegative = true;
-            doc.text(removeSumniki(`${sub.name}: neocenjeno`), 25, y);
+            doc.text(removeSumniki(sub.name), 22, y);
+            doc.text(removeSumniki("neocenjen"), 140, y);
         }
         
-        y += 8;
-        if(y > 270) { doc.addPage(); y = 20; }
+        doc.setLineWidth(0.1);
+        doc.line(20, y + 3, 190, y + 3);
+        
+        y += 10;
+        if(y > 260) { 
+            doc.addPage(); 
+            doc.setLineWidth(0.5); doc.rect(10, 10, 190, 277); doc.setLineWidth(0.2); doc.rect(12, 12, 186, 273);
+            y = 30; 
+        }
     });
     
-    y += 15;
     let uspeh = stu.splosniUspeh || "se ni zakljucen";
-    doc.setFont(undefined, 'bold');
-    doc.text(removeSumniki(`Splosni uspeh: ${uspeh}`), 20, y);
-    
-    y += 15;
     let sklep = "";
+    
     if(!hasGrades && (!stu.splosniUspeh || stu.splosniUspeh.trim() === '')) {
         sklep = "Sklep: Ocenjevanje se ni zakljuceno.";
     } else if (hasNegative || String(uspeh).toLowerCase().includes('nzd') || String(uspeh).toLowerCase().includes('nezadostno')) {
@@ -1576,7 +1654,7 @@ window.generateSpricevalo = function(classId, studentId) {
         sklep = "Sklep: Ucenec napreduje v visji letnik (Uspesno).";
     }
     
-    doc.text(removeSumniki(sklep), 20, y);
+    drawOfficialFooter(doc, uspeh, sklep, y);
     
     window.open(doc.output('bloburl'), '_blank');
 };
