@@ -1492,7 +1492,10 @@ function renderRazrednikView() {
                     s.ukrepi.forEach((u, i) => {
                         ukrepiHtml += `<li style="margin-bottom:3px; border-bottom:1px dotted #ccc; padding-bottom:3px;">
                                         ${u.date} - <b>${u.type}</b> 
-                                        <button class="win-btn mini-btn" onclick="deleteUkrep(${c.id}, ${s.id}, ${i})">X</button>
+                                        <div style="margin-top:3px;">
+                                            <button class="win-btn mini-btn" onclick="generateUkrepPDF(${c.id}, ${s.id}, ${i})">Sklep (PDF)</button>
+                                            <button class="win-btn mini-btn" onclick="deleteUkrep(${c.id}, ${s.id}, ${i})">X</button>
+                                        </div>
                                        </li>`;
                     });
                     ukrepiHtml += '</ul>';
@@ -1534,6 +1537,8 @@ window.openUkrepModal = function(classId, studentId) {
         </select>
         <label>Datum:</label>
         <input type="date" id="u-date" value="${todayIso}" style="width:100%; padding:4px;">
+        <label>Obrazložitev (obvezno):</label>
+        <textarea id="u-obrazlozitev" style="width:100%; height:80px; padding:4px;"></textarea>
     `;
     showModal("Dodaj sankcijo", html, [
         {
@@ -1541,13 +1546,17 @@ window.openUkrepModal = function(classId, studentId) {
             onClick: () => {
                 let cls = db.classes.find(c => c.id === classId);
                 let stu = cls.students.find(s => s.id === studentId);
+                let obr = document.getElementById('u-obrazlozitev').value.trim();
+                
+                if (!obr) return customAlert("Vnos obrazložitve je obvezen!");
+
                 if(!stu.ukrepi) stu.ukrepi = [];
                 
                 let t = document.getElementById('u-type').value;
                 let dRaw = document.getElementById('u-date').value;
                 let d = dRaw ? new Date(dRaw).toLocaleDateString('sl-SI') : new Date().toLocaleDateString('sl-SI');
                 
-                stu.ukrepi.push({ type: t, date: d });
+                stu.ukrepi.push({ type: t, date: d, obrazlozitev: obr });
                 saveDB(); renderRazrednikView(); closeModal();
             },
             shouldClose: false
@@ -1564,6 +1573,48 @@ window.deleteUkrep = function(classId, studentId, index) {
         saveDB(); renderRazrednikView(); closeModal();
     });
 };
+
+window.generateUkrepPDF = function(classId, studentId, ukrepIndex) {
+    const doc = new window.jspdf.jsPDF();
+    const cls = db.classes.find(c => c.id === classId);
+    const stu = cls.students.find(s => s.id === studentId);
+    const ukrep = stu.ukrepi[ukrepIndex];
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text("SKLEP O VZGOJNEM UKREPU", 105, 30, { align: "center" });
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Ucenec/ka: `, 20, 50);
+    doc.setFont('times', 'bold');
+    doc.text(removeSumniki(stu.name), 50, 50);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Razred: `, 20, 60);
+    doc.setFont('times', 'bold');
+    doc.text(removeSumniki(cls.name), 50, 60);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Datum izdaje: `, 20, 70);
+    doc.setFont('times', 'bold');
+    doc.text(ukrep.date, 50, 70);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Vrsta sankcije: `, 20, 80);
+    doc.setFont('times', 'bold');
+    doc.text(removeSumniki(ukrep.type), 50, 80);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Obrazlozitev: `, 20, 95);
+    doc.setFont('times', 'normal');
+    
+    let splitObr = doc.splitTextToSize(removeSumniki(ukrep.obrazlozitev || 'Brez obrazlozitve.'), 170);
+    doc.text(splitObr, 20, 105);
+    
+    window.open(doc.output('bloburl'), '_blank');
+};
+
 
 // --- PDF DOKUMENTI (Razrednik) ---
 function removeSumniki(str) {
@@ -1594,74 +1645,59 @@ function formatGradeText(val) {
     return val;
 }
 
+// Stara predloga (potrdilo o uspehu) - ohranjena nedotaknjena glede strukture podlage
 function drawOfficialTemplate(doc, titleText, stuName, className) {
-    // Zunanji rob
-    doc.setLineWidth(0.5);
-    doc.rect(10, 10, 190, 277);
-    // Notranji rob
-    doc.setLineWidth(0.2);
-    doc.rect(12, 12, 186, 273);
+    doc.setLineWidth(0.5); doc.rect(10, 10, 190, 277);
+    doc.setLineWidth(0.2); doc.rect(12, 12, 186, 273);
 
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(14);
     doc.text(removeSumniki("REPUBLIKA SLOVENIJA"), 105, 30, { align: "center" });
-    
     doc.setFontSize(12);
     doc.text(removeSumniki("E-DNEVNIK MINDEX"), 105, 38, { align: "center" });
 
     doc.setFontSize(22);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(removeSumniki(titleText), 105, 65, { align: "center" });
-    doc.setFont(undefined, 'normal');
-
+    
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(12);
     doc.text(removeSumniki("Ime in priimek: " + stuName), 20, 85);
     doc.text(removeSumniki("Razred: " + className), 20, 93);
     doc.text(removeSumniki("Datum izpisa: " + new Date().toLocaleDateString('sl-SI')), 140, 85);
     
-    // Tabela glava
     doc.setLineWidth(0.5);
     doc.line(20, 105, 190, 105);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(removeSumniki("PREDMET"), 22, 111);
     doc.text(removeSumniki("OCENA"), 140, 111);
     doc.line(20, 115, 190, 115);
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     
     return 123;
 }
 
 function drawOfficialFooter(doc, uspeh, sklep, yPos) {
-    if (yPos > 210) {
-        doc.addPage();
-        doc.setLineWidth(0.5); doc.rect(10, 10, 190, 277); doc.setLineWidth(0.2); doc.rect(12, 12, 186, 273);
-        yPos = 30;
-    }
-    
+    if (yPos > 210) { doc.addPage(); doc.setLineWidth(0.5); doc.rect(10, 10, 190, 277); doc.setLineWidth(0.2); doc.rect(12, 12, 186, 273); yPos = 30; }
     yPos += 10;
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(removeSumniki(`Splosni uspeh: ${uspeh}`), 20, yPos);
     
     if (sklep) {
         yPos += 10;
-        doc.setFont(undefined, 'normal');
+        doc.setFont('helvetica', 'normal');
         let splitSklep = doc.splitTextToSize(sklep, 160);
         doc.text(splitSklep, 20, yPos);
         yPos += (splitSklep.length * 6);
     }
-    
     yPos += 30;
-    if (yPos > 260) {
-        doc.addPage(); doc.setLineWidth(0.5); doc.rect(10, 10, 190, 277); doc.setLineWidth(0.2); doc.rect(12, 12, 186, 273); yPos = 40;
-    }
+    if (yPos > 260) { doc.addPage(); doc.setLineWidth(0.5); doc.rect(10, 10, 190, 277); doc.setLineWidth(0.2); doc.rect(12, 12, 186, 273); yPos = 40; }
     
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.text(removeSumniki(`V ______________, dne ______________`), 20, yPos);
-    
-    doc.text("M.P.", 100, yPos); // Žig
-    
+    doc.text("M.P.", 100, yPos); 
     doc.line(140, yPos - 10, 190, yPos - 10);
     doc.text(removeSumniki("Razrednik"), 155, yPos);
-    
     yPos += 20;
     doc.line(140, yPos - 10, 190, yPos - 10);
     doc.text(removeSumniki("Ravnatelj"), 155, yPos);
@@ -1673,7 +1709,6 @@ window.generatePotrdilo = function(classId, studentId) {
     const stu = cls.students.find(s => s.id === studentId);
     
     let y = drawOfficialTemplate(doc, "OBVESTILO O USPEHU", stu.name, cls.name);
-    
     let hasNegative = false;
     let hasGrades = false;
 
@@ -1682,106 +1717,179 @@ window.generatePotrdilo = function(classId, studentId) {
         if(grades.length > 0) {
             hasGrades = true;
             const gradeStrs = grades.map(g => g.value).join(', ');
-            
             doc.text(removeSumniki(sub.name), 22, y);
             doc.text(removeSumniki(gradeStrs), 140, y);
-            
             doc.setLineWidth(0.1);
             doc.line(20, y + 3, 190, y + 3);
-            
             y += 10;
-            if(y > 260) { 
-                doc.addPage(); 
-                doc.setLineWidth(0.5); doc.rect(10, 10, 190, 277); doc.setLineWidth(0.2); doc.rect(12, 12, 186, 273);
-                y = 30; 
-            }
+            if(y > 260) { doc.addPage(); doc.setLineWidth(0.5); doc.rect(10, 10, 190, 277); doc.setLineWidth(0.2); doc.rect(12, 12, 186, 273); y = 30; }
         }
     });
     
     let uspeh = stu.splosniUspeh || "se ni zakljucen";
     let statusStr = "uspesno/neuspesno (sredi leta)";
-    
     let sankcijeStr = "";
-    if (stu.ukrepi && stu.ukrepi.length > 0) {
-        sankcijeStr = stu.ukrepi.map(u => u.type).join(', ');
-    } else {
-        sankcijeStr = "brez sankcij";
-    }
+    if (stu.ukrepi && stu.ukrepi.length > 0) sankcijeStr = stu.ukrepi.map(u => u.type).join(', ');
+    else sankcijeStr = "brez sankcij";
 
     let sklep = `Na podlagi zapisnika evidence sprejemamo sklep, da je zgoraj\nnavedeni/-na ${statusStr} opravil/-a dosedanje obveznosti. Po pregledu\nzapisnika je zgoraj navedeni/-na prejel/-a sankcije: ${removeSumniki(sankcijeStr)}.`;
-    
     drawOfficialFooter(doc, uspeh, sklep, y);
-    
     window.open(doc.output('bloburl'), '_blank');
 };
 
+
+// NOVA, POSEBNA ZASNOVA ZA SPRIČEVALO
 window.generateSpricevalo = function(classId, studentId) {
     const doc = new window.jspdf.jsPDF();
     const cls = db.classes.find(c => c.id === classId);
     const stu = cls.students.find(s => s.id === studentId);
+    const year = new Date().getFullYear().toString();
     
-    let y = drawOfficialTemplate(doc, "SPRICEVALO", stu.name, cls.name);
+    let y = 20;
+
+    // SKLEP in SPRIČEVALO
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text("SKLEP", 105, y, { align: "center" });
+    y += 10;
+    doc.text("SPRICEVALO", 105, y, { align: "center" });
+    y += 15;
+
+    // VRSTICA: IME IN PRIIMEK (Levo) - RAZRED (Sredina) - LETO (Desno)
+    doc.setFontSize(12);
     
+    // Ime in priimek
+    doc.setFont('times', 'bold');
+    doc.text(removeSumniki(stu.name), 20, y);
+    let wName = doc.getTextWidth(removeSumniki(stu.name));
+    doc.setLineWidth(0.3); doc.line(20, y+1, 20+wName, y+1);
+
+    // Razred
+    doc.text(removeSumniki(cls.name), 105, y, { align: "center" });
+    let wClass = doc.getTextWidth(removeSumniki(cls.name));
+    doc.line(105 - wClass/2, y+1, 105 + wClass/2, y+1);
+
+    // Leto
+    let wYear = doc.getTextWidth(year);
+    doc.text(year, 190 - wYear, y);
+    doc.line(190 - wYear, y+1, 190, y+1);
+
+    y += 15;
+
+    // Besedilo 1
+    doc.setFont('helvetica', 'normal');
+    doc.text("Program Mindex zgoraj navedenemu / navedeni (v prihodnje navedenemu) izdaja sklep spricevala.", 20, y);
+    y += 15;
+
+    // TABELA Z ZAKLJUČNIMI OCENAMI
+    doc.setFont('helvetica', 'bold');
+    doc.text("PREDMET", 22, y);
+    doc.text("OCENA", 140, y);
+    doc.setLineWidth(0.5);
+    doc.line(20, y+2, 190, y+2);
+    y += 10;
+
     let hasNegative = false;
-    let hasGrades = false;
     let izpitiStrs = [];
 
     db.subjects.forEach(sub => {
         const isAssigned = (cls.assignments || []).some(a => a.subjectId === sub.id);
         const grades = db.grades.filter(g => g.studentId === studentId && g.subjectId === sub.id);
-        
         if (!isAssigned && grades.length === 0) return;
 
         const konecGrade = grades.find(g => g.isFinal && (!g.finalType || g.finalType === 'konec'));
         const izpitGrade = grades.find(g => g.isFinal && g.finalType === 'izpit');
         
-        if (izpitGrade) {
-            izpitiStrs.push(`${sub.name} (izpit: ${izpitGrade.value})`);
-        }
-
         let finalVal = izpitGrade ? izpitGrade.value : (konecGrade ? konecGrade.value : null);
         let formattedVal = formatGradeText(finalVal);
+        let displayVal = formattedVal;
+
+        if (izpitGrade) {
+            displayVal += " (izpit)";
+            izpitiStrs.push(`${sub.name}: ${formatGradeText(izpitGrade.value)}`);
+        }
         
         if(finalVal) {
-            hasGrades = true;
             if(getGradeValue(finalVal) === 1 || formattedVal === "ni opravil") hasNegative = true;
+            
+            doc.setFont('helvetica', 'normal');
             doc.text(removeSumniki(sub.name), 22, y);
-            doc.text(removeSumniki(formattedVal), 140, y);
+            
+            doc.setFont('times', 'bold');
+            doc.text(removeSumniki(displayVal), 140, y);
         } else {
             hasNegative = true;
+            doc.setFont('helvetica', 'normal');
             doc.text(removeSumniki(sub.name), 22, y);
-            doc.text(removeSumniki("neocenjen"), 140, y);
+            doc.setFont('times', 'bold');
+            doc.text("neocenjen", 140, y);
         }
         
         doc.setLineWidth(0.1);
         doc.line(20, y + 3, 190, y + 3);
-        
         y += 10;
-        if(y > 260) { 
-            doc.addPage(); 
-            doc.setLineWidth(0.5); doc.rect(10, 10, 190, 277); doc.setLineWidth(0.2); doc.rect(12, 12, 186, 273);
-            y = 30; 
-        }
+
+        if(y > 270) { doc.addPage(); y = 20; }
     });
+
+    y += 10;
+
+    // Obvestilo o uspehu
+    let uspesnoStatus = hasNegative ? "NEUSPESNO" : "USPESNO";
+    let napredujeStatus = hasNegative ? "NE NAPREDUJE" : "NAPREDUJE";
+
+    doc.setFont('helvetica', 'normal');
+    doc.text("Na podlagi zgoraj vidnih ocen sporocamo, da je ", 20, y);
+    y += 7;
+
+    doc.setFont('times', 'bold');
+    doc.text(removeSumniki(stu.name), 20, y);
+    let wName2 = doc.getTextWidth(removeSumniki(stu.name));
+    doc.setLineWidth(0.3); doc.line(20, y+1, 20+wName2, y+1);
     
-    let uspeh = stu.splosniUspeh || "se ni zakljucen";
+    doc.setFont('helvetica', 'normal');
+    doc.text(` ob koncnem uspehu ${uspesnoStatus} opravil vse obveznosti.`, 20 + wName2, y);
     
-    // Logika za sklep
-    let isUspesen = !hasNegative && !String(uspeh).toLowerCase().includes('nzd') && !String(uspeh).toLowerCase().includes('nezadostno') && (stu.splosniUspeh && stu.splosniUspeh.trim() !== '');
-    let statusStr = isUspesen ? "uspesno" : "neuspesno";
-    
-    let sankcijeStr = "";
+    y += 10;
+    doc.text(`Na podlagi razvidnega splosnega uspeha zgoraj omenjeni ${napredujeStatus}.`, 20, y);
+    y += 15;
+
+    // Sekcija o prekrških in ukrepih
+    let pSplit = doc.splitTextToSize("Po pregledu evidence prekrskov in izdanih ukrepov ugotavljamo, da je zgoraj omenjeni v dolocenem casovnem obdobju prejel sankcije:", 170);
+    doc.text(pSplit, 20, y);
+    y += pSplit.length * 7;
+
     if (stu.ukrepi && stu.ukrepi.length > 0) {
-        sankcijeStr = stu.ukrepi.map(u => u.type).join(', ');
+        doc.setFont('times', 'bold');
+        stu.ukrepi.forEach(u => {
+            doc.text(`- ${removeSumniki(u.type)} (${u.date})`, 25, y);
+            y += 7;
+        });
+        doc.setFont('helvetica', 'normal');
     } else {
-        sankcijeStr = "brez sankcij";
+        doc.setFont('times', 'bold');
+        doc.text("- BREZ SANKCIJ", 25, y);
+        doc.setFont('helvetica', 'normal');
+        y += 7;
     }
 
-    let izpitiText = izpitiStrs.length > 0 ? " | Izpiti: " + removeSumniki(izpitiStrs.join(', ')) : "";
+    // Izpisi popravnih izpitov
+    if (izpitiStrs.length > 0) {
+        y += 5;
+        doc.setFont('helvetica', 'normal');
+        doc.text("Izpis vseh ocen iz popravnih izpitov:", 20, y);
+        y += 7;
+        doc.setFont('times', 'bold');
+        izpitiStrs.forEach(izp => {
+            doc.text(`- ${removeSumniki(izp)}`, 25, y);
+            y += 7;
+        });
+        doc.setFont('helvetica', 'normal');
+    }
 
-    let sklep = `Na podlagi zapisnika evidence sprejemamo sklep, da je zgoraj\nnavedeni/-na ${statusStr} opravil/-a vse obveznosti. Po pregledu\nzapisnika je zgoraj navedeni/-na prejel/-a sankcije: ${removeSumniki(sankcijeStr)}.${izpitiText}`;
-    
-    drawOfficialFooter(doc, uspeh, sklep, y);
+    y += 10;
+    doc.setFont('helvetica', 'normal');
+    doc.text("DOKUMENT STOPI V VELJAVO TAKOJ. Pritozba nanj v roku 7 delovnih dni...", 20, y);
     
     window.open(doc.output('bloburl'), '_blank');
 };
