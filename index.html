@@ -7,7 +7,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
     
-    <!-- Dodan jsPDF za generiranje PDF datotek -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
@@ -197,7 +196,7 @@
         .win-body {
             padding: 15px;
             font-size: 14px;
-            max-height: 400px; overflow-y: auto;
+            max-height: 500px; overflow-y: auto;
         }
         .win-body label { display: block; margin-top: 10px; margin-bottom: 2px; font-weight: bold; }
         .win-body input[type="text"], .win-body input[type="password"], .win-body input[type="number"], .win-body select { width: 95%; padding: 3px; border: 2px inset #fff; }
@@ -221,24 +220,27 @@
         .class-btn-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
         .class-btn-grid button { padding: 10px 20px; font-size: 14px; font-weight: bold; }
 
-        .inline-grade-input {
+        /* Nova klasa za gumb za dodajanje ocene */
+        .inline-grade-add {
             position: absolute;
             bottom: 0;
             right: 0;
             width: 16px;
             height: 16px;
-            background-color: #b0b0b0;
-            border: none;
+            background-color: #e0e0e0;
+            border: 1px solid #999;
             padding: 0;
             margin: 0;
             text-align: center;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
+            line-height: 12px;
             outline: none;
+            cursor: pointer;
         }
-        .inline-grade-input:focus {
-            background-color: #fff;
-        }
+        .inline-grade-add:hover { background-color: #fff; }
+        .inline-grade-add:active { background-color: #ccc; }
+
         .grade-highlight {
             background-color: #c8f7c5 !important;
             padding: 2px;
@@ -344,11 +346,6 @@
                     </div>
 
                     <div id="redovalnica-controls" style="margin-top: 10px;" class="hidden">
-                        Izberi način vnosa:
-                        <button class="win-btn btn-pisno grade-type-btn" onclick="setGradeType('PISNO')">PISNO</button>
-                        <button class="win-btn btn-ustno grade-type-btn" onclick="setGradeType('USTNO')">USTNO</button>
-                        <button class="win-btn btn-izdelek grade-type-btn" onclick="setGradeType('IZDELEK')">IZDELEK</button>
-                        <hr>
                         <button class="win-btn" onclick="openBulkEntry()">MNOŽIČNO VPIŠI</button>
                     </div>
                 </div>
@@ -407,7 +404,6 @@ let db = {
 
 let currentState = {
     user: null,
-    selectedGradeType: 'USTNO', 
     selectedClassId: null,
     selectedSubjectId: null,
     viewMode: 'RAZREDNI',
@@ -811,7 +807,7 @@ window.addStudent = function(cId) {
     customPrompt("Ime in priimek učenca:", (sName) => {
         if (sName) {
             const cls = db.classes.find(c => c.id === cId);
-            cls.students.push({ id: Date.now(), name: sName, username: sName.toLowerCase().replace(/\s/g, ''), password: '123', access: true, ukrep: 'BREZ', splosniUspeh: '' });
+            cls.students.push({ id: Date.now(), name: sName, username: sName.toLowerCase().replace(/\s/g, ''), password: '123', access: true, ukrepi: [], splosniUspeh: '' });
             saveDB();
         }
         manageClass(cId);
@@ -880,14 +876,14 @@ function getGradeValue(val) {
     if (['3', 'dobro (3)', 'db (3)'].includes(v)) return 3;
     if (['2', 'zadostno (2)', 'zd (2)'].includes(v)) return 2;
     if (['1', 'ne zadostno (1)', 'nzd (1)', 'nezadostno (1)'].includes(v)) return 1;
-    return 0;
+    return parseInt(val) || 0;
 }
 
 function getAverage(studentId, subjectId) {
     let allGrades = db.grades.filter(g => g.studentId === studentId && g.subjectId === subjectId && !g.isFinal);
     let sum = 0, count = 0;
     allGrades.forEach(g => {
-        let match = g.value.match(/\d+/);
+        let match = String(g.value).match(/\d+/);
         if(match) {
             let num = parseInt(match[0]);
             if(num >= 1 && num <= 5) { sum += num; count++; }
@@ -943,12 +939,6 @@ function selectClassForRedovalnica(classId) {
     } else {
         openGradebookOsebni();
     }
-}
-
-function setGradeType(type) {
-    currentState.selectedGradeType = type;
-    document.querySelectorAll('.grade-type-btn').forEach(b => b.classList.remove('selected-type'));
-    document.querySelector(`.btn-${type.toLowerCase()}`).classList.add('selected-type');
 }
 
 function isSectorDisabled(classId, subjectId, sector) {
@@ -1119,9 +1109,14 @@ function renderOsebniTable() {
     let isRazrednik = (cls.razrednikId == currentState.user.id) || (currentState.user.role === 'admin');
     let splosniUspehHtml = studentObj.splosniUspeh || 'še ni zaključen';
 
-    if (isRazrednik) {
-        splosniUspehHtml = `<input type="text" value="${studentObj.splosniUspeh || ''}" id="inp-splosni" style="width:150px; font-weight:bold;"> 
-                            <button class="win-btn mini-btn" onclick="saveSplošniUspeh(${cls.id}, ${studentId})">Shrani</button>`;
+    if (isRazrednik || currentState.user.role === 'admin') {
+        if (!studentObj.splosniUspeh || currentState.user.role === 'admin') {
+            splosniUspehHtml = `<input type="text" value="${studentObj.splosniUspeh || ''}" id="inp-splosni" style="width:150px; font-weight:bold;"> 
+                                <button class="win-btn mini-btn" onclick="saveSplošniUspeh(${cls.id}, ${studentId})">Shrani</button>`;
+        } else {
+            splosniUspehHtml = `<span style="font-weight:bold;">${studentObj.splosniUspeh}</span> 
+                                <span style="font-size:11px; color:#666;">(Zaklenjeno. Ureja lahko le administrator.)</span>`;
+        }
     }
 
     const tallyHtml = `
@@ -1156,49 +1151,101 @@ function renderCellContent(studentId, subjectId, period) {
         let cls = g.type === 'PISNO' ? 'grade-pisno' : (g.type === 'IZDELEK' ? 'grade-izdelek' : 'grade-ustno');
         let hlClass = g.isUnsaved ? ' grade-highlight' : '';
         let val = g.correction ? `<span class="${cls} ${hlClass}"><span class="grade-correction">${g.value}</span>${g.correction}</span>` : `<span class="${cls} ${hlClass}">${g.value}</span>`;
-        const tooltip = `Vpisal: ${g.authorName || 'Neznano'}\nDatum: ${g.date || 'Neznano'}`;
+        let tooltip = `Vpisal: ${g.authorName || 'Neznano'}\nDatum: ${g.date || 'Neznano'}`;
+        if (g.komentar) tooltip += `\nKomentar: ${g.komentar}`;
         h += `<span class="grade-span" title="${tooltip}" onclick="editGrade(${g.id}); event.stopPropagation();">${val}</span>`;
     });
     
-    h += `<input type="text" class="inline-grade-input" onkeyup="handleInlineGradeSubmit(event, ${studentId}, ${subjectId}, '${period}')" onclick="event.stopPropagation();">`;
+    h += `<button class="inline-grade-add" onclick="openAddGradeModal(${studentId}, ${subjectId}, '${period}'); event.stopPropagation();">+</button>`;
     return `<div class="single-view">${h}</div>`;
 }
 
-function handleInlineGradeSubmit(event, studentId, subjectId, period) {
-    if (event.key === 'Enter') {
-        const val = event.target.value.trim();
-        if (!val) return;
-        
-        const type = currentState.selectedGradeType || 'USTNO';
-        const gradeId = Date.now() + Math.random();
-        
-        db.grades.push({ 
-            id: gradeId, 
-            studentId, 
-            subjectId, 
-            period, 
-            type, 
-            value: val, 
-            correction: null, 
-            isFinal: false,
-            authorId: currentState.user.id, 
-            authorName: currentState.user.name, 
-            date: new Date().toLocaleDateString('sl-SI'),
-            isUnsaved: true
-        });
-        
-        event.target.value = '';
-        refreshActiveTable();
-        
-        setTimeout(() => {
-            const idx = db.grades.findIndex(g => g.id === gradeId);
-            if (idx !== -1) {
-                delete db.grades[idx].isUnsaved;
-            }
-            saveDB();
-            refreshActiveTable();
-        }, 4000);
-    }
+// NOVO: Modalno okno za dodajanje ocene preko +
+window.openAddGradeModal = function(studentId, subjectId, period) {
+    const cls = db.classes.find(c => c.id === currentState.selectedClassId);
+    const stu = cls.students.find(s => s.id === studentId);
+    const sub = db.subjects.find(s => s.id === subjectId);
+    const todayIso = new Date().toISOString().split('T')[0];
+    
+    let html = `
+        <div style="font-size:18px; font-weight:bold; margin-bottom:15px; border-bottom:1px solid #ccc; padding-bottom:10px;">
+            ${stu.name} - ${sub.name}
+        </div>
+        <table style="width:100%; border-spacing:8px; font-size:14px;">
+            <tr>
+                <td width="35%" align="right" class="bold">Datum:</td>
+                <td><input type="date" id="ng-date" value="${todayIso}" style="width:150px; padding:3px;"></td>
+            </tr>
+            <tr>
+                <td align="right" class="bold">Ocenjevalno obdobje:</td>
+                <td>
+                    <select id="ng-period" style="width:150px; padding:3px;">
+                        <option value="${period}" selected>Sektor ${period}</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td align="right" class="bold">Tip:</td>
+                <td>
+                    <select id="ng-type" style="width:150px; padding:3px;">
+                        <option value="USTNO">Ustna ocena</option>
+                        <option value="PISNO">Pisna ocena</option>
+                        <option value="IZDELEK">Izdelek</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td align="right" valign="top" class="bold">Ocena:</td>
+                <td>
+                    <label style="display:block; margin:2px 0;"><input type="radio" name="ng-val" value="1"> 1</label>
+                    <label style="display:block; margin:2px 0;"><input type="radio" name="ng-val" value="2"> 2</label>
+                    <label style="display:block; margin:2px 0;"><input type="radio" name="ng-val" value="3"> 3</label>
+                    <label style="display:block; margin:2px 0;"><input type="radio" name="ng-val" value="4"> 4</label>
+                    <label style="display:block; margin:2px 0;"><input type="radio" name="ng-val" value="5"> 5</label>
+                </td>
+            </tr>
+            <tr>
+                <td align="right" valign="top" class="bold">Komentar:</td>
+                <td><textarea id="ng-comment" style="width:90%; height:60px; padding:5px; border:1px solid #999;"></textarea></td>
+            </tr>
+        </table>
+    `;
+    
+    showModal(`Dodaj oceno (${stu.name}, ${cls.name})`, html, [
+        {
+            label: 'Shrani',
+            onClick: () => {
+                const valEl = document.querySelector('input[name="ng-val"]:checked');
+                if(!valEl) return customAlert("Prosimo izberite oceno!");
+                
+                const val = valEl.value;
+                const type = document.getElementById('ng-type').value;
+                const dRaw = document.getElementById('ng-date').value;
+                const date = dRaw ? new Date(dRaw).toLocaleDateString('sl-SI') : new Date().toLocaleDateString('sl-SI');
+                const comment = document.getElementById('ng-comment').value;
+                
+                const gradeId = Date.now() + Math.random();
+                
+                db.grades.push({ 
+                    id: gradeId, studentId, subjectId, period, type, value: val, correction: null, isFinal: false,
+                    authorId: currentState.user.id, authorName: currentState.user.name, date: date, komentar: comment, isUnsaved: true
+                });
+                
+                saveDB(); refreshActiveTable(); closeModal();
+                
+                setTimeout(() => {
+                    const idx = db.grades.findIndex(g => g.id === gradeId);
+                    if (idx !== -1) {
+                        delete db.grades[idx].isUnsaved;
+                    }
+                    saveDB();
+                    refreshActiveTable();
+                }, 3000);
+            },
+            shouldClose: false
+        },
+        { label: 'Prekliči', onClick: closeModal }
+    ]);
 }
 
 function getWarnHtml(studentId, subjectId, period) {
@@ -1424,15 +1471,14 @@ function renderRazrednikView() {
     }
 
     let html = '';
-    const ukrepiList = ['BREZ', 'OPOMIN', '1. UKOR', '2. UKOR', 'UKOR PRED IZKLJUČITVIJO', 'IZKLJUČITEV'];
 
     myClasses.forEach(c => {
         html += `<h4 style="margin-top:20px;">Razred: ${c.name}</h4>
                  <table class="gradebook-table" style="width:100%;">
                     <thead><tr>
-                        <th width="30%" class="pastel-yellow">Učenec</th>
-                        <th width="30%" class="pastel-yellow">Vzgojni ukrep</th>
-                        <th width="40%" class="pastel-yellow">Dokumenti</th>
+                        <th width="25%" class="pastel-yellow">Učenec</th>
+                        <th width="45%" class="pastel-yellow">Vzgojni ukrepi (zgodovina)</th>
+                        <th width="30%" class="pastel-yellow">Dokumenti</th>
                     </tr></thead>
                     <tbody>`;
         
@@ -1440,14 +1486,31 @@ function renderRazrednikView() {
             html += `<tr><td colspan="3">Ni učencev.</td></tr>`;
         } else {
             c.students.forEach(s => {
-                const val = s.ukrep || 'BREZ';
-                const opts = ukrepiList.map(o => `<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('');
+                let ukrepiHtml = '';
+                if (s.ukrepi && s.ukrepi.length > 0) {
+                    ukrepiHtml = '<ul style="list-style:none; padding:0; margin:0; font-size:12px; text-align:left;">';
+                    s.ukrepi.forEach((u, i) => {
+                        ukrepiHtml += `<li style="margin-bottom:3px; border-bottom:1px dotted #ccc; padding-bottom:3px;">
+                                        ${u.date} - <b>${u.type}</b> 
+                                        <button class="win-btn mini-btn" onclick="deleteUkrep(${c.id}, ${s.id}, ${i})">X</button>
+                                       </li>`;
+                    });
+                    ukrepiHtml += '</ul>';
+                } else {
+                    ukrepiHtml = '<span style="font-size:12px; color:#555;">Brez izdanih sankcij.</span>';
+                }
+
                 html += `<tr>
                             <td>${s.name}</td>
-                            <td><select style="width:90%; padding:3px;" onchange="setUkrep(${c.id}, ${s.id}, this.value)">${opts}</select></td>
+                            <td style="padding:5px;">
+                                ${ukrepiHtml}
+                                <div style="margin-top:5px; text-align:left;">
+                                    <button class="win-btn mini-btn" onclick="openUkrepModal(${c.id}, ${s.id})">+ Dodaj sankcijo</button>
+                                </div>
+                            </td>
                             <td>
-                                <button class="win-btn mini-btn" onclick="generatePotrdilo(${c.id}, ${s.id})">POTRDILO O USPEHU</button>
-                                <button class="win-btn mini-btn" onclick="generateSpricevalo(${c.id}, ${s.id})">SPRIČEVALO</button>
+                                <button class="win-btn mini-btn" onclick="generatePotrdilo(${c.id}, ${s.id})" style="margin-bottom:4px; width:90%;">POTRDILO O USPEHU</button><br>
+                                <button class="win-btn mini-btn" onclick="generateSpricevalo(${c.id}, ${s.id})" style="width:90%;">SPRIČEVALO</button>
                             </td>
                          </tr>`;
             });
@@ -1458,13 +1521,48 @@ function renderRazrednikView() {
     container.innerHTML = html;
 }
 
-window.setUkrep = function(classId, studentId, ukrepValue) {
-    let cls = db.classes.find(c => c.id === classId);
-    let stu = cls.students.find(s => s.id === studentId);
-    if(stu) {
-        stu.ukrep = ukrepValue;
-        saveDB();
-    }
+window.openUkrepModal = function(classId, studentId) {
+    const todayIso = new Date().toISOString().split('T')[0];
+    const html = `
+        <label>Vrsta sankcije:</label>
+        <select id="u-type" style="width:100%; padding:4px;">
+            <option value="OPOMIN">OPOMIN</option>
+            <option value="1. UKOR">1. UKOR</option>
+            <option value="2. UKOR">2. UKOR</option>
+            <option value="UKOR PRED IZKLJUČITVIJO">UKOR PRED IZKLJUČITVIJO</option>
+            <option value="IZKLJUČITEV">IZKLJUČITEV</option>
+        </select>
+        <label>Datum:</label>
+        <input type="date" id="u-date" value="${todayIso}" style="width:100%; padding:4px;">
+    `;
+    showModal("Dodaj sankcijo", html, [
+        {
+            label: "Shrani",
+            onClick: () => {
+                let cls = db.classes.find(c => c.id === classId);
+                let stu = cls.students.find(s => s.id === studentId);
+                if(!stu.ukrepi) stu.ukrepi = [];
+                
+                let t = document.getElementById('u-type').value;
+                let dRaw = document.getElementById('u-date').value;
+                let d = dRaw ? new Date(dRaw).toLocaleDateString('sl-SI') : new Date().toLocaleDateString('sl-SI');
+                
+                stu.ukrepi.push({ type: t, date: d });
+                saveDB(); renderRazrednikView(); closeModal();
+            },
+            shouldClose: false
+        },
+        { label: "Prekliči", onClick: closeModal }
+    ]);
+};
+
+window.deleteUkrep = function(classId, studentId, index) {
+    customConfirm("Izbrišem izbrano sankcijo?", () => {
+        let cls = db.classes.find(c => c.id === classId);
+        let stu = cls.students.find(s => s.id === studentId);
+        stu.ukrepi.splice(index, 1);
+        saveDB(); renderRazrednikView(); closeModal();
+    });
 };
 
 // --- PDF DOKUMENTI (Razrednik) ---
@@ -1545,10 +1643,13 @@ function drawOfficialFooter(doc, uspeh, sklep, yPos) {
     
     if (sklep) {
         yPos += 10;
-        doc.text(removeSumniki(sklep), 20, yPos);
+        doc.setFont(undefined, 'normal');
+        let splitSklep = doc.splitTextToSize(sklep, 160);
+        doc.text(splitSklep, 20, yPos);
+        yPos += (splitSklep.length * 6);
     }
     
-    yPos += 40;
+    yPos += 30;
     if (yPos > 260) {
         doc.addPage(); doc.setLineWidth(0.5); doc.rect(10, 10, 190, 277); doc.setLineWidth(0.2); doc.rect(12, 12, 186, 273); yPos = 40;
     }
@@ -1571,11 +1672,15 @@ window.generatePotrdilo = function(classId, studentId) {
     const cls = db.classes.find(c => c.id === classId);
     const stu = cls.students.find(s => s.id === studentId);
     
-    let y = drawOfficialTemplate(doc, "POTRDILO O USPEHU", stu.name, cls.name);
+    let y = drawOfficialTemplate(doc, "OBVESTILO O USPEHU", stu.name, cls.name);
     
+    let hasNegative = false;
+    let hasGrades = false;
+
     db.subjects.forEach(sub => {
         const grades = db.grades.filter(g => g.studentId === studentId && g.subjectId === sub.id && !g.isFinal);
         if(grades.length > 0) {
+            hasGrades = true;
             const gradeStrs = grades.map(g => g.value).join(', ');
             
             doc.text(removeSumniki(sub.name), 22, y);
@@ -1594,7 +1699,18 @@ window.generatePotrdilo = function(classId, studentId) {
     });
     
     let uspeh = stu.splosniUspeh || "se ni zakljucen";
-    drawOfficialFooter(doc, uspeh, null, y);
+    let statusStr = "uspesno/neuspesno (sredi leta)";
+    
+    let sankcijeStr = "";
+    if (stu.ukrepi && stu.ukrepi.length > 0) {
+        sankcijeStr = stu.ukrepi.map(u => u.type).join(', ');
+    } else {
+        sankcijeStr = "brez sankcij";
+    }
+
+    let sklep = `Na podlagi zapisnika evidence sprejemamo sklep, da je zgoraj\nnavedeni/-na ${statusStr} opravil/-a dosedanje obveznosti. Po pregledu\nzapisnika je zgoraj navedeni/-na prejel/-a sankcije: ${removeSumniki(sankcijeStr)}.`;
+    
+    drawOfficialFooter(doc, uspeh, sklep, y);
     
     window.open(doc.output('bloburl'), '_blank');
 };
@@ -1608,6 +1724,7 @@ window.generateSpricevalo = function(classId, studentId) {
     
     let hasNegative = false;
     let hasGrades = false;
+    let izpitiStrs = [];
 
     db.subjects.forEach(sub => {
         const isAssigned = (cls.assignments || []).some(a => a.subjectId === sub.id);
@@ -1618,6 +1735,10 @@ window.generateSpricevalo = function(classId, studentId) {
         const konecGrade = grades.find(g => g.isFinal && (!g.finalType || g.finalType === 'konec'));
         const izpitGrade = grades.find(g => g.isFinal && g.finalType === 'izpit');
         
+        if (izpitGrade) {
+            izpitiStrs.push(`${sub.name} (izpit: ${izpitGrade.value})`);
+        }
+
         let finalVal = izpitGrade ? izpitGrade.value : (konecGrade ? konecGrade.value : null);
         let formattedVal = formatGradeText(finalVal);
         
@@ -1644,15 +1765,21 @@ window.generateSpricevalo = function(classId, studentId) {
     });
     
     let uspeh = stu.splosniUspeh || "se ni zakljucen";
-    let sklep = "";
     
-    if(!hasGrades && (!stu.splosniUspeh || stu.splosniUspeh.trim() === '')) {
-        sklep = "Sklep: Ocenjevanje se ni zakljuceno.";
-    } else if (hasNegative || String(uspeh).toLowerCase().includes('nzd') || String(uspeh).toLowerCase().includes('nezadostno')) {
-        sklep = "Sklep: Ucenec NE napreduje v visji letnik (Neuspesno).";
+    // Logika za sklep
+    let isUspesen = !hasNegative && !String(uspeh).toLowerCase().includes('nzd') && !String(uspeh).toLowerCase().includes('nezadostno') && (stu.splosniUspeh && stu.splosniUspeh.trim() !== '');
+    let statusStr = isUspesen ? "uspesno" : "neuspesno";
+    
+    let sankcijeStr = "";
+    if (stu.ukrepi && stu.ukrepi.length > 0) {
+        sankcijeStr = stu.ukrepi.map(u => u.type).join(', ');
     } else {
-        sklep = "Sklep: Ucenec napreduje v visji letnik (Uspesno).";
+        sankcijeStr = "brez sankcij";
     }
+
+    let izpitiText = izpitiStrs.length > 0 ? " | Izpiti: " + removeSumniki(izpitiStrs.join(', ')) : "";
+
+    let sklep = `Na podlagi zapisnika evidence sprejemamo sklep, da je zgoraj\nnavedeni/-na ${statusStr} opravil/-a vse obveznosti. Po pregledu\nzapisnika je zgoraj navedeni/-na prejel/-a sankcije: ${removeSumniki(sankcijeStr)}.${izpitiText}`;
     
     drawOfficialFooter(doc, uspeh, sklep, y);
     
