@@ -107,11 +107,6 @@
         .data-table th, .data-table td { padding: 12px; border: 1px solid var(--border); text-align: left; }
         .data-table th { background: #fafafa; }
         .data-table tr:hover { background: #f9f9f9; }
-        
-        .badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; }
-        .badge-open { background: #f39c12; }
-        .badge-exc { background: #2ecc71; }
-        .badge-unexc { background: #e74c3c; }
 
     </style>
 </head>
@@ -182,11 +177,17 @@
             <!-- ADMIN UREJANJE URNIKA -->
             <div id="view-admin" class="hidden">
                 <div class="toolbar">
-                    <div>
-                        <label style="font-weight:bold; margin-right:10px;">Urejanje urnika za razred:</label>
-                        <select id="admin-class-selector" onchange="renderAdminSchedule()">
-                            <option value="">-- Izberi razred --</option>
-                        </select>
+                    <div style="display:flex; gap:20px; align-items:center;">
+                        <div>
+                            <label style="font-weight:bold; margin-right:10px;">Urejanje urnika za razred:</label>
+                            <select id="admin-class-selector" onchange="renderAdminSchedule()">
+                                <option value="">-- Izberi razred --</option>
+                            </select>
+                        </div>
+                        <div id="admin-razrednik-container" class="hidden">
+                            <label style="font-weight:bold; margin-right:10px; color:#e67e22;">Razrednik:</label>
+                            <select id="admin-razrednik-selector"></select>
+                        </div>
                     </div>
                 </div>
                 <div class="schedule-grid" id="admin-schedule-grid">
@@ -208,7 +209,7 @@ const database = firebase.database();
 
 // --- STANJE APLIKACIJE ---
 let db = {
-    users: [], classes: [], subjects: [], schedules: [], journalEntries: [], absences: []
+    users: [], classes: [], subjects: [], schedules: [], journalEntries: [], absences: [], exceptions: []
 };
 let currentUser = null;
 let currentViewDate = new Date(); 
@@ -238,6 +239,7 @@ function init() {
             db.schedules = data.schedules || [];
             db.journalEntries = data.journalEntries || [];
             db.absences = data.absences || [];
+            db.exceptions = data.exceptions || [];
         }
     }).catch(err => console.error(err));
 }
@@ -246,7 +248,9 @@ function saveDB() {
     database.ref('mindex_db').update({
         schedules: db.schedules,
         journalEntries: db.journalEntries,
-        absences: db.absences
+        absences: db.absences,
+        classes: db.classes,
+        exceptions: db.exceptions
     });
 }
 
@@ -288,11 +292,13 @@ function setupDropdowns() {
         schedSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
     });
 
-    // Opravičila selektor (samo razredi kjer uči ali razrednik ali admin)
+    // Opravičila selektor (SAMO RAZREDNIK ali ADMIN)
     const excSel = document.getElementById('excuse-class-selector');
     excSel.innerHTML = `<option value="">-- Izberi --</option>`;
     db.classes.forEach(c => {
-        excSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+        if (currentUser.role === 'admin' || c.razrednikId == currentUser.id) {
+            excSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+        }
     });
 
     // Admin selektor
@@ -433,15 +439,66 @@ function openDnevnik(scheduleId, dateStr, lessonNum, classId) {
     const sched = db.schedules.find(s => s.id == scheduleId);
     const sub = db.subjects.find(s => s.id == sched.subjectId);
     
-    // Nastavi aktivni kontekst
     activeJournalCtx = { scheduleId, dateStr, lessonNum, classId };
     
     let journal = db.journalEntries.find(j => j.scheduleId == scheduleId && j.date === dateStr);
     
+    // ZGODOVINA PRETEKLIH UR (za isti predmet v tem razredu)
+    const classSubjectSchedIds = db.schedules.filter(s => s.classId == classId && s.subjectId == sched.subjectId).map(s => s.id);
+    const historyEntries = db.journalEntries.filter(j => classSubjectSchedIds.includes(j.scheduleId) && j.date !== dateStr).sort((a,b) => new Date(b.date) - new Date(a.date));
+    
+    let historyHtml = '<div style="max-height:80px; overflow-y:auto; border:1px solid var(--border); padding:5px; font-size:12px; background:#f9f9f9;">';
+    if(historyEntries.length === 0) historyHtml += 'Ni preteklih vpisov.';
+    historyEntries.forEach(h => {
+        historyHtml += `<div><strong>${h.date}:</strong> ${h.snov || '/'}</div>`;
+    });
+    historyHtml += '</div>';
+
     let rediteljOpts = `<option value="">-- Ni določen --</option>`;
     cls.students.forEach(st => {
         rediteljOpts += `<option value="${st.id}" ${journal && journal.rediteljId == st.id ? 'selected' : ''}>${st.name}</option>`;
     });
+
+    // IZJEME (Zamude in Predčasni odhodi)
+    const isRazrednik = (cls.razrednikId == currentUser.id || currentUser.role === 'admin');
+    const brushColor = isRazrednik ? 'var(--primary)' : '#ccc';
+    const brushCursor = isRazrednik ? 'cursor:pointer;' : 'cursor:not-allowed;';
+    
+    let exceptions = (db.exceptions || []).filter(e => e.classId == classId && e.date === dateStr);
+    let excHtml = `<table class="data-table" style="font-size:12px; margin-top:5px;">
+        <thead><tr><th>Učenec</th><th>Vrsta</th><th>Opomba</th><th style="width:50px;">Uredi</th></tr></thead><tbody>`;
+    
+    if(exceptions.length === 0) excHtml += `<tr><td colspan="4" style="text-align:center; color:#777;">Ni vpisanih izjem.</td></tr>`;
+    
+    exceptions.forEach(ex => {
+        const stName = cls.students.find(x => x.id == ex.studentId)?.name || '?';
+        const brushSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="${brushColor}" style="${brushCursor} vertical-align:middle;" ${isRazrednik ? `onclick="editException('${ex.id}')"` : ''}><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>`;
+        
+        excHtml += `<tr>
+            <td>${stName}</td>
+            <td><strong>${ex.type}</strong></td>
+            <td>${ex.note || ''}</td>
+            <td style="text-align:center;">
+                ${brushSvg}
+                ${isRazrednik ? `<span style="color:red; cursor:pointer; margin-left:8px; font-weight:bold;" onclick="deleteException('${ex.id}')">✖</span>` : ''}
+            </td>
+        </tr>`;
+    });
+    excHtml += `</tbody></table>`;
+    
+    let addExcForm = '';
+    if(isRazrednik) {
+        let stOpts = cls.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        excHtml += `<button style="margin-top:5px; font-size:12px;" onclick="document.getElementById('exc-form').classList.toggle('hidden')">+ Dodaj izjemo</button>`;
+        
+        addExcForm = `
+        <div id="exc-form" class="hidden" style="margin-top:10px; padding:10px; background:#fff; border:1px solid #ddd; border-radius:4px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <select id="exc-new-student" style="flex-grow:1;">${stOpts}</select>
+            <select id="exc-new-type"><option value="Zamuda">Zamuda</option><option value="Predčasni odhod">Predčasni odhod</option></select>
+            <input type="text" id="exc-new-note" placeholder="Opomba..." style="flex-grow:2;">
+            <button class="btn-primary" onclick="saveNewException()">Shrani</button>
+        </div>`;
+    }
 
     const html = `
         <div class="modal-header">
@@ -449,6 +506,12 @@ function openDnevnik(scheduleId, dateStr, lessonNum, classId) {
             <span class="close-btn" onclick="closeModal()">✖</span>
         </div>
         <div class="modal-body">
+            
+            <div class="dnevnik-section">
+                <label>Zgodovina ur (pretekle snovi):</label>
+                ${historyHtml}
+            </div>
+
             <div class="dnevnik-section">
                 <label>Odsotni učenci:</label>
                 <div class="students-grid" id="dnevnik-students">
@@ -465,6 +528,13 @@ function openDnevnik(scheduleId, dateStr, lessonNum, classId) {
                 <label>Snov:</label>
                 <textarea id="snov-input" placeholder="Vpišite, kaj se je na uri delalo...">${journal ? journal.snov : ''}</textarea>
             </div>
+
+            <div class="dnevnik-section" style="border-top:2px solid #eee; padding-top:15px; background:#f4f6f9; padding:10px; border-radius:6px;">
+                <label style="color:#e67e22; margin-bottom:10px;">IZJEME (ZAMUDE / PREDČASNI ODHODI):</label>
+                ${excHtml}
+                ${addExcForm}
+            </div>
+
         </div>
         <div class="modal-footer">
             <button onclick="closeModal()" style="margin-right:10px;">Prekliči</button>
@@ -475,19 +545,51 @@ function openDnevnik(scheduleId, dateStr, lessonNum, classId) {
     renderDnevnikStudents();
 }
 
+// Globalne funkcije za izjeme
+window.saveNewException = function() {
+    const stId = parseInt(document.getElementById('exc-new-student').value);
+    const type = document.getElementById('exc-new-type').value;
+    const note = document.getElementById('exc-new-note').value;
+    db.exceptions.push({
+        id: 'ex_' + Date.now(),
+        classId: activeJournalCtx.classId,
+        date: activeJournalCtx.dateStr,
+        studentId: stId,
+        type: type,
+        note: note
+    });
+    saveDB();
+    openDnevnik(activeJournalCtx.scheduleId, activeJournalCtx.dateStr, activeJournalCtx.lessonNum, activeJournalCtx.classId);
+};
+window.deleteException = function(id) {
+    if(confirm("Izbrišem izjemo?")) {
+        db.exceptions = db.exceptions.filter(e => e.id !== id);
+        saveDB();
+        openDnevnik(activeJournalCtx.scheduleId, activeJournalCtx.dateStr, activeJournalCtx.lessonNum, activeJournalCtx.classId);
+    }
+};
+window.editException = function(id) {
+    const ex = db.exceptions.find(e => e.id === id);
+    if(ex) {
+        const note = prompt("Nova opomba za izjemo:", ex.note || '');
+        if(note !== null) {
+            ex.note = note;
+            saveDB();
+            openDnevnik(activeJournalCtx.scheduleId, activeJournalCtx.dateStr, activeJournalCtx.lessonNum, activeJournalCtx.classId);
+        }
+    }
+};
+
 // Izris seznama učencev v dnevniku
 function renderDnevnikStudents() {
     const cls = db.classes.find(c => c.id == activeJournalCtx.classId);
     const container = document.getElementById('dnevnik-students');
     let html = '';
     
-    // Sort students by name
     const sorted = [...cls.students].sort((a,b) => a.name.localeCompare(b.name));
     
     sorted.forEach(st => {
-        // Vse odsotnosti tega učenca NA TA DAN
         const todayAbs = db.absences.filter(a => a.studentId == st.id && a.date === activeJournalCtx.dateStr);
-        
         const isAbsentNowObj = todayAbs.find(a => a.lessonNumber == activeJournalCtx.lessonNum);
         const isAbsentNow = !!isAbsentNowObj;
         const prevAbs = todayAbs.filter(a => a.lessonNumber != activeJournalCtx.lessonNum);
@@ -527,10 +629,8 @@ function toggleAbsence(studentId) {
     );
     
     if (existingIdx !== -1) {
-        // Odstrani odsotnost
         db.absences.splice(existingIdx, 1);
     } else {
-        // Dodaj odsotnost
         db.absences.push({
             id: Date.now() + Math.random().toString(),
             studentId: studentId,
@@ -546,7 +646,7 @@ function toggleAbsence(studentId) {
 }
 
 function editAbsenceNote(event, absenceId) {
-    event.stopPropagation(); // Prepreči toggleAbsence
+    event.stopPropagation();
     const abs = db.absences.find(a => a.id === absenceId);
     if(abs) {
         const note = prompt("Opomba za odsotnost:", abs.note || '');
@@ -617,12 +717,13 @@ function renderExcusesTable() {
         const exc = stAbs.filter(a => a.status === 'excused').length;
         const unexc = stAbs.filter(a => a.status === 'unexcused').length;
         
+        // Zamenjano na samo obarvano besedilo brez krogov/badge-ov
         html += `
             <tr>
                 <td style="font-weight:bold;">${st.name}</td>
-                <td><span class="badge badge-open">${open}</span></td>
-                <td><span class="badge badge-exc">${exc}</span></td>
-                <td><span class="badge badge-unexc">${unexc}</span></td>
+                <td><span style="color:#f39c12; font-weight:bold; font-size:16px;">${open}</span></td>
+                <td><span style="color:#2ecc71; font-weight:bold; font-size:16px;">${exc}</span></td>
+                <td><span style="color:#e74c3c; font-weight:bold; font-size:16px;">${unexc}</span></td>
                 <td><button onclick="openStudentExcuses(${st.id}, ${classId})">Odpri</button></td>
             </tr>
         `;
@@ -635,30 +736,33 @@ function openStudentExcuses(studentId, classId) {
     const cls = db.classes.find(c => c.id == classId);
     const st = cls.students.find(s => s.id == studentId);
     
-    // Generiraj the body ob klicu (tudi za refresh)
     window.currentExcuseStudentId = studentId;
     window.renderExcuseRows = function() {
         const abs = db.absences.filter(a => a.studentId == studentId).sort((a,b) => new Date(b.date) - new Date(a.date));
         if(abs.length === 0) return `<p>Učenec nima zabeleženih odsotnosti.</p>`;
         
-        let rHtml = `<table class="data-table" style="font-size:13px;">
-            <thead><tr><th>Datum</th><th>Ura</th><th>Opomba</th><th>Status</th><th>Izbriši</th></tr></thead><tbody>`;
+        let rHtml = `<table class="data-table" style="font-size:13px; text-align:center;">
+            <thead><tr><th style="text-align:left;">Datum</th><th>Ura</th><th>Opomba</th><th>Status</th><th>Izbriši</th></tr></thead><tbody>`;
         
         abs.forEach(a => {
+            const iconStyle = "cursor:pointer; font-size:22px; margin:0 8px; filter: grayscale(100%); opacity: 0.3; transition: 0.2s; display:inline-block;";
+            const activeStyle = "cursor:pointer; font-size:22px; margin:0 8px; filter: none; opacity: 1; display:inline-block; transform:scale(1.15);";
+            
+            // Ikonice za status (klikabilne)
+            let icons = `
+                <span style="${a.status==='open' ? activeStyle : iconStyle}" title="Odprto" onclick="updateAbsenceStatus('${a.id}', 'open')">❓</span>
+                <span style="${a.status==='excused' ? activeStyle : iconStyle}" title="Opravičeno" onclick="updateAbsenceStatus('${a.id}', 'excused')">✅</span>
+                <span style="${a.status==='unexcused' ? activeStyle : iconStyle}" title="Neopravičeno" onclick="updateAbsenceStatus('${a.id}', 'unexcused')">❌</span>
+            `;
+
             rHtml += `
                 <tr>
-                    <td>${a.date}</td>
+                    <td style="text-align:left;">${a.date}</td>
                     <td>${a.lessonNumber}.</td>
                     <td>${a.note || ''}</td>
+                    <td style="background:#fdfdfd; min-width:130px;">${icons}</td>
                     <td>
-                        <select onchange="updateAbsenceStatus('${a.id}', this.value)">
-                            <option value="open" ${a.status==='open'?'selected':''}>Odprto</option>
-                            <option value="excused" ${a.status==='excused'?'selected':''}>Opravičeno</option>
-                            <option value="unexcused" ${a.status==='unexcused'?'selected':''}>Neopravičeno</option>
-                        </select>
-                    </td>
-                    <td style="text-align:center;">
-                        <span style="cursor:pointer; color:red; font-size:16px;" onclick="deleteAbsence('${a.id}')">✖</span>
+                        <span style="cursor:pointer; color:red; font-size:18px;" onclick="deleteAbsence('${a.id}')">✖</span>
                     </td>
                 </tr>
             `;
@@ -684,7 +788,11 @@ function openStudentExcuses(studentId, classId) {
 
 window.updateAbsenceStatus = function(id, val) {
     const a = db.absences.find(x => x.id === id);
-    if(a) { a.status = val; saveDB(); }
+    if(a) { 
+        a.status = val; 
+        saveDB(); 
+        document.getElementById('excuse-modal-body').innerHTML = window.renderExcuseRows();
+    }
 };
 
 window.deleteAbsence = function(id) {
@@ -699,8 +807,26 @@ window.deleteAbsence = function(id) {
 function renderAdminSchedule() {
     const classId = document.getElementById('admin-class-selector').value;
     const grid = document.getElementById('admin-schedule-grid');
-    if(!classId) { grid.innerHTML = ''; return; }
+    const razContainer = document.getElementById('admin-razrednik-container');
+
+    if(!classId) { 
+        grid.innerHTML = ''; 
+        razContainer.classList.add('hidden');
+        return; 
+    }
     
+    // Nastavitev razrednika
+    razContainer.classList.remove('hidden');
+    const cls = db.classes.find(c => c.id == classId);
+    const razSel = document.getElementById('admin-razrednik-selector');
+    razSel.innerHTML = `<option value="">-- Brez razrednika --</option>` + 
+        db.users.filter(u => u.role !== 'admin').map(u => `<option value="${u.id}" ${cls.razrednikId == u.id ? 'selected' : ''}>${u.name}</option>`).join('');
+    
+    razSel.onchange = function() {
+        cls.razrednikId = parseInt(this.value) || null;
+        saveDB();
+    };
+
     let html = `<div class="header-cell"></div>`;
     daysOfWeek.forEach(d => html += `<div class="header-cell">${d}</div>`);
     
@@ -715,9 +841,12 @@ function renderAdminSchedule() {
             items.forEach(item => {
                 const sub = db.subjects.find(x => x.id == item.subjectId)?.name || '?';
                 const tea = db.users.find(x => x.id == item.teacherId)?.name || '?';
+                
+                // Dodana ikonica ⬇️ za kopiranje dol
                 slotHtml += `
-                    <div class="schedule-card" onclick="editScheduleItem('${item.id}', ${classId})" style="margin-bottom:2px; font-size:12px;">
+                    <div class="schedule-card" onclick="editScheduleItem('${item.id}', ${classId})" style="margin-bottom:2px; font-size:12px; position:relative;">
                         <strong>${sub}</strong><br>${tea}<br>${item.room || ''}
+                        <div title="Zapotegni uro dol (kopiraj v naslednjo)" onclick="copyScheduleDown('${item.id}', event)" style="position:absolute; right:5px; bottom:5px; cursor:pointer; background:rgba(255,255,255,0.8); border-radius:3px; padding:2px; font-size:16px;">⬇️</div>
                     </div>
                 `;
             });
@@ -731,6 +860,24 @@ function renderAdminSchedule() {
     });
     grid.innerHTML = html;
 }
+
+window.copyScheduleDown = function(itemId, event) {
+    event.stopPropagation();
+    const item = db.schedules.find(s => s.id == itemId);
+    if(item && item.lessonNumber < 8) {
+        db.schedules.push({
+            id: 's_' + Date.now() + Math.random().toString().substring(2,6),
+            classId: item.classId,
+            day: item.day,
+            lessonNumber: item.lessonNumber + 1,
+            subjectId: item.subjectId,
+            teacherId: item.teacherId,
+            room: item.room
+        });
+        saveDB(); 
+        renderAdminSchedule();
+    }
+};
 
 function addScheduleItem(classId, dayNum, lessonNum) {
     openAdminModal(null, classId, dayNum, lessonNum);
