@@ -26,87 +26,88 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: var(--bg); color: var(--text); user-select: none; }
         .hidden { display: none !important; }
         
-        /* Gumbi in vnosi */
-        button { cursor: pointer; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; background: var(--white); border: 1px solid var(--border); transition: 0.2s; }
+        /* Gumbi in vnosi - Bolj kompaktno */
+        button { cursor: pointer; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; background: var(--white); border: 1px solid var(--border); transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; }
         button:hover { background: #f0f0f0; }
         .btn-primary { background: var(--primary); color: white; border: none; }
         .btn-primary:hover { background: #2980b9; }
-        .btn-danger { background: var(--absent-color); color: white; }
-        select, input[type="text"], input[type="password"], textarea { padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-family: inherit; }
+        .btn-danger { background: var(--absent-color); color: white; border: none; }
+        select, input[type="text"], input[type="password"], textarea { padding: 6px; border: 1px solid var(--border); border-radius: 4px; font-family: inherit; font-size: 13px; }
 
         /* Login */
         #login-page { display: flex; height: 100vh; align-items: center; justify-content: center; background: #e9ecef; }
-        .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 300px; text-align: center; }
+        .login-box { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 280px; text-align: center; }
         .login-box input { width: 90%; margin-bottom: 15px; }
 
         /* Top Navigacija */
-        .top-nav { background: white; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .nav-brand { font-size: 24px; font-weight: bold; color: var(--primary); letter-spacing: 1px; }
-        .nav-links { display: flex; gap: 15px; }
-        .nav-user { font-size: 14px; font-weight: bold; margin-right: 15px; color: var(--text-light); }
+        .top-nav { background: white; height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .nav-brand { font-size: 20px; font-weight: bold; color: var(--primary); letter-spacing: 1px; }
+        .nav-links { display: flex; gap: 10px; }
+        .nav-user { font-size: 13px; font-weight: bold; margin-right: 15px; color: var(--text-light); }
 
         /* Glavno področje */
-        .main-content { padding: 20px; max-width: 1400px; margin: 0 auto; }
+        .main-content { padding: 10px; max-width: 1400px; margin: 0 auto; }
         
         /* Orodjarna (Toolbar) */
-        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .week-nav { display: flex; align-items: center; gap: 15px; font-weight: bold; font-size: 18px; }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: white; padding: 8px 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .week-nav { display: flex; align-items: center; gap: 15px; font-weight: bold; font-size: 16px; }
         .week-nav span { cursor: pointer; color: var(--text-light); }
         .week-nav span:hover { color: var(--text); }
 
-        /* Urnik Grid */
-        .schedule-grid { display: grid; grid-template-columns: 80px repeat(5, 1fr); gap: 10px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .header-cell { text-align: center; font-weight: bold; color: var(--text-light); padding: 10px; border-bottom: 2px solid var(--border); }
-        .time-cell { text-align: right; padding: 10px; color: var(--text-light); font-size: 12px; border-right: 1px solid var(--border); position: relative; }
-        .time-cell strong { font-size: 16px; color: var(--text); display: block; margin-top: 5px; }
+        /* Urnik Grid - KOMPAKTNO */
+        .schedule-grid { display: grid; grid-template-columns: 60px repeat(5, 1fr); gap: 4px; background: white; padding: 10px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .header-cell { text-align: center; font-weight: bold; color: var(--text-light); padding: 5px; font-size: 13px; border-bottom: 2px solid var(--border); }
+        .time-cell { text-align: right; padding: 5px; color: var(--text-light); font-size: 11px; border-right: 1px solid var(--border); position: relative; }
+        .time-cell strong { font-size: 14px; color: var(--text); display: block; margin-top: 2px; }
         
-        .day-column { display: flex; flex-direction: column; gap: 5px; }
-        .lesson-slot { min-height: 80px; background: #fafafa; border-radius: 4px; position: relative; border-bottom: 1px solid #eee; display: flex; flex-direction: column; padding: 5px; }
+        .lesson-slot { min-height: 50px; background: #fafafa; border-radius: 4px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; padding: 2px; gap: 2px; }
         
         /* Kartica posamezne ure na urniku */
-        .schedule-card { background: white; border: 1px solid var(--border); border-left: 4px solid var(--primary); padding: 8px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer; flex-grow: 1; display: flex; flex-direction: column; font-size: 13px; transition: transform 0.1s; }
+        .schedule-card { background: white; border: 1px solid var(--border); border-left: 3px solid var(--primary); padding: 4px 6px; border-radius: 3px; cursor: pointer; flex-grow: 1; display: flex; flex-direction: column; font-size: 11px; transition: transform 0.1s; }
         .schedule-card:active { transform: scale(0.98); }
-        .sc-subject { font-weight: bold; font-size: 14px; margin-bottom: 2px; }
+        .sc-subject { font-weight: bold; font-size: 12px; margin-bottom: 1px; }
         .sc-teacher { color: var(--text-light); }
         .sc-room { color: var(--text-light); margin-top: auto; }
         .schedule-card.completed { background-color: var(--completed-bg); border-left-color: var(--completed-border); }
 
         /* Modali */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal { background: white; width: 800px; max-width: 95%; max-height: 90vh; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; }
-        .modal-header { padding: 15px 20px; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: bold; }
-        .modal-body { padding: 20px; overflow-y: auto; flex-grow: 1; }
-        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border); text-align: right; background: #fafafa; }
-        .close-btn { cursor: pointer; font-size: 20px; color: var(--text-light); }
+        .modal { background: white; width: 750px; max-width: 95%; max-height: 90vh; border-radius: 6px; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; }
+        .modal-header { padding: 12px 15px; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: bold; }
+        .modal-body { padding: 15px; overflow-y: auto; flex-grow: 1; }
+        .modal-footer { padding: 10px 15px; border-top: 1px solid var(--border); text-align: right; background: #fafafa; }
+        .close-btn { cursor: pointer; font-size: 18px; color: var(--text-light); }
 
         /* Dnevnik (Znotraj modala) */
-        .students-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .student-cell { border: 1px solid var(--border); border-radius: 4px; padding: 10px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; background: #fff; transition: 0.1s; }
+        .students-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 15px; }
+        .student-cell { border: 1px solid var(--border); border-radius: 4px; padding: 6px 10px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; background: #fff; transition: 0.1s; }
         .student-cell:hover { background: #f9f9f9; }
         
-        .st-name { font-size: 14px; }
+        .st-name { font-size: 13px; }
         .st-meta { display: flex; align-items: center; gap: 8px; }
-        .st-numbers { font-size: 14px; }
+        .st-numbers { font-size: 12px; }
         
-        /* Stanja prisotnosti */
         .st-prev-absent .st-name { font-weight: bold; color: var(--prev-absent-color); }
         .st-prev-absent .st-numbers { font-weight: bold; color: var(--prev-absent-color); }
-        
         .st-now-absent .st-name { font-weight: bold; color: var(--absent-color); }
         .st-now-absent .st-numbers { font-weight: bold; color: var(--absent-color); }
         
-        .edit-note-icon { display: none; font-size: 16px; color: #f39c12; }
+        .edit-note-icon { display: none; font-size: 14px; color: #f39c12; }
         .st-now-absent .edit-note-icon { display: inline-block; }
 
-        .dnevnik-section { margin-bottom: 20px; }
-        .dnevnik-section label { display: block; font-weight: bold; margin-bottom: 8px; color: var(--text-light); }
-        .dnevnik-section textarea { width: 100%; height: 80px; box-sizing: border-box; resize: vertical; }
+        .dnevnik-section { margin-bottom: 15px; }
+        .dnevnik-section label { display: block; font-weight: bold; margin-bottom: 4px; color: var(--text-light); font-size: 12px; text-transform: uppercase; }
+        .dnevnik-section textarea { width: 100%; height: 60px; box-sizing: border-box; resize: vertical; }
 
-        /* Opravičila Tabela */
-        .data-table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .data-table th, .data-table td { padding: 12px; border: 1px solid var(--border); text-align: left; }
-        .data-table th { background: #fafafa; }
+        /* Tabele */
+        .data-table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .data-table th, .data-table td { padding: 6px 10px; border: 1px solid var(--border); text-align: left; font-size: 12px; }
+        .data-table th { background: #f4f6f9; font-weight: bold; color: var(--text-light); }
         .data-table tr:hover { background: #f9f9f9; }
+
+        /* SVG ikone */
+        .icon { width: 16px; height: 16px; margin-right: 6px; vertical-align: text-bottom; }
+        .icon-btn { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 
     </style>
 </head>
@@ -115,22 +116,35 @@
     <!-- LOG IN -->
     <div id="login-page">
         <div class="login-box">
-            <h1 style="color:var(--primary); margin-top:0;">MINDEX</h1>
-            <p style="color:gray; font-size:14px; margin-bottom:30px;">Vstop v e-dnevnik in urnik</p>
+            <h2 style="color:var(--primary); margin-top:0;">MINDEX</h2>
+            <p style="color:gray; font-size:13px; margin-bottom:20px;">Vstop v e-dnevnik in urnik</p>
             <input type="text" id="login-username" placeholder="Uporabniško ime">
             <input type="password" id="login-password" placeholder="Geslo">
-            <button class="btn-primary" style="width: 90%; padding: 10px;" onclick="handleLogin()">PRIJAVA</button>
+            <button class="btn-primary" style="width: 90%; padding: 8px;" onclick="handleLogin()">PRIJAVA</button>
         </div>
     </div>
 
     <!-- MAIN APP -->
     <div id="app-page" class="hidden">
         <div class="top-nav">
-            <div class="nav-brand">MINDEX URNIK</div>
+            <div class="nav-brand">MINDEX</div>
             <div class="nav-links">
-                <button onclick="switchView('urnik')">Moj urnik</button>
-                <button onclick="switchView('opravicila')">Opravičevanje</button>
-                <button id="nav-admin" class="hidden" onclick="switchView('admin')">Urejanje urnika</button>
+                <button onclick="switchView('urnik')">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    MOJ URNIK
+                </button>
+                <button onclick="switchView('opravicila')">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path></svg>
+                    OPRAVIČEVANJE
+                </button>
+                <button onclick="switchView('razrednik')">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    RAZREDNIK
+                </button>
+                <button id="nav-admin" class="hidden" onclick="switchView('admin')">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Urejanje urnika
+                </button>
             </div>
             <div>
                 <span class="nav-user" id="user-display"></span>
@@ -144,14 +158,14 @@
             <div id="view-urnik">
                 <div class="toolbar">
                     <div>
-                        <label style="font-weight:bold; margin-right:10px;">Prikaži urnik:</label>
+                        <label style="font-weight:bold; margin-right:5px; font-size:13px;">Prikaži urnik:</label>
                         <select id="schedule-selector" onchange="renderSchedule()"></select>
                     </div>
                     <div class="week-nav">
                         <span onclick="changeWeek(-1)">&#10094;</span>
                         <div id="week-display">14. 09. - 20. 09. 2026</div>
                         <span onclick="changeWeek(1)">&#10095;</span>
-                        <button style="margin-left:15px; font-size:12px;" onclick="resetToToday()">Danes</button>
+                        <button style="margin-left:15px; font-size:11px;" onclick="resetToToday()">Danes</button>
                     </div>
                 </div>
                 <div class="schedule-grid" id="schedule-grid">
@@ -163,7 +177,7 @@
             <div id="view-opravicila" class="hidden">
                 <div class="toolbar">
                     <div>
-                        <label style="font-weight:bold; margin-right:10px;">Izberi razred:</label>
+                        <label style="font-weight:bold; margin-right:5px; font-size:13px;">Izberi razred:</label>
                         <select id="excuse-class-selector" onchange="renderExcusesTable()">
                             <option value="">-- Izberi --</option>
                         </select>
@@ -174,18 +188,33 @@
                 </div>
             </div>
 
+            <!-- RAZREDNIK VIEW -->
+            <div id="view-razrednik" class="hidden">
+                <div class="toolbar">
+                    <div>
+                        <label style="font-weight:bold; margin-right:5px; font-size:13px;">Urejanje razreda:</label>
+                        <select id="raz-class-selector" onchange="renderRazrednikView()">
+                            <option value="">-- Izberi --</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="razrednik-content">
+                    <p style="text-align:center; color:gray; padding:20px;">Izberite razred, v katerem ste razrednik.</p>
+                </div>
+            </div>
+
             <!-- ADMIN UREJANJE URNIKA -->
             <div id="view-admin" class="hidden">
                 <div class="toolbar">
                     <div style="display:flex; gap:20px; align-items:center;">
                         <div>
-                            <label style="font-weight:bold; margin-right:10px;">Urejanje urnika za razred:</label>
+                            <label style="font-weight:bold; margin-right:5px; font-size:13px;">Urejanje urnika za razred:</label>
                             <select id="admin-class-selector" onchange="renderAdminSchedule()">
                                 <option value="">-- Izberi razred --</option>
                             </select>
                         </div>
                         <div id="admin-razrednik-container" class="hidden">
-                            <label style="font-weight:bold; margin-right:10px; color:#e67e22;">Razrednik:</label>
+                            <label style="font-weight:bold; margin-right:5px; color:#e67e22; font-size:13px;">Razrednik:</label>
                             <select id="admin-razrednik-selector"></select>
                         </div>
                     </div>
@@ -209,11 +238,11 @@ const database = firebase.database();
 
 // --- STANJE APLIKACIJE ---
 let db = {
-    users: [], classes: [], subjects: [], schedules: [], journalEntries: [], absences: [], exceptions: []
+    users: [], classes: [], subjects: [], schedules: [], journalEntries: [], absences: [], exceptions: [], behaviorEntries: []
 };
 let currentUser = null;
 let currentViewDate = new Date(); 
-let activeJournalCtx = null; // Podatki o uri, ki se trenutno ureja v dnevniku
+let activeJournalCtx = null; 
 
 // Ure pouka
 const lessonTimes = [
@@ -240,6 +269,7 @@ function init() {
             db.journalEntries = data.journalEntries || [];
             db.absences = data.absences || [];
             db.exceptions = data.exceptions || [];
+            db.behaviorEntries = data.behaviorEntries || [];
         }
     }).catch(err => console.error(err));
 }
@@ -250,7 +280,8 @@ function saveDB() {
         journalEntries: db.journalEntries,
         absences: db.absences,
         classes: db.classes,
-        exceptions: db.exceptions
+        exceptions: db.exceptions,
+        behaviorEntries: db.behaviorEntries
     });
 }
 
@@ -285,38 +316,35 @@ function handleLogout() {
 }
 
 function setupDropdowns() {
-    // Urnik selektor
     const schedSel = document.getElementById('schedule-selector');
     schedSel.innerHTML = `<option value="me">Moj urnik</option>`;
-    db.classes.forEach(c => {
-        schedSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-    });
+    db.classes.forEach(c => schedSel.innerHTML += `<option value="${c.id}">${c.name}</option>`);
 
-    // Opravičila selektor (SAMO RAZREDNIK ali ADMIN)
     const excSel = document.getElementById('excuse-class-selector');
     excSel.innerHTML = `<option value="">-- Izberi --</option>`;
+    
+    const razSel = document.getElementById('raz-class-selector');
+    razSel.innerHTML = `<option value="">-- Izberi --</option>`;
+    
     db.classes.forEach(c => {
         if (currentUser.role === 'admin' || c.razrednikId == currentUser.id) {
             excSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+            razSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
         }
     });
 
-    // Admin selektor
     const admSel = document.getElementById('admin-class-selector');
     admSel.innerHTML = `<option value="">-- Izberi razred --</option>`;
-    db.classes.forEach(c => {
-        admSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-    });
+    db.classes.forEach(c => admSel.innerHTML += `<option value="${c.id}">${c.name}</option>`);
 }
 
 function switchView(view) {
-    document.getElementById('view-urnik').classList.add('hidden');
-    document.getElementById('view-opravicila').classList.add('hidden');
-    document.getElementById('view-admin').classList.add('hidden');
+    ['view-urnik', 'view-opravicila', 'view-razrednik', 'view-admin'].forEach(v => {
+        document.getElementById(v).classList.add('hidden');
+    });
+    document.getElementById('view-' + view).classList.remove('hidden');
     
-    if(view === 'urnik') { document.getElementById('view-urnik').classList.remove('hidden'); renderSchedule(); }
-    if(view === 'opravicila') { document.getElementById('view-opravicila').classList.remove('hidden'); }
-    if(view === 'admin') { document.getElementById('view-admin').classList.remove('hidden'); }
+    if(view === 'urnik') renderSchedule();
 }
 
 // --- DATUM POMOŽNE FUNKCIJE ---
@@ -326,41 +354,23 @@ function getFormatDate(d) {
     const day = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
 }
-
-function getDisplayDate(d) {
-    return `${String(d.getDate()).padStart(2, '0')}. ${String(d.getMonth() + 1).padStart(2, '0')}.`;
-}
+function getDisplayDate(d) { return `${String(d.getDate()).padStart(2, '0')}. ${String(d.getMonth() + 1).padStart(2, '0')}.`; }
 
 function getWeekDates(dateObj) {
     const d = new Date(dateObj);
     const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Ponedeljek
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     const start = new Date(d.setDate(diff));
-    
     let dates = [];
-    for(let i=0; i<5; i++) {
-        let n = new Date(start);
-        n.setDate(start.getDate() + i);
-        dates.push(n);
-    }
+    for(let i=0; i<5; i++) { let n = new Date(start); n.setDate(start.getDate() + i); dates.push(n); }
     return dates;
 }
-
-function changeWeek(offset) {
-    currentViewDate.setDate(currentViewDate.getDate() + (offset * 7));
-    renderSchedule();
-}
-
-function resetToToday() {
-    currentViewDate = new Date();
-    renderSchedule();
-}
-
+function changeWeek(offset) { currentViewDate.setDate(currentViewDate.getDate() + (offset * 7)); renderSchedule(); }
+function resetToToday() { currentViewDate = new Date(); renderSchedule(); }
 function updateWeekHeader(dates) {
     const d1 = getDisplayDate(dates[0]);
     const d2 = getDisplayDate(dates[4]);
-    const year = dates[4].getFullYear();
-    document.getElementById('week-display').innerText = `${d1} - ${d2} ${year}`;
+    document.getElementById('week-display').innerText = `${d1} - ${d2} ${dates[4].getFullYear()}`;
 }
 
 // --- PRIKAZ URNIKA ---
@@ -382,9 +392,8 @@ function renderSchedule() {
         
         dates.forEach((d, dayIdx) => {
             const dateStr = getFormatDate(d);
-            const dayNum = dayIdx + 1; // 1=Pon, 5=Pet
+            const dayNum = dayIdx + 1;
             
-            // Poišči vse urnike za to celico
             let items = db.schedules.filter(s => s.day === dayNum && s.lessonNumber === lt.num);
             if(target === 'me') items = items.filter(s => s.teacherId == currentUser.id);
             else items = items.filter(s => s.classId == target);
@@ -398,13 +407,12 @@ function renderSchedule() {
                 
                 const isCompleted = db.journalEntries.some(j => j.scheduleId == item.id && j.date === dateStr);
                 const compClass = isCompleted ? 'completed' : '';
-                
                 const hashColor = ['#3498db', '#e67e22', '#9b59b6', '#1abc9c', '#e74c3c'][item.subjectId % 5];
                 
                 slotHtml += `
                     <div class="schedule-card ${compClass}" style="border-left-color:${isCompleted ? 'var(--completed-border)' : hashColor}" 
                          onclick="openDnevnik('${item.id}', '${dateStr}', ${lt.num}, ${item.classId})">
-                        <div class="sc-subject">${sub} <span style="font-size:10px; font-weight:normal;">(${cls})</span></div>
+                        <div class="sc-subject">${sub} <span style="font-weight:normal;">(${cls})</span></div>
                         <div class="sc-teacher">${tea}</div>
                         <div class="sc-room">${item.room || ''}</div>
                     </div>
@@ -420,17 +428,9 @@ function renderSchedule() {
 // --- DNEVNIK (MODAL) ---
 function showModal(content) {
     const container = document.getElementById('modal-container');
-    container.innerHTML = `
-        <div class="modal-overlay">
-            <div class="modal">
-                ${content}
-            </div>
-        </div>
-    `;
+    container.innerHTML = `<div class="modal-overlay"><div class="modal">${content}</div></div>`;
 }
-function closeModal() {
-    document.getElementById('modal-container').innerHTML = '';
-}
+function closeModal() { document.getElementById('modal-container').innerHTML = ''; }
 
 function openDnevnik(scheduleId, dateStr, lessonNum, classId) {
     const cls = db.classes.find(c => c.id == classId);
@@ -438,149 +438,110 @@ function openDnevnik(scheduleId, dateStr, lessonNum, classId) {
     
     const sched = db.schedules.find(s => s.id == scheduleId);
     const sub = db.subjects.find(s => s.id == sched.subjectId);
+    const timeInfo = lessonTimes.find(l => l.num === lessonNum).time;
     
     activeJournalCtx = { scheduleId, dateStr, lessonNum, classId };
-    
     let journal = db.journalEntries.find(j => j.scheduleId == scheduleId && j.date === dateStr);
     
-    // ZGODOVINA PRETEKLIH UR (za isti predmet v tem razredu)
+    // Zgodovina ur - Premaknjena na dno modala
     const classSubjectSchedIds = db.schedules.filter(s => s.classId == classId && s.subjectId == sched.subjectId).map(s => s.id);
     const historyEntries = db.journalEntries.filter(j => classSubjectSchedIds.includes(j.scheduleId) && j.date !== dateStr).sort((a,b) => new Date(b.date) - new Date(a.date));
     
-    let historyHtml = '<div style="max-height:80px; overflow-y:auto; border:1px solid var(--border); padding:5px; font-size:12px; background:#f9f9f9;">';
-    if(historyEntries.length === 0) historyHtml += 'Ni preteklih vpisov.';
+    let historyHtml = '<table class="data-table"><thead><tr><th style="width:100px;">Datum</th><th>Snov</th></tr></thead><tbody>';
+    if(historyEntries.length === 0) historyHtml += '<tr><td colspan="2" style="text-align:center; color:#777;">Ni preteklih vpisov.</td></tr>';
     historyEntries.forEach(h => {
-        historyHtml += `<div><strong>${h.date}:</strong> ${h.snov || '/'}</div>`;
+        historyHtml += `<tr style="cursor:pointer;" title="Klikni za prenos snovi" onclick="document.getElementById('snov-input').value = \`${h.snov || ''}\`">
+            <td><strong>${h.date}</strong></td>
+            <td>${h.snov || '/'}</td>
+        </tr>`;
     });
-    historyHtml += '</div>';
+    historyHtml += '</tbody></table>';
 
-    let rediteljOpts = `<option value="">-- Ni določen --</option>`;
-    cls.students.forEach(st => {
-        rediteljOpts += `<option value="${st.id}" ${journal && journal.rediteljId == st.id ? 'selected' : ''}>${st.name}</option>`;
+    // Vpisi v dnevnik (Pohvale/Pritožbe) ZA TO URO
+    const behOpts = cls.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    const currentBehs = (db.behaviorEntries || []).filter(b => b.classId == classId && b.date == dateStr && b.lessonNum == lessonNum);
+    
+    let behHtml = '';
+    currentBehs.forEach(b => {
+        const sName = cls.students.find(s => s.id == b.studentId)?.name || '?';
+        const clr = b.type === 'Pohvala' ? 'color:#2ecc71;' : 'color:#e74c3c;';
+        behHtml += `<div style="background:#fff; border:1px solid #ddd; padding:4px 8px; border-radius:4px; font-size:12px; margin-top:4px; display:flex; justify-content:space-between;">
+            <div><strong>${sName}</strong> (<span style="${clr}">${b.type}</span>): ${b.note}</div>
+            <span style="color:red; cursor:pointer;" onclick="deleteBehavior('${b.id}')">✖</span>
+        </div>`;
     });
 
-    // IZJEME (Zamude in Predčasni odhodi)
+    // IZJEME (Prikaz vseh veljavnih za ta razred, dodaja/ureja le razrednik)
     const isRazrednik = (cls.razrednikId == currentUser.id || currentUser.role === 'admin');
     const brushColor = isRazrednik ? 'var(--primary)' : '#ccc';
     const brushCursor = isRazrednik ? 'cursor:pointer;' : 'cursor:not-allowed;';
+    const brushSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${brushColor}" stroke-width="2" style="${brushCursor} vertical-align:middle; margin-left:10px;"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path></svg>`;
     
-    let exceptions = (db.exceptions || []).filter(e => e.classId == classId && e.date === dateStr);
-    let excHtml = `<table class="data-table" style="font-size:12px; margin-top:5px;">
-        <thead><tr><th>Učenec</th><th>Vrsta</th><th>Opomba</th><th style="width:50px;">Uredi</th></tr></thead><tbody>`;
-    
+    let exceptions = (db.exceptions || []).filter(e => e.classId == classId);
+    let excHtml = `<table class="data-table" style="margin-top:5px;">
+        <thead><tr><th>Učenec</th><th>Vrsta</th><th>Opomba</th><th style="width:30px;">Uredi</th></tr></thead><tbody>`;
     if(exceptions.length === 0) excHtml += `<tr><td colspan="4" style="text-align:center; color:#777;">Ni vpisanih izjem.</td></tr>`;
-    
     exceptions.forEach(ex => {
         const stName = cls.students.find(x => x.id == ex.studentId)?.name || '?';
-        const brushSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="${brushColor}" style="${brushCursor} vertical-align:middle;" ${isRazrednik ? `onclick="editException('${ex.id}')"` : ''}><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>`;
-        
         excHtml += `<tr>
             <td>${stName}</td>
             <td><strong>${ex.type}</strong></td>
             <td>${ex.note || ''}</td>
             <td style="text-align:center;">
-                ${brushSvg}
-                ${isRazrednik ? `<span style="color:red; cursor:pointer; margin-left:8px; font-weight:bold;" onclick="deleteException('${ex.id}')">✖</span>` : ''}
+                ${isRazrednik ? `<span onclick="editException('${ex.id}')">${brushSvg}</span>` : `<span>${brushSvg}</span>`}
             </td>
         </tr>`;
     });
     excHtml += `</tbody></table>`;
-    
-    let addExcForm = '';
-    if(isRazrednik) {
-        let stOpts = cls.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-        excHtml += `<button style="margin-top:5px; font-size:12px;" onclick="document.getElementById('exc-form').classList.toggle('hidden')">+ Dodaj izjemo</button>`;
-        
-        addExcForm = `
-        <div id="exc-form" class="hidden" style="margin-top:10px; padding:10px; background:#fff; border:1px solid #ddd; border-radius:4px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-            <select id="exc-new-student" style="flex-grow:1;">${stOpts}</select>
-            <select id="exc-new-type"><option value="Zamuda">Zamuda</option><option value="Predčasni odhod">Predčasni odhod</option></select>
-            <input type="text" id="exc-new-note" placeholder="Opomba..." style="flex-grow:2;">
-            <button class="btn-primary" onclick="saveNewException()">Shrani</button>
-        </div>`;
-    }
 
     const html = `
         <div class="modal-header">
-            Dnevnik: ${cls.name} | ${sub.name} (${lessonNum}. ura, ${dateStr})
+            <div>Dnevnik: ${cls.name} | ${sub.name} <span style="font-weight:normal; margin-left:10px; color:var(--text-light);">${lessonNum}. ura (${timeInfo}) &bull; ${dateStr}</span></div>
             <span class="close-btn" onclick="closeModal()">✖</span>
         </div>
         <div class="modal-body">
             
             <div class="dnevnik-section">
-                <label>Zgodovina ur (pretekle snovi):</label>
-                ${historyHtml}
-            </div>
-
-            <div class="dnevnik-section">
                 <label>Odsotni učenci:</label>
-                <div class="students-grid" id="dnevnik-students">
-                    <!-- Učenci -->
-                </div>
+                <div class="students-grid" id="dnevnik-students"></div>
             </div>
             
             <div class="dnevnik-section">
-                <label>Reditelj: <span style="cursor:pointer;" onclick="document.getElementById('reditelj-select').focus()">&#9998;</span></label>
-                <select id="reditelj-select">${rediteljOpts}</select>
-            </div>
-            
-            <div class="dnevnik-section">
-                <label>Snov:</label>
-                <textarea id="snov-input" placeholder="Vpišite, kaj se je na uri delalo...">${journal ? journal.snov : ''}</textarea>
+                <label>Snov ure:</label>
+                <textarea id="snov-input" placeholder="Vpišite snov, ki se je obravnavala...">${journal ? journal.snov : ''}</textarea>
             </div>
 
-            <div class="dnevnik-section" style="border-top:2px solid #eee; padding-top:15px; background:#f4f6f9; padding:10px; border-radius:6px;">
-                <label style="color:#e67e22; margin-bottom:10px;">IZJEME (ZAMUDE / PREDČASNI ODHODI):</label>
+            <div class="dnevnik-section" style="background:#e8f4fd; padding:10px; border-radius:4px; border:1px solid #b3d7ff;">
+                <label style="color:#0056b3;">VPIS V DNEVNIK (Pohvale in Pritožbe):</label>
+                <div style="display:flex; gap:10px; margin-bottom:5px;">
+                    <select id="beh-student" style="flex:1;"><option value="">-- Izberi učenca --</option>${behOpts}</select>
+                    <select id="beh-type" style="width:120px;"><option value="Pohvala">Pohvala</option><option value="Pritožba">Pritožba</option></select>
+                    <input type="text" id="beh-note" placeholder="Opomba..." style="flex:2;">
+                    <button class="btn-primary" onclick="saveBehavior()">Dodaj</button>
+                </div>
+                ${behHtml}
+            </div>
+
+            <div class="dnevnik-section" style="border-top:1px dashed #ccc; padding-top:15px;">
+                <label style="color:#e67e22;">IZJEME (Status, Odločba, Zamuda, Predčasni odhod):</label>
                 ${excHtml}
-                ${addExcForm}
+            </div>
+
+            <div class="dnevnik-section" style="border-top:1px dashed #ccc; padding-top:15px;">
+                <label>Tabela preteklih ur (Zgodovina):</label>
+                ${historyHtml}
             </div>
 
         </div>
         <div class="modal-footer">
             <button onclick="closeModal()" style="margin-right:10px;">Prekliči</button>
-            <button class="btn-primary" style="background:#2ecc71;" onclick="saveUra()">URO SHRANI</button>
+            <button class="btn-primary" style="background:#2ecc71;" onclick="saveUra()">SHRANI URO</button>
         </div>
     `;
     showModal(html);
     renderDnevnikStudents();
 }
 
-// Globalne funkcije za izjeme
-window.saveNewException = function() {
-    const stId = parseInt(document.getElementById('exc-new-student').value);
-    const type = document.getElementById('exc-new-type').value;
-    const note = document.getElementById('exc-new-note').value;
-    db.exceptions.push({
-        id: 'ex_' + Date.now(),
-        classId: activeJournalCtx.classId,
-        date: activeJournalCtx.dateStr,
-        studentId: stId,
-        type: type,
-        note: note
-    });
-    saveDB();
-    openDnevnik(activeJournalCtx.scheduleId, activeJournalCtx.dateStr, activeJournalCtx.lessonNum, activeJournalCtx.classId);
-};
-window.deleteException = function(id) {
-    if(confirm("Izbrišem izjemo?")) {
-        db.exceptions = db.exceptions.filter(e => e.id !== id);
-        saveDB();
-        openDnevnik(activeJournalCtx.scheduleId, activeJournalCtx.dateStr, activeJournalCtx.lessonNum, activeJournalCtx.classId);
-    }
-};
-window.editException = function(id) {
-    const ex = db.exceptions.find(e => e.id === id);
-    if(ex) {
-        const note = prompt("Nova opomba za izjemo:", ex.note || '');
-        if(note !== null) {
-            ex.note = note;
-            saveDB();
-            openDnevnik(activeJournalCtx.scheduleId, activeJournalCtx.dateStr, activeJournalCtx.lessonNum, activeJournalCtx.classId);
-        }
-    }
-};
-
-// Izris seznama učencev v dnevniku
 function renderDnevnikStudents() {
     const cls = db.classes.find(c => c.id == activeJournalCtx.classId);
     const container = document.getElementById('dnevnik-students');
@@ -588,6 +549,7 @@ function renderDnevnikStudents() {
     
     const sorted = [...cls.students].sort((a,b) => a.name.localeCompare(b.name));
     
+    let numIndex = 1;
     sorted.forEach(st => {
         const todayAbs = db.absences.filter(a => a.studentId == st.id && a.date === activeJournalCtx.dateStr);
         const isAbsentNowObj = todayAbs.find(a => a.lessonNumber == activeJournalCtx.lessonNum);
@@ -596,265 +558,234 @@ function renderDnevnikStudents() {
         
         let stateClass = '';
         let numText = '';
-        
-        if (prevAbs.length > 0) {
-            stateClass = 'st-prev-absent';
-            numText = prevAbs.map(a => a.lessonNumber).sort().join(', ');
-        }
-        if (isAbsentNow) {
-            stateClass = 'st-now-absent';
-            numText = numText ? `${numText}, ${activeJournalCtx.lessonNum}` : `${activeJournalCtx.lessonNum}`;
-        }
-
-        if(numText) numText = `(${numText})`;
+        if (prevAbs.length > 0) { stateClass = 'st-prev-absent'; numText = prevAbs.map(a => a.lessonNumber).sort().join(', '); }
+        if (isAbsentNow) { stateClass = 'st-now-absent'; numText = numText ? `${numText}, ${activeJournalCtx.lessonNum}` : `${activeJournalCtx.lessonNum}`; }
+        if (numText) numText = `(${numText})`;
 
         html += `
             <div class="student-cell ${stateClass}" onclick="toggleAbsence(${st.id})">
-                <span class="st-name">${st.name}</span>
+                <span class="st-name">${numIndex}. ${st.name}</span>
                 <div class="st-meta">
                     <span class="st-numbers">${numText}</span>
-                    <span class="edit-note-icon" title="Opomba" onclick="editAbsenceNote(event, '${isAbsentNowObj ? isAbsentNowObj.id : ''}')">&#9998;</span>
+                    <span class="edit-note-icon" title="Opomba" onclick="editAbsenceNote(event, '${isAbsentNowObj ? isAbsentNowObj.id : ''}')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path></svg>
+                    </span>
                 </div>
             </div>
         `;
+        numIndex++;
     });
     container.innerHTML = html;
 }
 
-function toggleAbsence(studentId) {
-    const existingIdx = db.absences.findIndex(a => 
-        a.studentId == studentId && 
-        a.date === activeJournalCtx.dateStr && 
-        a.lessonNumber == activeJournalCtx.lessonNum
-    );
-    
-    if (existingIdx !== -1) {
-        db.absences.splice(existingIdx, 1);
-    } else {
-        db.absences.push({
-            id: Date.now() + Math.random().toString(),
-            studentId: studentId,
-            classId: activeJournalCtx.classId,
-            date: activeJournalCtx.dateStr,
-            lessonNumber: activeJournalCtx.lessonNum,
-            status: 'open',
-            note: ''
-        });
-    }
+window.saveBehavior = function() {
+    const stId = document.getElementById('beh-student').value;
+    const type = document.getElementById('beh-type').value;
+    const note = document.getElementById('beh-note').value;
+    if(!stId || !note) return alert("Izpolnite učenca in opombo.");
+    db.behaviorEntries.push({ id: 'b_' + Date.now(), classId: activeJournalCtx.classId, date: activeJournalCtx.dateStr, lessonNum: activeJournalCtx.lessonNum, studentId: parseInt(stId), teacherId: currentUser.id, type: type, note: note });
     saveDB();
-    renderDnevnikStudents();
-}
+    openDnevnik(activeJournalCtx.scheduleId, activeJournalCtx.dateStr, activeJournalCtx.lessonNum, activeJournalCtx.classId);
+};
+window.deleteBehavior = function(id) {
+    if(confirm("Izbrišem vpis?")) {
+        db.behaviorEntries = db.behaviorEntries.filter(b => b.id !== id);
+        saveDB(); openDnevnik(activeJournalCtx.scheduleId, activeJournalCtx.dateStr, activeJournalCtx.lessonNum, activeJournalCtx.classId);
+    }
+};
 
+window.editException = function(id) {
+    const ex = db.exceptions.find(e => e.id === id);
+    if(ex) {
+        const note = prompt("Nova opomba za izjemo:", ex.note || '');
+        if(note !== null) { ex.note = note; saveDB(); openDnevnik(activeJournalCtx.scheduleId, activeJournalCtx.dateStr, activeJournalCtx.lessonNum, activeJournalCtx.classId); }
+    }
+};
+
+function toggleAbsence(studentId) {
+    const existingIdx = db.absences.findIndex(a => a.studentId == studentId && a.date === activeJournalCtx.dateStr && a.lessonNumber == activeJournalCtx.lessonNum);
+    if (existingIdx !== -1) db.absences.splice(existingIdx, 1);
+    else db.absences.push({ id: 'a_' + Date.now() + Math.random().toString(), studentId, classId: activeJournalCtx.classId, date: activeJournalCtx.dateStr, lessonNumber: activeJournalCtx.lessonNum, status: 'open', note: '' });
+    saveDB(); renderDnevnikStudents();
+}
 function editAbsenceNote(event, absenceId) {
     event.stopPropagation();
     const abs = db.absences.find(a => a.id === absenceId);
-    if(abs) {
-        const note = prompt("Opomba za odsotnost:", abs.note || '');
-        if(note !== null) {
-            abs.note = note;
-            saveDB();
-        }
-    }
+    if(abs) { const note = prompt("Opomba za odsotnost:", abs.note || ''); if(note !== null) { abs.note = note; saveDB(); } }
 }
 
 function saveUra() {
     const snov = document.getElementById('snov-input').value;
-    const red = document.getElementById('reditelj-select').value;
-    
-    const existingIdx = db.journalEntries.findIndex(j => 
-        j.scheduleId == activeJournalCtx.scheduleId && j.date === activeJournalCtx.dateStr
-    );
-    
-    const entry = {
-        id: existingIdx !== -1 ? db.journalEntries[existingIdx].id : Date.now(),
-        scheduleId: activeJournalCtx.scheduleId,
-        date: activeJournalCtx.dateStr,
-        classId: activeJournalCtx.classId,
-        snov: snov,
-        rediteljId: red || null
-    };
+    const existingIdx = db.journalEntries.findIndex(j => j.scheduleId == activeJournalCtx.scheduleId && j.date === activeJournalCtx.dateStr);
+    const entry = { id: existingIdx !== -1 ? db.journalEntries[existingIdx].id : 'j_' + Date.now(), scheduleId: activeJournalCtx.scheduleId, date: activeJournalCtx.dateStr, classId: activeJournalCtx.classId, snov: snov };
     
     if (existingIdx !== -1) db.journalEntries[existingIdx] = entry;
     else db.journalEntries.push(entry);
     
-    saveDB();
-    closeModal();
-    renderSchedule();
+    saveDB(); closeModal(); renderSchedule();
 }
+
+// --- RAZREDNIK ZAVIHEK ---
+function renderRazrednikView() {
+    const classId = document.getElementById('raz-class-selector').value;
+    const container = document.getElementById('razrednik-content');
+    if(!classId) { container.innerHTML = `<p style="text-align:center; padding:20px;">Izberite razred.</p>`; return; }
+    
+    const cls = db.classes.find(c => c.id == classId);
+    let stOpts = cls.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+    // Vpisi v dnevnik za ta razred
+    const behs = (db.behaviorEntries || []).filter(b => b.classId == classId).sort((a,b) => new Date(b.date) - new Date(a.date));
+    let behHtml = `<table class="data-table"><thead><tr><th>Datum</th><th>Učenec</th><th>Vrsta</th><th>Opomba</th><th>Učitelj</th></tr></thead><tbody>`;
+    if(behs.length === 0) behHtml += `<tr><td colspan="5" style="text-align:center; color:#777;">Ni vpisov.</td></tr>`;
+    behs.forEach(b => {
+        const st = cls.students.find(s => s.id == b.studentId)?.name || '?';
+        const tea = db.users.find(u => u.id == b.teacherId)?.name || '?';
+        const clr = b.type === 'Pohvala' ? 'color:#2ecc71; font-weight:bold;' : 'color:#e74c3c; font-weight:bold;';
+        behHtml += `<tr><td>${b.date}</td><td>${st}</td><td style="${clr}">${b.type}</td><td>${b.note}</td><td>${tea}</td></tr>`;
+    });
+    behHtml += `</tbody></table>`;
+
+    // Izjeme za ta razred
+    const excs = (db.exceptions || []).filter(e => e.classId == classId);
+    let excHtml = `<div style="margin-bottom:10px; display:flex; gap:10px; background:#f4f6f9; padding:10px; border-radius:4px;">
+        <select id="raz-exc-st" style="flex:1;">${stOpts}</select>
+        <select id="raz-exc-type"><option value="Predčasni odhod">Predčasni odhod</option><option value="Zamuda">Zamuda</option><option value="Status">Status</option><option value="Odločba">Odločba</option></select>
+        <input type="text" id="raz-exc-note" placeholder="Opomba..." style="flex:2;">
+        <button class="btn-primary" onclick="addRazException(${classId})">+ Dodaj</button>
+    </div>`;
+    excHtml += `<table class="data-table"><thead><tr><th>Učenec</th><th>Vrsta</th><th>Opomba</th><th style="width:50px;">Briši</th></tr></thead><tbody>`;
+    if(excs.length === 0) excHtml += `<tr><td colspan="4" style="text-align:center; color:#777;">Ni izjem.</td></tr>`;
+    excs.forEach(e => {
+        const st = cls.students.find(s => s.id == e.studentId)?.name || '?';
+        excHtml += `<tr><td>${st}</td><td><strong>${e.type}</strong></td><td>${e.note}</td><td style="text-align:center;"><span style="color:red; cursor:pointer;" onclick="deleteRazException('${e.id}')">✖</span></td></tr>`;
+    });
+    excHtml += `</tbody></table>`;
+
+    container.innerHTML = `
+        <div style="display:flex; gap:20px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:300px;">
+                <h3 style="color:#e67e22; font-size:15px; margin-bottom:10px;">Določene izjeme</h3>
+                ${excHtml}
+            </div>
+            <div style="flex:1.5; min-width:400px;">
+                <h3 style="color:var(--primary); font-size:15px; margin-bottom:10px;">Vpisi v dnevnik</h3>
+                ${behHtml}
+            </div>
+        </div>
+    `;
+}
+
+window.addRazException = function(classId) {
+    const stId = document.getElementById('raz-exc-st').value;
+    const type = document.getElementById('raz-exc-type').value;
+    const note = document.getElementById('raz-exc-note').value;
+    db.exceptions.push({ id: 'ex_' + Date.now(), classId: classId, studentId: parseInt(stId), type: type, note: note });
+    saveDB(); renderRazrednikView();
+};
+window.deleteRazException = function(id) {
+    if(confirm("Odstrani izjemo?")) { db.exceptions = db.exceptions.filter(e => e.id !== id); saveDB(); renderRazrednikView(); }
+};
 
 // --- OPRAVIČEVANJE ---
 function renderExcusesTable() {
     const classId = document.getElementById('excuse-class-selector').value;
     const container = document.getElementById('excuses-content');
-    if(!classId) {
-        container.innerHTML = `<p style="text-align:center; padding:20px;">Izberite razred.</p>`;
-        return;
-    }
+    if(!classId) { container.innerHTML = `<p style="text-align:center; padding:20px;">Izberite razred.</p>`; return; }
     
     const cls = db.classes.find(c => c.id == classId);
-    if(!cls || !cls.students || cls.students.length === 0) {
-        container.innerHTML = `<p style="text-align:center; padding:20px;">Razred nima učencev.</p>`;
-        return;
-    }
+    let html = `<table class="data-table"><thead><tr><th>Učenec</th><th>Odprte ure</th><th>Opravičene</th><th>Neopravičene</th><th>Urejanje</th></tr></thead><tbody>`;
 
-    let html = `
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Učenec</th>
-                    <th>Odprte ure</th>
-                    <th>Opravičene</th>
-                    <th>Neopravičene</th>
-                    <th>Podrobnosti</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
-
-    cls.students.forEach(st => {
+    [...cls.students].sort((a,b)=>a.name.localeCompare(b.name)).forEach(st => {
         const stAbs = db.absences.filter(a => a.studentId == st.id);
         const open = stAbs.filter(a => a.status === 'open').length;
         const exc = stAbs.filter(a => a.status === 'excused').length;
         const unexc = stAbs.filter(a => a.status === 'unexcused').length;
         
-        // Zamenjano na samo obarvano besedilo brez krogov/badge-ov
-        html += `
-            <tr>
-                <td style="font-weight:bold;">${st.name}</td>
-                <td><span style="color:#f39c12; font-weight:bold; font-size:16px;">${open}</span></td>
-                <td><span style="color:#2ecc71; font-weight:bold; font-size:16px;">${exc}</span></td>
-                <td><span style="color:#e74c3c; font-weight:bold; font-size:16px;">${unexc}</span></td>
-                <td><button onclick="openStudentExcuses(${st.id}, ${classId})">Odpri</button></td>
-            </tr>
-        `;
+        html += `<tr>
+            <td style="font-weight:bold;">${st.name}</td>
+            <td><strong style="color:#f39c12; font-size:14px;">${open}</strong></td>
+            <td><strong style="color:#2ecc71; font-size:14px;">${exc}</strong></td>
+            <td><strong style="color:#e74c3c; font-size:14px;">${unexc}</strong></td>
+            <td><button onclick="openStudentExcuses(${st.id}, ${classId})">Uredi</button></td>
+        </tr>`;
     });
     html += `</tbody></table>`;
     container.innerHTML = html;
 }
 
 function openStudentExcuses(studentId, classId) {
-    const cls = db.classes.find(c => c.id == classId);
-    const st = cls.students.find(s => s.id == studentId);
+    const st = db.classes.find(c => c.id == classId).students.find(s => s.id == studentId);
     
-    window.currentExcuseStudentId = studentId;
     window.renderExcuseRows = function() {
         const abs = db.absences.filter(a => a.studentId == studentId).sort((a,b) => new Date(b.date) - new Date(a.date));
         if(abs.length === 0) return `<p>Učenec nima zabeleženih odsotnosti.</p>`;
         
-        let rHtml = `<table class="data-table" style="font-size:13px; text-align:center;">
+        let rHtml = `<table class="data-table" style="text-align:center;">
             <thead><tr><th style="text-align:left;">Datum</th><th>Ura</th><th>Opomba</th><th>Status</th><th>Izbriši</th></tr></thead><tbody>`;
         
-        abs.forEach(a => {
-            const iconStyle = "cursor:pointer; font-size:22px; margin:0 8px; filter: grayscale(100%); opacity: 0.3; transition: 0.2s; display:inline-block;";
-            const activeStyle = "cursor:pointer; font-size:22px; margin:0 8px; filter: none; opacity: 1; display:inline-block; transform:scale(1.15);";
-            
-            // Ikonice za status (klikabilne)
-            let icons = `
-                <span style="${a.status==='open' ? activeStyle : iconStyle}" title="Odprto" onclick="updateAbsenceStatus('${a.id}', 'open')">❓</span>
-                <span style="${a.status==='excused' ? activeStyle : iconStyle}" title="Opravičeno" onclick="updateAbsenceStatus('${a.id}', 'excused')">✅</span>
-                <span style="${a.status==='unexcused' ? activeStyle : iconStyle}" title="Neopravičeno" onclick="updateAbsenceStatus('${a.id}', 'unexcused')">❌</span>
-            `;
+        const qSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="#f39c12" stroke-width="3" width="22" height="22"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+        const okSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="3" width="22" height="22"><polyline points="20 6 9 17 4 12"/></svg>`;
+        const noSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="3" width="22" height="22"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 
-            rHtml += `
-                <tr>
-                    <td style="text-align:left;">${a.date}</td>
-                    <td>${a.lessonNumber}.</td>
-                    <td>${a.note || ''}</td>
-                    <td style="background:#fdfdfd; min-width:130px;">${icons}</td>
-                    <td>
-                        <span style="cursor:pointer; color:red; font-size:18px;" onclick="deleteAbsence('${a.id}')">✖</span>
-                    </td>
-                </tr>
-            `;
+        abs.forEach(a => {
+            const getIconClass = (match) => a.status === match ? 'opacity:1; transform:scale(1.2); cursor:pointer;' : 'opacity:0.2; filter:grayscale(100%); cursor:pointer;';
+            rHtml += `<tr>
+                <td style="text-align:left;">${a.date}</td>
+                <td>${a.lessonNumber}.</td>
+                <td>${a.note || ''}</td>
+                <td style="background:#fcfcfc;">
+                    <span style="${getIconClass('open')} display:inline-block; margin:0 5px;" onclick="updateAbsenceStatus('${a.id}', 'open')">${qSvg}</span>
+                    <span style="${getIconClass('excused')} display:inline-block; margin:0 5px;" onclick="updateAbsenceStatus('${a.id}', 'excused')">${okSvg}</span>
+                    <span style="${getIconClass('unexcused')} display:inline-block; margin:0 5px;" onclick="updateAbsenceStatus('${a.id}', 'unexcused')">${noSvg}</span>
+                </td>
+                <td><span style="cursor:pointer; color:red; font-weight:bold; font-size:16px;" onclick="deleteAbsence('${a.id}')">✖</span></td>
+            </tr>`;
         });
-        rHtml += `</tbody></table>`;
-        return rHtml;
+        return rHtml + `</tbody></table>`;
     };
 
-    const html = `
-        <div class="modal-header">
-            Urejanje izostankov: ${st.name}
-            <span class="close-btn" onclick="closeModal()">✖</span>
-        </div>
-        <div class="modal-body" id="excuse-modal-body">
-            ${window.renderExcuseRows()}
-        </div>
-        <div class="modal-footer">
-            <button class="btn-primary" onclick="closeModal(); renderExcusesTable();">Zapri</button>
-        </div>
-    `;
-    showModal(html);
+    showModal(`
+        <div class="modal-header">Urejanje izostankov: ${st.name} <span class="close-btn" onclick="closeModal()">✖</span></div>
+        <div class="modal-body" id="excuse-modal-body">${window.renderExcuseRows()}</div>
+        <div class="modal-footer"><button class="btn-primary" onclick="closeModal(); renderExcusesTable();">Zapri</button></div>
+    `);
 }
 
-window.updateAbsenceStatus = function(id, val) {
-    const a = db.absences.find(x => x.id === id);
-    if(a) { 
-        a.status = val; 
-        saveDB(); 
-        document.getElementById('excuse-modal-body').innerHTML = window.renderExcuseRows();
-    }
-};
+window.updateAbsenceStatus = function(id, val) { const a = db.absences.find(x => x.id === id); if(a) { a.status = val; saveDB(); document.getElementById('excuse-modal-body').innerHTML = window.renderExcuseRows(); } };
+window.deleteAbsence = function(id) { if(confirm("Zagotovo izbrišem?")) { db.absences = db.absences.filter(x => x.id !== id); saveDB(); document.getElementById('excuse-modal-body').innerHTML = window.renderExcuseRows(); } };
 
-window.deleteAbsence = function(id) {
-    if(confirm("Zagotovo izbrišem odsotnost?")) {
-        db.absences = db.absences.filter(x => x.id !== id);
-        saveDB();
-        document.getElementById('excuse-modal-body').innerHTML = window.renderExcuseRows();
-    }
-};
-
-// --- ADMIN UREJANJE URNIKA ---
+// --- ADMIN UREJANJE URNIKA (Ostane nespremenjeno z drobnimi vizualnimi popravki) ---
 function renderAdminSchedule() {
     const classId = document.getElementById('admin-class-selector').value;
     const grid = document.getElementById('admin-schedule-grid');
     const razContainer = document.getElementById('admin-razrednik-container');
 
-    if(!classId) { 
-        grid.innerHTML = ''; 
-        razContainer.classList.add('hidden');
-        return; 
-    }
+    if(!classId) { grid.innerHTML = ''; razContainer.classList.add('hidden'); return; }
     
-    // Nastavitev razrednika
     razContainer.classList.remove('hidden');
     const cls = db.classes.find(c => c.id == classId);
     const razSel = document.getElementById('admin-razrednik-selector');
-    razSel.innerHTML = `<option value="">-- Brez razrednika --</option>` + 
-        db.users.filter(u => u.role !== 'admin').map(u => `<option value="${u.id}" ${cls.razrednikId == u.id ? 'selected' : ''}>${u.name}</option>`).join('');
-    
-    razSel.onchange = function() {
-        cls.razrednikId = parseInt(this.value) || null;
-        saveDB();
-    };
+    razSel.innerHTML = `<option value="">-- Brez razrednika --</option>` + db.users.filter(u => u.role !== 'admin').map(u => `<option value="${u.id}" ${cls.razrednikId == u.id ? 'selected' : ''}>${u.name}</option>`).join('');
+    razSel.onchange = function() { cls.razrednikId = parseInt(this.value) || null; saveDB(); setupDropdowns(); };
 
     let html = `<div class="header-cell"></div>`;
     daysOfWeek.forEach(d => html += `<div class="header-cell">${d}</div>`);
     
     lessonTimes.forEach(lt => {
         html += `<div class="time-cell">${lt.time.split(' - ')[0]}<br><strong>${lt.num}.</strong><br>${lt.time.split(' - ')[1]}</div>`;
-        
         for(let dayNum=1; dayNum<=5; dayNum++) {
             let items = db.schedules.filter(s => s.classId == classId && s.day == dayNum && s.lessonNumber == lt.num);
-            
             let slotHtml = `<div class="lesson-slot" style="background:#f4f6f9; border:1px dashed #ccc;">`;
-            
             items.forEach(item => {
                 const sub = db.subjects.find(x => x.id == item.subjectId)?.name || '?';
                 const tea = db.users.find(x => x.id == item.teacherId)?.name || '?';
-                
-                // Dodana ikonica ⬇️ za kopiranje dol
-                slotHtml += `
-                    <div class="schedule-card" onclick="editScheduleItem('${item.id}', ${classId})" style="margin-bottom:2px; font-size:12px; position:relative;">
-                        <strong>${sub}</strong><br>${tea}<br>${item.room || ''}
-                        <div title="Zapotegni uro dol (kopiraj v naslednjo)" onclick="copyScheduleDown('${item.id}', event)" style="position:absolute; right:5px; bottom:5px; cursor:pointer; background:rgba(255,255,255,0.8); border-radius:3px; padding:2px; font-size:16px;">⬇️</div>
-                    </div>
-                `;
+                slotHtml += `<div class="schedule-card" onclick="editScheduleItem('${item.id}', ${classId})" style="position:relative;">
+                    <strong>${sub}</strong><br>${tea}<br>${item.room || ''}
+                    <div title="Zapotegni uro dol" onclick="copyScheduleDown('${item.id}', event)" style="position:absolute; right:2px; bottom:2px; font-weight:bold; cursor:pointer; background:rgba(255,255,255,0.9); padding:2px;">⬇️</div>
+                </div>`;
             });
-            
-            slotHtml += `<button style="margin-top:auto; padding:2px; font-size:16px; background:none; border:none; color:var(--primary);" 
-                                onclick="addScheduleItem(${classId}, ${dayNum}, ${lt.num})">⊕ Dodaj</button>`;
-            
-            slotHtml += `</div>`;
+            slotHtml += `<button style="margin-top:auto; background:none; border:none; color:var(--primary); font-size:11px;" onclick="addScheduleItem(${classId}, ${dayNum}, ${lt.num})">⊕ Dodaj</button></div>`;
             html += slotHtml;
         }
     });
@@ -865,84 +796,43 @@ window.copyScheduleDown = function(itemId, event) {
     event.stopPropagation();
     const item = db.schedules.find(s => s.id == itemId);
     if(item && item.lessonNumber < 8) {
-        db.schedules.push({
-            id: 's_' + Date.now() + Math.random().toString().substring(2,6),
-            classId: item.classId,
-            day: item.day,
-            lessonNumber: item.lessonNumber + 1,
-            subjectId: item.subjectId,
-            teacherId: item.teacherId,
-            room: item.room
-        });
-        saveDB(); 
-        renderAdminSchedule();
+        db.schedules.push({ id: 's_' + Date.now() + Math.random(), classId: item.classId, day: item.day, lessonNumber: item.lessonNumber + 1, subjectId: item.subjectId, teacherId: item.teacherId, room: item.room });
+        saveDB(); renderAdminSchedule();
     }
 };
 
-function addScheduleItem(classId, dayNum, lessonNum) {
-    openAdminModal(null, classId, dayNum, lessonNum);
-}
-function editScheduleItem(itemId, classId) {
-    const item = db.schedules.find(s => s.id == itemId);
-    openAdminModal(item, classId, item.day, item.lessonNumber);
-}
+function addScheduleItem(classId, dayNum, lessonNum) { openAdminModal(null, classId, dayNum, lessonNum); }
+function editScheduleItem(itemId, classId) { const item = db.schedules.find(s => s.id == itemId); openAdminModal(item, classId, item.day, item.lessonNumber); }
 
 function openAdminModal(existingItem, classId, dayNum, lessonNum) {
     let subOpts = db.subjects.map(s => `<option value="${s.id}" ${existingItem && existingItem.subjectId==s.id?'selected':''}>${s.name}</option>`).join('');
     let teaOpts = db.users.filter(u=>u.role!=='admin').map(u => `<option value="${u.id}" ${existingItem && existingItem.teacherId==u.id?'selected':''}>${u.name}</option>`).join('');
     
-    const html = `
-        <div class="modal-header">
-            ${existingItem ? 'Uredi uro' : 'Dodaj uro na urnik'} (${daysOfWeek[dayNum-1]}, ${lessonNum}. ura)
-            <span class="close-btn" onclick="closeModal()">✖</span>
-        </div>
+    showModal(`
+        <div class="modal-header">${existingItem ? 'Uredi uro' : 'Dodaj uro na urnik'} (${daysOfWeek[dayNum-1]}, ${lessonNum}. ura)<span class="close-btn" onclick="closeModal()">✖</span></div>
         <div class="modal-body">
-            <div class="dnevnik-section">
-                <label>Predmet:</label>
-                <select id="adm-sub" style="width:100%;">${subOpts}</select>
-            </div>
-            <div class="dnevnik-section">
-                <label>Učitelj:</label>
-                <select id="adm-tea" style="width:100%;">${teaOpts}</select>
-            </div>
-            <div class="dnevnik-section">
-                <label>Prostor (učilnica):</label>
-                <input type="text" id="adm-room" style="width:100%;" value="${existingItem ? (existingItem.room||'') : ''}">
-            </div>
+            <div class="dnevnik-section"><label>Predmet:</label><select id="adm-sub" style="width:100%;">${subOpts}</select></div>
+            <div class="dnevnik-section"><label>Učitelj:</label><select id="adm-tea" style="width:100%;">${teaOpts}</select></div>
+            <div class="dnevnik-section"><label>Prostor:</label><input type="text" id="adm-room" style="width:100%;" value="${existingItem ? (existingItem.room||'') : ''}"></div>
         </div>
         <div class="modal-footer">
             ${existingItem ? `<button class="btn-danger" style="float:left;" onclick="deleteAdminItem('${existingItem.id}')">Izbriši</button>` : ''}
             <button onclick="closeModal()" style="margin-right:10px;">Prekliči</button>
             <button class="btn-primary" onclick="saveAdminItem('${existingItem ? existingItem.id : ''}', ${classId}, ${dayNum}, ${lessonNum})">Shrani</button>
         </div>
-    `;
-    showModal(html);
+    `);
 }
 
 function saveAdminItem(id, classId, day, lesson) {
-    const sub = parseInt(document.getElementById('adm-sub').value);
-    const tea = parseInt(document.getElementById('adm-tea').value);
-    const rm = document.getElementById('adm-room').value;
-    
-    if(id) {
-        const idx = db.schedules.findIndex(s => s.id == id);
-        db.schedules[idx] = { ...db.schedules[idx], subjectId: sub, teacherId: tea, room: rm };
-    } else {
-        db.schedules.push({ id: 's_' + Date.now(), classId, day, lessonNumber: lesson, subjectId: sub, teacherId: tea, room: rm });
-    }
+    const sub = parseInt(document.getElementById('adm-sub').value), tea = parseInt(document.getElementById('adm-tea').value), rm = document.getElementById('adm-room').value;
+    if(id) { const idx = db.schedules.findIndex(s => s.id == id); db.schedules[idx] = { ...db.schedules[idx], subjectId: sub, teacherId: tea, room: rm }; }
+    else db.schedules.push({ id: 's_' + Date.now(), classId, day, lessonNumber: lesson, subjectId: sub, teacherId: tea, room: rm });
     saveDB(); closeModal(); renderAdminSchedule();
 }
 
-function deleteAdminItem(id) {
-    if(confirm("Izbrišem to uro z urnika?")) {
-        db.schedules = db.schedules.filter(s => s.id !== id);
-        saveDB(); closeModal(); renderAdminSchedule();
-    }
-}
+function deleteAdminItem(id) { if(confirm("Izbrišem to uro z urnika?")) { db.schedules = db.schedules.filter(s => s.id !== id); saveDB(); closeModal(); renderAdminSchedule(); } }
 
-// Zagon aplikacije
 init();
-
 </script>
 </body>
 </html>
