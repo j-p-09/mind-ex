@@ -246,6 +246,35 @@
             padding: 2px;
             border-radius: 2px;
         }
+
+        /* --- NOVO: URNIK, ODSOTNOST, LETNA PRIPRAVA --- */
+        .sidebar { overflow-y: auto; }
+        .btn-box {
+            width: 150px; height: 50px; background: var(--pastel-yellow);
+            border: 1px solid #999; display: flex; align-items: center;
+            justify-content: center; font-weight: bold; color: black;
+            box-shadow: 2px 2px 0px #ccc; font-size: 13px; text-align: center;
+        }
+        .btn-box:active { transform: translate(1px, 1px); box-shadow: none; }
+
+        .sched-table td { vertical-align: top; height: 60px; padding: 2px; }
+        .sched-block {
+            margin: 2px; padding: 4px; border: 1px solid #888; background: #f4f4f4;
+            cursor: pointer; font-size: 12px; text-align: center;
+        }
+        .sched-block:hover { background: #ffffcc; }
+        .sched-block.done { background: #8fe88f; border-color: #2e8b2e; }
+        .sched-block.done:hover { background: #7ad87a; }
+        .sched-block.future { background: #e8e8e8; color: #888; cursor: default; opacity: 0.7; }
+        .sched-block.empty { background: transparent; border: 1px dashed #ccc; color: #bbb; }
+        .sched-block.empty:hover { background: #fafafa; color: #666; }
+        .slot-now { outline: 3px solid #e6a800; outline-offset: -3px; }
+
+        .lf-table { width: 100%; border-collapse: collapse; border: 1px solid #000; background: white; }
+        .lf-table td { border: 1px solid #888; padding: 4px; text-align: left; height: auto; }
+        .lf-name { cursor: pointer; }
+        .lf-name:hover { background: #ffffcc; }
+        .lf-error { color: #d00000; font-weight: bold; margin-top: 6px; }
     </style>
 </head>
 <body>
@@ -298,6 +327,12 @@
             <button class="sidebar-btn hidden" id="nav-razrednik" onclick="showPage('razrednik')">
                 <div class="btn-razrednik-box">RAZREDNIK</div>
             </button>
+            <button class="sidebar-btn hidden" id="nav-opravicevanja" onclick="showPage('opravicevanja')">
+                <div class="btn-box">OPRAVIČEVANJA</div>
+            </button>
+            <button class="sidebar-btn" id="nav-letna" onclick="showPage('letna')">
+                <div class="btn-box">LETNA PRIPRAVA</div>
+            </button>
             <button class="sidebar-btn" onclick="showProfile()"><img src="profil_sivo.png" onmouseover="this.src='profil_barve.png'" onmouseout="this.src='profil_sivo.png'" alt="Profil"></button>
             <button class="sidebar-btn" onclick="checkAdminAndShowData()"><img src="podatki_sivo.png" onmouseover="this.src='podatki_barve.png'" onmouseout="this.src='podatki_sivo.png'" alt="Podatki"></button>
             <button class="sidebar-btn" onclick="handleLogout()"><img src="odjava_sivo.png" onmouseover="this.src='odjava_barve.png'" onmouseout="this.src='odjava_sivo.png'" alt="Odjava"></button>
@@ -327,10 +362,9 @@
 
             <div id="content-area" class="content-body">
                 <div id="view-home" class="view-section hidden">
-                    <div style="text-align: center; margin-top: 50px;">
-                        <h2>Dobrodošli v e-dnevnik MINDEX</h2>
-                        <p>Izberite akcijo v levem meniju.</p>
-                    </div>
+                    <div id="home-day-panel"></div>
+                    <div id="home-sched-controls" style="margin-top:12px;"></div>
+                    <div id="home-sched"></div>
                 </div>
 
                 <div id="view-redovalnica" class="view-section hidden">
@@ -355,6 +389,16 @@
                     <div id="razrednik-content"></div>
                 </div>
 
+                <div id="view-opravicevanja" class="view-section hidden">
+                    <h3 class="pastel-yellow" style="padding:10px; border:1px solid #999;">Opravičevanja</h3>
+                    <div id="opr-content"></div>
+                </div>
+
+                <div id="view-letna" class="view-section hidden">
+                    <h3 class="pastel-yellow" style="padding:10px; border:1px solid #999;">Letna priprava</h3>
+                    <div id="letna-content"></div>
+                </div>
+
                 <div id="view-podatki" class="view-section hidden">
                     <h3>Administracija podatkov</h3>
                     <div class="win-border" style="padding: 10px; margin-bottom: 10px; border: 2px inset white; background: #e8e8e8;">
@@ -371,6 +415,11 @@
                         <h4>SEZNAM RAZREDOV</h4>
                         <ul id="list-classes" class="admin-list"></ul>
                         <button class="win-btn" onclick="addClass()">Dodaj razred</button>
+                    </div>
+                    <div class="win-border" style="padding: 10px; margin-bottom: 10px; border: 2px inset white; background: #e8e8e8;">
+                        <h4>UREJANJE URNIKA (po razredih)</h4>
+                        <p style="font-size:12px; margin:0 0 5px 0;">Urnik lahko urejaš šele, ko so razredu dodeljeni učitelji in predmeti (Uredi razred &rarr; Dodaj dodelitev).</p>
+                        <div id="list-timetable-classes" class="class-btn-grid" style="margin-top:0;"></div>
                     </div>
                     
                     <button class="win-btn" style="background: #ffcccc;" onclick="resetAllData()">PONASTAVI VSE (Reset)</button>
@@ -399,8 +448,16 @@ let db = {
     grades: [], 
     warnings: [], 
     lastLogin: { user: '', time: '' },
-    sectorSettings: {} 
+    sectorSettings: {},
+    // NOVO
+    timetable: [],
+    lessons: [],
+    absences: [],
+    annualPlans: {},
+    schoolDay: {}
 };
+
+let dbReady = false;
 
 let currentState = {
     user: null,
@@ -499,6 +556,13 @@ function customPrompt(message, onResult) {
     setTimeout(() => document.getElementById('prompt-input').focus(), 100);
 }
 
+// NOVO: širše modalno okno
+function showWideModal(title, html, buttons, width) {
+    showModal(title, html, buttons);
+    const w = document.getElementById('draggable-window');
+    if (w) { w.style.width = (width || 800) + 'px'; w.style.maxWidth = '95vw'; }
+}
+
 // --- INIT & FIREBASE SYNC ---
 function init() {
     database.ref('mindex_db').once('value').then(snapshot => {
@@ -512,12 +576,20 @@ function init() {
             if(!db.warnings) db.warnings = [];
             if(!db.sectorSettings) db.sectorSettings = {};
             if(!db.lastLogin) db.lastLogin = { user: '', time: '' };
+            if(!db.timetable) db.timetable = [];
+            if(!db.lessons) db.lessons = [];
+            if(!db.absences) db.absences = [];
+            if(!db.annualPlans) db.annualPlans = {};
+            if(!db.schoolDay) db.schoolDay = {};
         } else {
             saveDB();
         }
         
+        dbReady = true;
         updateClock();
         setInterval(updateClock, 1000);
+        setInterval(homeTick, 1000);
+        setInterval(botTick, 4000);
         
         if(db.lastLogin && db.lastLogin.user) {
             document.getElementById('last-login-user').innerText = db.lastLogin.user;
@@ -576,10 +648,19 @@ function handleLogin() {
     const user = db.users.find(x => x.username === u && x.password === p);
     
     if (user) {
+        if (user.isBot) {
+            customAlert("Ta račun je BOT. Njegovo delo opravlja računalnik, zato prijava ni mogoča.");
+            return;
+        }
         currentState.user = user;
         db.lastLogin = { user: u, time: new Date().toLocaleString('sl-SI') };
         saveDB();
         
+        homeState.mode = 'TEACHER';
+        homeState.teacherId = user.id;
+        homeState.weekStart = null;
+        homeState.lastSlotKey = '';
+
         document.getElementById('login-page').classList.add('hidden');
         document.getElementById('dashboard-page').classList.remove('hidden');
         document.getElementById('teacher-name-display').innerText = user.name;
@@ -612,12 +693,17 @@ function updateSidebarVisibility() {
     const isRazrednik = db.classes.some(c => c.razrednikId == currentState.user.id) || currentState.user.role === 'admin';
     if(isRazrednik) document.getElementById('nav-razrednik').classList.remove('hidden');
     else document.getElementById('nav-razrednik').classList.add('hidden');
+    if(isRazrednik) document.getElementById('nav-opravicevanja').classList.remove('hidden');
+    else document.getElementById('nav-opravicevanja').classList.add('hidden');
 }
 
 // --- NAVIGATION ---
 function showPage(pageId) {
     document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-    if (pageId === 'home') document.getElementById('view-home').classList.remove('hidden');
+    if (pageId === 'home') {
+        document.getElementById('view-home').classList.remove('hidden');
+        renderHome();
+    }
     if (pageId === 'redovalnica') {
         document.getElementById('view-redovalnica').classList.remove('hidden');
     }
@@ -628,6 +714,14 @@ function showPage(pageId) {
     if (pageId === 'razrednik') {
         document.getElementById('view-razrednik').classList.remove('hidden');
         renderRazrednikView();
+    }
+    if (pageId === 'opravicevanja') {
+        document.getElementById('view-opravicevanja').classList.remove('hidden');
+        renderOpravicevanja();
+    }
+    if (pageId === 'letna') {
+        document.getElementById('view-letna').classList.remove('hidden');
+        renderLetna();
     }
 }
 
@@ -687,7 +781,7 @@ function renderAdminLists() {
     const tList = document.getElementById('list-teachers');
     tList.innerHTML = db.users.map(u => 
         `<li>
-            <span>${u.name} (${u.role === 'admin' ? 'ADMIN' : 'Učitelj'})</span>
+            <span>${u.name} (${u.role === 'admin' ? 'ADMIN' : (u.isBot ? 'BOT' : 'Učitelj')})</span>
             <div>
                 <button class="win-btn mini-btn" onclick="editTeacher(${u.id})">Uredi</button>
                 <button class="win-btn mini-btn" onclick="deleteUser(${u.id})">X</button>
@@ -704,6 +798,13 @@ function renderAdminLists() {
     cList.innerHTML = db.classes.map(c => 
         `<li>${c.name} <div><button class="win-btn mini-btn" onclick="manageClass(${c.id})">Uredi</button> <button class="win-btn mini-btn" onclick="deleteClass(${c.id})">X</button></div></li>`
     ).join('');
+
+    const tc = document.getElementById('list-timetable-classes');
+    if (tc) {
+        tc.innerHTML = db.classes.length
+            ? db.classes.map(c => `<button class="win-btn" onclick="openTimetableEditor(${c.id})">${c.name}</button>`).join('')
+            : '<i>Ni razredov.</i>';
+    }
 }
 
 function addTeacher() { openTeacherModal(); }
@@ -715,6 +816,7 @@ function openTeacherModal(user = null) {
         <label>Uporabniško ime:</label><input type="text" id="t-user" value="${isEdit ? user.username : ''}">
         <label>Geslo:</label><input type="text" id="t-pass" value="${isEdit ? user.password : ''}">
         <label>Čas seje (min):</label><input type="number" id="t-time" value="${isEdit ? (user.sessionTimeout || 15) : '15'}">
+        <label style="font-weight:normal; margin-top:14px;"><input type="checkbox" id="t-bot" ${isEdit && user.isBot ? 'checked' : ''} style="width:auto; margin-right:6px;"> BOT (uro in odsotnosti vpisuje računalnik)</label>
     `;
     showModal(isEdit ? "Urejanje učitelja" : "Dodajanje učitelja", html, [
         {
@@ -724,13 +826,14 @@ function openTeacherModal(user = null) {
                 const username = document.getElementById('t-user').value;
                 const password = document.getElementById('t-pass').value;
                 const timeout = parseInt(document.getElementById('t-time').value) || 15;
+                const isBot = document.getElementById('t-bot').checked;
                 if(!name || !username || !password) return customAlert("Vsa polja so obvezna!");
 
                 if (isEdit) {
                     const idx = db.users.findIndex(u => u.id === user.id);
-                    db.users[idx] = { ...db.users[idx], name, username, password, sessionTimeout: timeout };
+                    db.users[idx] = { ...db.users[idx], name, username, password, sessionTimeout: timeout, isBot };
                 } else {
-                    db.users.push({ id: Date.now(), name, username, password, sessionTimeout: timeout, role: 'teacher' });
+                    db.users.push({ id: Date.now(), name, username, password, sessionTimeout: timeout, role: 'teacher', isBot });
                 }
                 saveDB(); renderAdminLists(); closeModal();
             },
@@ -1893,6 +1996,777 @@ window.generateSpricevalo = function(classId, studentId) {
     
     window.open(doc.output('bloburl'), '_blank');
 };
+
+
+/* =====================================================================
+   NOVO: ŠOLSKI DAN, URNIK, EVIDENCA ODSOTNOSTI, BOTI, OPRAVIČEVANJA,
+         LETNA PRIPRAVA
+   ===================================================================== */
+
+// --- KONSTANTE ---
+const LESSON_MIN = 10;          // dolžina ure (min)
+const BREAK_MIN = 3;            // odmor med urami (min)
+const MAX_HOURS = 9;            // št. ur na dan
+const START_DATE = '2021-01-01';// datum prvega šolskega dne
+const DAY_NAMES = ['Nedelja', 'Ponedeljek', 'Torek', 'Sreda', 'Četrtek', 'Petek', 'Sobota'];
+
+// --- POMOŽNE FUNKCIJE ---
+function uid() { return Date.now() * 1000 + Math.floor(Math.random() * 1000); }
+function pad2(n) { return String(n).padStart(2, '0'); }
+function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function parseISO(s) { const p = s.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+function toISO(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function fmtDate(iso) { return parseISO(iso).toLocaleDateString('sl-SI'); }
+function addDays(iso, n) { const d = parseISO(iso); d.setDate(d.getDate() + n); return toISO(d); }
+function weekdayIdx(iso) { return parseISO(iso).getDay(); } // 1 = pon ... 5 = pet
+function nextWeekday(iso) {
+    let r = addDays(iso, 1);
+    while ([0, 6].includes(parseISO(r).getDay())) r = addDays(r, 1);
+    return r;
+}
+function mondayOf(iso) {
+    const wd = parseISO(iso).getDay();
+    return addDays(iso, wd === 0 ? -6 : 1 - wd);
+}
+function fmtMMSS(sec) {
+    sec = Math.max(0, Math.round(sec));
+    return pad2(Math.floor(sec / 60)) + ':' + pad2(sec % 60);
+}
+
+function getSD() {
+    if (!db.schoolDay) db.schoolDay = {};
+    const s = db.schoolDay;
+    if (!s.arrived) s.arrived = {};
+    if (!s.departed) s.departed = {};
+    return s;
+}
+function currentSchoolDate() { return getSD().date || START_DATE; }
+
+function isPresent(userId) {
+    const id = userId || (currentState.user && currentState.user.id);
+    const sd = getSD();
+    const k = 't' + id;
+    return !!(sd.active && sd.arrived[k] && !sd.departed[k]);
+}
+
+function getSlotInfo() {
+    const sd = getSD();
+    if (!sd.active || !sd.startedAt) return null;
+    const el = (Date.now() - sd.startedAt) / 60000;
+    const cyc = LESSON_MIN + BREAK_MIN;
+    const idx = Math.floor(el / cyc);
+    const inC = el - idx * cyc;
+    if (idx >= MAX_HOURS || (idx === MAX_HOURS - 1 && inC >= LESSON_MIN)) {
+        return { phase: 'end', hour: MAX_HOURS, remaining: 0, elapsed: el };
+    }
+    if (inC < LESSON_MIN) return { phase: 'lesson', hour: idx + 1, remaining: (LESSON_MIN - inC) * 60, elapsed: el };
+    return { phase: 'break', hour: idx + 1, remaining: (cyc - inC) * 60, elapsed: el };
+}
+
+function findLesson(classId, date, hour) {
+    return (db.lessons || []).find(l => l.classId === classId && l.date === date && l.hour === hour);
+}
+
+// zaporedna številka ure predmeta v razredu (kronološko)
+function lessonOrdinal(classId, subjectId, date, hour, excludeId) {
+    let n = 0;
+    (db.lessons || []).forEach(l => {
+        if (l.id === excludeId) return;
+        if (l.classId !== classId || l.subjectId !== subjectId) return;
+        if (l.date < date || (l.date === date && l.hour < hour)) n++;
+    });
+    return n + 1;
+}
+
+function getPlanArray(classId, subjectId) {
+    const p = (db.annualPlans || {})[classId + '_' + subjectId];
+    if (!p) return [];
+    return Array.isArray(p) ? p : Object.values(p);
+}
+function getPlanTopic(classId, subjectId, ordinal) {
+    return getPlanArray(classId, subjectId)[ordinal - 1] || '';
+}
+
+function subjName(id) { const s = db.subjects.find(x => x.id === id); return s ? s.name : '?'; }
+function userName(id) { const u = db.users.find(x => x.id === id); return u ? u.name : '?'; }
+
+// shranjevanje ure + usklajevanje odsotnosti (uporabljata uporabnik in bot)
+function commitLesson(l) {
+    if (!db.lessons) db.lessons = [];
+    if (!db.absences) db.absences = [];
+    const idx = db.lessons.findIndex(x => x.id === l.id);
+    if (idx >= 0) db.lessons[idx] = l; else db.lessons.push(l);
+
+    const prev = db.absences.filter(a => a.lessonId === l.id);
+    db.absences = db.absences.filter(a => a.lessonId !== l.id);
+    (l.absent || []).forEach(ab => {
+        const p = prev.find(x => x.studentId === ab.studentId);
+        db.absences.push({
+            id: uid(), lessonId: l.id, classId: l.classId, studentId: ab.studentId,
+            date: l.date, hour: l.hour, subjectId: l.subjectId,
+            status: p ? p.status : 'open', note: ab.note || ''
+        });
+    });
+}
+
+// --- PRIHOD / ODHOD IZ SLUŽBE ---
+function arriveToWork() {
+    const sd = getSD();
+    const key = 't' + currentState.user.id;
+    const now = Date.now();
+    if (!sd.active) {
+        // nov šolski dan (prvi prihod)
+        sd.date = sd.date ? nextWeekday(sd.date) : START_DATE;
+        sd.active = true;
+        sd.startedAt = now;
+        sd.arrived = {};
+        sd.departed = {};
+        sd.firstTeacher = currentState.user.name;
+        homeState.weekStart = mondayOf(sd.date);
+    }
+    sd.arrived[key] = now;
+    delete sd.departed[key];
+    saveDB();
+    renderHome();
+}
+
+function departFromWork() {
+    const sd = getSD();
+    const key = 't' + currentState.user.id;
+    sd.departed[key] = Date.now();
+    const allOut = Object.keys(sd.arrived).every(k => sd.departed[k]);
+    if (allOut) sd.active = false;
+    saveDB();
+    renderHome();
+}
+
+// --- DOMAČA STRAN ---
+let homeState = { mode: 'TEACHER', classId: null, teacherId: null, weekStart: null, lastSlotKey: '' };
+
+function renderHome() {
+    if (!currentState.user) return;
+    const cur = currentSchoolDate();
+    if (!homeState.weekStart) homeState.weekStart = mondayOf(cur);
+    if (!homeState.teacherId) homeState.teacherId = currentState.user.id;
+    if (!homeState.classId && db.classes.length) homeState.classId = db.classes[0].id;
+    if (homeState.classId && !db.classes.some(c => c.id === homeState.classId)) homeState.classId = db.classes.length ? db.classes[0].id : null;
+    renderDayPanel();
+    renderSchedControls();
+    renderSchedule();
+    updateHomeLive();
+}
+
+function renderDayPanel() {
+    const el = document.getElementById('home-day-panel');
+    if (!el) return;
+    const sd = getSD();
+    const cur = currentSchoolDate();
+    const present = isPresent();
+    const key = 't' + currentState.user.id;
+
+    let status = '';
+    if (sd.active) {
+        const nPresent = Object.keys(sd.arrived).filter(k => !sd.departed[k]).length;
+        status = `Šola se je začela ob <b>${new Date(sd.startedAt).toLocaleTimeString('sl-SI')}</b> (prvi prihod: ${esc(sd.firstTeacher || '?')}). Trenutno prisotnih: <b>${nPresent}</b>.`;
+        if (present) status += `<br>Vaš prihod: <b>${new Date(sd.arrived[key]).toLocaleTimeString('sl-SI')}</b>.`;
+        else status += `<br>Vi še niste označili prihoda.`;
+    } else {
+        const next = sd.date ? nextWeekday(sd.date) : START_DATE;
+        status = `Šolski dan še ni začet. Ob prvem prihodu v službo se začne: <b>${DAY_NAMES[weekdayIdx(next)]}, ${fmtDate(next)}</b>.`;
+    }
+
+    const btn = present
+        ? `<button class="win-btn bold" style="padding:12px 24px; font-size:16px;" onclick="departFromWork()">ODHOD IZ SLUŽBE</button>`
+        : `<button class="win-btn bold" style="padding:12px 24px; font-size:16px;" onclick="arriveToWork()">PRIHOD V SLUŽBO</button>`;
+
+    el.innerHTML = `
+        <div class="pastel-yellow" style="border:2px solid black; padding:10px; display:flex; justify-content:space-between; align-items:center; gap:15px;">
+            <div>
+                <div style="font-size:18px; font-weight:bold;">${sd.active ? 'Šolski dan' : 'Zadnji šolski dan'}: ${DAY_NAMES[weekdayIdx(cur)]}, ${fmtDate(cur)}</div>
+                <div style="font-size:13px; margin-top:4px;">${status}</div>
+                <div id="home-live" style="font-size:14px; font-weight:bold; margin-top:6px;"></div>
+            </div>
+            <div>${btn}</div>
+        </div>`;
+}
+
+function updateHomeLive() {
+    const el = document.getElementById('home-live');
+    if (!el) return;
+    const sd = getSD();
+    if (!sd.active) { el.innerHTML = 'Pouk ne poteka.'; return; }
+    const s = getSlotInfo();
+    const el_sec = (Date.now() - sd.startedAt) / 1000;
+    const hh = pad2(Math.floor(el_sec / 3600)), mm = pad2(Math.floor((el_sec % 3600) / 60)), ss = pad2(Math.floor(el_sec % 60));
+    let txt = `Od začetka dneva: ${hh}:${mm}:${ss} &nbsp;|&nbsp; `;
+    if (s.phase === 'lesson') txt += `Poteka <span style="color:#006400;">${s.hour}. ura</span> (še ${fmtMMSS(s.remaining)})`;
+    else if (s.phase === 'break') txt += `Odmor po ${s.hour}. uri (še ${fmtMMSS(s.remaining)})`;
+    else txt += `Pouk je za danes zaključen.`;
+    el.innerHTML = txt;
+}
+
+function homeTick() {
+    if (!currentState.user) return;
+    const home = document.getElementById('view-home');
+    if (!home || home.classList.contains('hidden')) return;
+    updateHomeLive();
+    const s = getSlotInfo();
+    const key = s ? s.phase + s.hour : 'none';
+    if (key !== homeState.lastSlotKey) {
+        homeState.lastSlotKey = key;
+        renderSchedule();
+    }
+}
+
+function renderSchedControls() {
+    const el = document.getElementById('home-sched-controls');
+    if (!el) return;
+    const isAdmin = currentState.user.role === 'admin';
+    let extra = '';
+    if (homeState.mode === 'TEACHER' && isAdmin) {
+        const opts = db.users.filter(u => u.role !== 'admin').map(u =>
+            `<option value="${u.id}" ${u.id === homeState.teacherId ? 'selected' : ''}>${esc(u.name)}${u.isBot ? ' (BOT)' : ''}</option>`).join('');
+        extra = `<select onchange="homeState.teacherId=parseInt(this.value); renderSchedule();" style="margin-left:8px; padding:3px;">${opts}</select>`;
+    }
+    if (homeState.mode === 'CLASS') {
+        const opts = db.classes.map(c => `<option value="${c.id}" ${c.id === homeState.classId ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+        extra = `<select onchange="homeState.classId=parseInt(this.value); renderSchedule();" style="margin-left:8px; padding:3px;">${opts}</select>`;
+    }
+    const wEnd = addDays(homeState.weekStart, 4);
+    el.innerHTML = `
+        <div class="top-toolbar">
+            <div>
+                <b>Pogled:</b>
+                <select onchange="setHomeMode(this.value)" style="padding:3px; font-weight:bold;">
+                    <option value="TEACHER" ${homeState.mode === 'TEACHER' ? 'selected' : ''}>Učiteljski pogled</option>
+                    <option value="CLASS" ${homeState.mode === 'CLASS' ? 'selected' : ''}>Pogled razreda</option>
+                </select>
+                ${extra}
+            </div>
+            <div>
+                <button class="win-btn" style="min-width:40px;" onclick="shiftWeek(-1)">&#9664;</button>
+                <b style="margin:0 8px;">Teden: ${fmtDate(homeState.weekStart)} – ${fmtDate(wEnd)}</b>
+                <button class="win-btn" style="min-width:40px;" onclick="shiftWeek(1)">&#9654;</button>
+                <button class="win-btn" onclick="homeState.weekStart=mondayOf(currentSchoolDate()); renderHome();">Danes</button>
+            </div>
+        </div>`;
+}
+
+function setHomeMode(m) { homeState.mode = m; renderSchedControls(); renderSchedule(); }
+function shiftWeek(n) { homeState.weekStart = addDays(homeState.weekStart, 7 * n); renderSchedControls(); renderSchedule(); }
+
+function renderSchedule() {
+    const cont = document.getElementById('home-sched');
+    if (!cont || !currentState.user) return;
+    const cur = currentSchoolDate();
+    const slot = getSlotInfo();
+    const isClass = homeState.mode === 'CLASS';
+
+    if (isClass && !homeState.classId) { cont.innerHTML = '<p>Ni razredov.</p>'; return; }
+
+    let thead = '<tr><th width="9%" class="pastel-yellow">Ura</th>';
+    for (let d = 1; d <= 5; d++) {
+        const iso = addDays(homeState.weekStart, d - 1);
+        thead += `<th class="${iso === cur ? 'pastel-yellow' : ''}">${DAY_NAMES[d]}<br><span style="font-weight:normal;">${fmtDate(iso)}</span></th>`;
+    }
+    thead += '</tr>';
+
+    let tbody = '';
+    for (let h = 1; h <= MAX_HOURS; h++) {
+        const t0 = (h - 1) * (LESSON_MIN + BREAK_MIN);
+        tbody += `<tr><td class="pastel-yellow" style="height:auto; vertical-align:middle;"><b>${h}. ura</b><br><span style="font-size:10px; color:#555;">${t0}–${t0 + LESSON_MIN} min</span></td>`;
+        for (let d = 1; d <= 5; d++) {
+            const iso = addDays(homeState.weekStart, d - 1);
+            const future = iso > cur;
+            const isNow = iso === cur && slot && slot.phase === 'lesson' && slot.hour === h;
+            let inner = '';
+
+            if (!isClass) {
+                const entries = db.timetable.filter(e => e.day === d && e.hour === h && e.teacherId === homeState.teacherId);
+                entries.forEach(e => {
+                    const cls = db.classes.find(c => c.id === e.classId);
+                    if (!cls) return;
+                    const les = findLesson(cls.id, iso, h);
+                    const sId = les ? les.subjectId : e.subjectId;
+                    inner += blockHtml(cls.id, iso, h, `${esc(cls.name)}<br><b>${esc(subjName(sId))}</b>`, !!les, future);
+                });
+            } else {
+                const e = db.timetable.find(x => x.classId === homeState.classId && x.day === d && x.hour === h);
+                const les = findLesson(homeState.classId, iso, h);
+                if (e || les) {
+                    const sId = les ? les.subjectId : e.subjectId;
+                    const tId = les ? les.teacherId : e.teacherId;
+                    const t = db.users.find(u => u.id === tId);
+                    const label = `<b>${esc(subjName(sId))}</b><br>${esc(t ? t.name : '?')}${t && t.isBot ? ' [BOT]' : ''}${les && les.type === 'nadomescanje' ? '<br><i>nadomeščanje</i>' : ''}`;
+                    inner += blockHtml(homeState.classId, iso, h, label, !!les, future);
+                } else if (!future) {
+                    inner += blockHtml(homeState.classId, iso, h, '+', false, false, true);
+                }
+            }
+            tbody += `<td class="${isNow ? 'slot-now' : ''}">${inner}</td>`;
+        }
+        tbody += '</tr>';
+    }
+
+    let hint = '';
+    if (!isClass) {
+        const has = db.timetable.some(e => e.teacherId === homeState.teacherId);
+        if (!has) hint = '<p style="margin:8px 0; font-size:13px;">Za tega učitelja urnik še ni določen (nastavi ga administrator v: Podatki &rarr; Urejanje urnika).</p>';
+    }
+    hint += `<p style="font-size:12px; color:#444; margin:6px 0;">Zelena = ura je vpisana. Rumen okvir = ura trenutno poteka. V pogledu razreda lahko urejaš vse ure razreda.</p>`;
+
+    cont.innerHTML = hint + `<table class="gradebook-table sched-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+}
+
+function blockHtml(classId, iso, hour, label, done, future, empty) {
+    const cls = 'sched-block' + (done ? ' done' : '') + (future ? ' future' : '') + (empty ? ' empty' : '');
+    const click = future ? '' : `onclick="openLessonForm(${classId}, '${iso}', ${hour})"`;
+    return `<div class="${cls}" ${click}>${label}${done ? ' ✓' : ''}</div>`;
+}
+
+// --- OBRAZEC ZA VPIS URE ---
+let lessonForm = null;
+
+function openLessonForm(classId, date, hour) {
+    const cls = db.classes.find(c => c.id === classId);
+    if (!cls) return;
+    const cur = currentSchoolDate();
+    if (date > cur) return customAlert("Ur v prihodnosti še ni mogoče vpisovati.");
+    if (date === cur && !isPresent()) return customAlert("Najprej označite PRIHOD V SLUŽBO na domači strani.");
+
+    const existing = findLesson(classId, date, hour);
+    const wd = weekdayIdx(date);
+    const tt = db.timetable.find(e => e.classId === classId && e.day === wd && e.hour === hour);
+
+    const absent = {};
+    if (existing) (existing.absent || []).forEach(a => { absent[a.studentId] = a.note || ''; });
+
+    lessonForm = {
+        classId, date, hour,
+        existingId: existing ? existing.id : null,
+        subjectId: existing ? existing.subjectId : (tt ? tt.subjectId : 0),
+        type: existing ? (existing.type || 'redna') : 'redna',
+        absent
+    };
+
+    const subjOpts = '<option value="0">-- izberi predmet --</option>' +
+        db.subjects.map(s => `<option value="${s.id}" ${s.id === lessonForm.subjectId ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+
+    const botNote = (existing && existing.byBot)
+        ? `<div style="background:#e8e8ff; border:1px solid #99c; padding:4px; margin-bottom:6px; font-size:12px;">To uro je samodejno vpisal bot (${esc(existing.authorName || '')}).</div>` : '';
+
+    const html = `
+        <div style="font-size:16px; font-weight:bold; border-bottom:1px solid #999; padding-bottom:6px; margin-bottom:6px;">
+            Razred: ${esc(cls.name)} &nbsp;|&nbsp; ${DAY_NAMES[wd]}, ${fmtDate(date)} &nbsp;|&nbsp; ${hour}. ura
+        </div>
+        ${botNote}
+        <table style="width:100%; border-spacing:4px;">
+            <tr><td class="bold" width="22%">Predmet:</td>
+                <td><select id="lf-subject" onchange="lfSubjectChanged()" style="width:98%;">${subjOpts}</select></td></tr>
+            <tr><td class="bold">Vrsta ure:</td>
+                <td><select id="lf-type" style="width:98%;">
+                    <option value="redna" ${lessonForm.type === 'redna' ? 'selected' : ''}>Redna ura</option>
+                    <option value="nadomescanje" ${lessonForm.type === 'nadomescanje' ? 'selected' : ''}>Nadomeščanje</option>
+                </select></td></tr>
+        </table>
+        <div id="lf-plan" style="margin:8px 0;"></div>
+        <div class="bold" style="margin-top:6px;">Učenci <span style="font-weight:normal; font-size:12px;">(klik na ime = odsoten / ponovni klik = odstrani odsotnost)</span></div>
+        <div id="lf-students" style="margin-top:4px;"></div>
+        <label>Opombe o uri:</label>
+        <textarea id="lf-note" style="width:97%; height:50px; padding:4px; border:1px solid #999;">${esc(existing ? existing.note || '' : '')}</textarea>
+        <div id="lf-error" class="lf-error"></div>
+    `;
+
+    const buttons = [
+        { label: 'Shrani uro', onClick: lfSave, shouldClose: false },
+        { label: 'Prekliči', onClick: closeModal }
+    ];
+    if (existing) {
+        buttons.splice(1, 0, {
+            label: 'Izbriši uro',
+            onClick: () => {
+                const id = existing.id;
+                customConfirm("Res želiš izbrisati vpis te ure (skupaj z odsotnostmi)?", () => {
+                    db.lessons = db.lessons.filter(l => l.id !== id);
+                    db.absences = db.absences.filter(a => a.lessonId !== id);
+                    saveDB(); renderSchedule(); closeModal();
+                });
+            },
+            shouldClose: false
+        });
+    }
+    showWideModal(`Vpis ure – ${esc(cls.name)}`, html, buttons, 700);
+    lfRenderPlan();
+    lfRenderStudents();
+}
+
+function lfSubjectChanged() {
+    lessonForm.subjectId = parseInt(document.getElementById('lf-subject').value) || 0;
+    lfRenderPlan();
+}
+
+function lfRenderPlan() {
+    const lf = lessonForm;
+    const el = document.getElementById('lf-plan');
+    if (!el) return;
+    if (!lf.subjectId) {
+        el.innerHTML = '<div class="pastel-yellow" style="border:1px solid #999; padding:6px;">Izberite predmet za prikaz zaporedne številke ure in letne priprave.</div>';
+        return;
+    }
+    const ord = lessonOrdinal(lf.classId, lf.subjectId, lf.date, lf.hour, lf.existingId);
+    const topic = getPlanTopic(lf.classId, lf.subjectId, ord);
+    el.innerHTML = `
+        <table class="lf-table">
+            <tr>
+                <td width="28%" class="pastel-yellow"><b>Zaporedna št. ure:</b><br><span style="font-size:20px; font-weight:bold;">${ord}.</span></td>
+                <td><b>Predvideno po letni pripravi:</b><br>${topic ? esc(topic) : '<i style="color:#777;">v letni pripravi za to uro ni vpisano ničesar</i>'}</td>
+            </tr>
+        </table>`;
+}
+
+function lfRenderStudents() {
+    const lf = lessonForm;
+    const el = document.getElementById('lf-students');
+    if (!el) return;
+    const cls = db.classes.find(c => c.id === lf.classId);
+    if (!cls || !cls.students || cls.students.length === 0) { el.innerHTML = '<p>V tem razredu ni učencev.</p>'; return; }
+
+    const others = db.absences.filter(a => a.classId === lf.classId && a.date === lf.date && a.hour !== lf.hour);
+    let rows = cls.students.map(s => {
+        let hrs = others.filter(a => a.studentId === s.id).map(a => a.hour);
+        const isAbs = lf.absent[s.id] !== undefined;
+        if (isAbs) hrs.push(lf.hour);
+        hrs = [...new Set(hrs)].sort((a, b) => a - b);
+        const hrsTxt = hrs.length ? ` (${hrs.join(', ')})` : '';
+        let style = '';
+        if (isAbs) style = 'color:#d00000; font-weight:bold;';
+        else if (hrs.length) style = 'color:#000; font-weight:bold;';
+        const noteCell = isAbs
+            ? `<input type="text" value="${esc(lf.absent[s.id])}" placeholder="Opomba..." oninput="lessonForm.absent[${s.id}] = this.value" style="width:95%;">`
+            : '';
+        return `<tr><td class="lf-name" style="${style}" onclick="lfToggleAbsent(${s.id})" width="55%">${esc(s.name)}${hrsTxt}</td><td>${noteCell}</td></tr>`;
+    }).join('');
+
+    el.innerHTML = `<table class="lf-table"><tr><td class="pastel-yellow bold">Ime in priimek</td><td class="pastel-yellow bold">Opomba (za odsotnega)</td></tr>${rows}</table>`;
+}
+
+function lfToggleAbsent(sid) {
+    const lf = lessonForm;
+    if (lf.absent[sid] === undefined) lf.absent[sid] = '';
+    else delete lf.absent[sid];
+    lfRenderStudents();
+}
+
+function lfSave() {
+    const lf = lessonForm;
+    const err = document.getElementById('lf-error');
+    const subjectId = parseInt(document.getElementById('lf-subject').value) || 0;
+    if (!subjectId) { err.innerText = 'Izberite predmet!'; return; }
+    const type = document.getElementById('lf-type').value;
+    const note = document.getElementById('lf-note').value;
+    const wd = weekdayIdx(lf.date);
+    const tt = db.timetable.find(e => e.classId === lf.classId && e.day === wd && e.hour === lf.hour);
+
+    let teacherId = currentState.user.id;
+    if (type === 'redna' && tt) teacherId = tt.teacherId;
+
+    const absent = Object.keys(lf.absent).map(k => ({ studentId: Number(k), note: lf.absent[k] || '' }));
+
+    commitLesson({
+        id: lf.existingId || uid(),
+        classId: lf.classId, date: lf.date, hour: lf.hour,
+        subjectId, type, note, absent, teacherId,
+        authorId: currentState.user.id, authorName: currentState.user.name,
+        byBot: false, ts: Date.now()
+    });
+    saveDB();
+    closeModal();
+    renderSchedule();
+}
+
+// --- UREJANJE URNIKA (ADMIN) ---
+function openTimetableEditor(classId) {
+    const cls = db.classes.find(c => c.id === classId);
+    if (!cls) return;
+    const assignments = cls.assignments || [];
+    if (assignments.length === 0) return customAlert("Razredu najprej dodeli učitelje in predmete (Uredi razred → Dodaj dodelitev).");
+
+    const opts = assignments.map(a =>
+        `<option value="${a.subjectId}_${a.teacherId}">${esc(subjName(a.subjectId))} (${esc(userName(a.teacherId))}${(db.users.find(u => u.id === a.teacherId) || {}).isBot ? ', BOT' : ''})</option>`
+    ).join('');
+
+    let thead = '<tr><th width="8%">Ura</th>';
+    for (let d = 1; d <= 5; d++) thead += `<th>${DAY_NAMES[d]}</th>`;
+    thead += '</tr>';
+
+    let tbody = '';
+    for (let h = 1; h <= MAX_HOURS; h++) {
+        tbody += `<tr><td class="bold" style="height:auto;">${h}.</td>`;
+        for (let d = 1; d <= 5; d++) {
+            const e = db.timetable.find(x => x.classId === classId && x.day === d && x.hour === h);
+            const cur = e ? `${e.subjectId}_${e.teacherId}` : '';
+            const o = opts.replace(`value="${cur}"`, `value="${cur}" selected`);
+            tbody += `<td style="height:auto; padding:3px;"><select onchange="ttSet(${classId}, ${d}, ${h}, this.value)" style="width:100%; font-size:11px;"><option value="">—</option>${cur ? o : opts}</select></td>`;
+        }
+        tbody += '</tr>';
+    }
+
+    const html = `
+        <p style="margin-top:0;">Urnik razreda <b>${esc(cls.name)}</b>. Izbira se shrani samodejno. Ponudba izhaja iz dodeljenih učiteljev in predmetov razreda.</p>
+        <table class="gradebook-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+    showWideModal(`Urnik: ${esc(cls.name)}`, html, [{ label: 'Zapri', onClick: closeModal }], 950);
+}
+
+function ttSet(classId, day, hour, val) {
+    db.timetable = (db.timetable || []).filter(e => !(e.classId === classId && e.day === day && e.hour === hour));
+    if (val) {
+        const p = val.split('_').map(Number);
+        db.timetable.push({ id: uid(), classId, day, hour, subjectId: p[0], teacherId: p[1] });
+    }
+    saveDB();
+}
+
+// --- BOTI ---
+function botEnterLesson(e, teacher) {
+    const cls = db.classes.find(c => c.id === e.classId);
+    if (!cls) return false;
+    const sd = getSD();
+    const absent = [];
+    (cls.students || []).forEach(s => {
+        const earlier = db.absences.some(a => a.studentId === s.id && a.date === sd.date && a.hour < e.hour);
+        if (Math.random() < (earlier ? 0.8 : 0.03)) absent.push({ studentId: s.id, note: 'Odsotnost vpisal bot.' });
+    });
+    commitLesson({
+        id: uid(), classId: e.classId, date: sd.date, hour: e.hour,
+        subjectId: e.subjectId, type: 'redna', note: 'Uro je samodejno vpisal bot.',
+        absent, teacherId: teacher.id,
+        authorId: teacher.id, authorName: teacher.name + ' (bot)',
+        byBot: true, ts: Date.now()
+    });
+    return true;
+}
+
+function botTick() {
+    if (!dbReady) return;
+    const sd = getSD();
+    if (!sd.active || !sd.startedAt || !sd.date) return;
+    const wd = weekdayIdx(sd.date);
+    const now = Date.now();
+    let changed = false;
+    (db.timetable || []).forEach(e => {
+        if (e.day !== wd) return;
+        const t = db.users.find(u => u.id === e.teacherId);
+        if (!t || !t.isBot) return;
+        const start = sd.startedAt + (e.hour - 1) * (LESSON_MIN + BREAK_MIN) * 60000;
+        if (now < start + 3000) return;
+        if (findLesson(e.classId, sd.date, e.hour)) return;
+        if (botEnterLesson(e, t)) changed = true;
+    });
+    if (changed) {
+        saveDB();
+        if (currentState.user) {
+            const home = document.getElementById('view-home');
+            if (home && !home.classList.contains('hidden')) renderSchedule();
+            const opr = document.getElementById('view-opravicevanja');
+            if (opr && !opr.classList.contains('hidden')) renderOpravicevanja();
+        }
+    }
+}
+
+// --- OPRAVIČEVANJA (RAZREDNIK) ---
+const ABS_STATUS = {
+    open:        { label: 'Odprto',       color: '#000000' },
+    justified:   { label: 'Opravičeno',   color: '#008000' },
+    unjustified: { label: 'Neopravičeno', color: '#d00000' },
+    handled:     { label: 'Obravnavano',  color: '#777777' }
+};
+
+function absCounts(studentId) {
+    const r = { justified: 0, unjustified: 0, open: 0, handled: 0 };
+    db.absences.filter(a => a.studentId === studentId).forEach(a => { if (r[a.status] !== undefined) r[a.status]++; });
+    return r;
+}
+
+function renderOpravicevanja() {
+    const container = document.getElementById('opr-content');
+    if (!container || !currentState.user) return;
+    const myClasses = db.classes.filter(c => c.razrednikId == currentState.user.id || currentState.user.role === 'admin');
+    if (myClasses.length === 0) { container.innerHTML = '<p style="padding:10px;">Niste razrednik nobenemu razredu.</p>'; return; }
+
+    let html = '<p style="font-size:12px;">Klikni na ime učenca za podrobnosti izostankov.</p>';
+    myClasses.forEach(c => {
+        html += `<h4 style="margin-top:20px;">Razred: ${esc(c.name)}</h4>
+            <table class="gradebook-table">
+              <thead><tr>
+                <th width="34%" class="pastel-yellow">Učenec</th>
+                <th width="17%" style="color:#008000;">Opravičene ure</th>
+                <th width="17%" style="color:#d00000;">Neopravičene ure</th>
+                <th width="17%">Odprte ure</th>
+                <th width="15%" style="color:#777;">Obravnavane</th>
+              </tr></thead><tbody>`;
+        if (!c.students || c.students.length === 0) {
+            html += '<tr><td colspan="5">Ni učencev.</td></tr>';
+        } else {
+            c.students.forEach(s => {
+                const k = absCounts(s.id);
+                html += `<tr>
+                    <td class="grade-cell" style="text-align:left; padding-left:8px; font-weight:bold;" onclick="openAbsenceDetails(${c.id}, ${s.id})">${esc(s.name)}</td>
+                    <td style="color:#008000; font-weight:bold;">${k.justified}</td>
+                    <td style="color:#d00000; font-weight:bold;">${k.unjustified}</td>
+                    <td style="color:#000; font-weight:bold;">${k.open}</td>
+                    <td style="color:#777;">${k.handled}</td>
+                </tr>`;
+            });
+        }
+        html += '</tbody></table>';
+    });
+    container.innerHTML = html;
+}
+
+function openAbsenceDetails(classId, studentId) {
+    const cls = db.classes.find(c => c.id === classId);
+    if (!cls) return;
+    const stu = (cls.students || []).find(s => s.id === studentId);
+    if (!stu) return;
+
+    const list = db.absences.filter(a => a.studentId === studentId)
+        .sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : a.hour - b.hour);
+
+    let rows = list.map(a => {
+        const st = ABS_STATUS[a.status] || ABS_STATUS.open;
+        return `<tr>
+            <td>${fmtDate(a.date)}</td>
+            <td>${a.hour}.</td>
+            <td>${esc(subjName(a.subjectId))}</td>
+            <td style="text-align:left;">${esc(a.note || '')}</td>
+            <td style="color:${st.color}; font-weight:bold;">${st.label}</td>
+            <td style="white-space:nowrap;">
+                <button class="win-btn mini-btn" style="color:#008000;" onclick="setAbsStatus(${classId}, ${studentId}, ${a.id}, 'justified')">Opraviči</button>
+                <button class="win-btn mini-btn" style="color:#d00000;" onclick="setAbsStatus(${classId}, ${studentId}, ${a.id}, 'unjustified')">Neopraviči</button>
+                <button class="win-btn mini-btn" onclick="setAbsStatus(${classId}, ${studentId}, ${a.id}, 'handled')">Obravnavano</button>
+                <button class="win-btn mini-btn" onclick="setAbsStatus(${classId}, ${studentId}, ${a.id}, 'open')" title="Vrni med odprte">&#8634;</button>
+            </td>
+        </tr>`;
+    }).join('');
+    if (!rows) rows = '<tr><td colspan="6">Učenec nima zabeleženih izostankov.</td></tr>';
+
+    const k = absCounts(studentId);
+    const summary = `<div style="margin-bottom:8px;">
+        <span style="color:#008000; font-weight:bold;">Opravičene: ${k.justified}</span> &nbsp;|&nbsp;
+        <span style="color:#d00000; font-weight:bold;">Neopravičene: ${k.unjustified}</span> &nbsp;|&nbsp;
+        <span style="font-weight:bold;">Odprte: ${k.open}</span> &nbsp;|&nbsp;
+        <span style="color:#777; font-weight:bold;">Obravnavane: ${k.handled}</span></div>`;
+
+    const html = `${summary}
+        <table class="gradebook-table">
+          <thead><tr><th>Datum</th><th>Ura</th><th>Predmet</th><th>Opomba</th><th>Status</th><th>Dejanje</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+
+    const bulk = (status) => () => {
+        db.absences.forEach(a => { if (a.studentId === studentId && a.status === 'open') a.status = status; });
+        saveDB(); renderOpravicevanja(); openAbsenceDetails(classId, studentId);
+    };
+    showWideModal(`Izostanki: ${esc(stu.name)} (${esc(cls.name)})`, html, [
+        { label: 'Vse odprte → opravičeno', onClick: bulk('justified'), shouldClose: false },
+        { label: 'Vse odprte → neopravičeno', onClick: bulk('unjustified'), shouldClose: false },
+        { label: 'Zapri', onClick: closeModal }
+    ], 900);
+}
+
+function setAbsStatus(classId, studentId, absId, status) {
+    const a = db.absences.find(x => x.id === absId);
+    if (!a) return;
+    a.status = status;
+    saveDB();
+    renderOpravicevanja();
+    openAbsenceDetails(classId, studentId);
+}
+
+// --- LETNA PRIPRAVA ---
+let letnaState = { key: '', rows: [] };
+
+function letnaOptions() {
+    const u = currentState.user;
+    const out = [];
+    const seen = new Set();
+    db.classes.forEach(c => (c.assignments || []).forEach(a => {
+        if (u.role !== 'admin' && a.teacherId !== u.id) return;
+        const k = c.id + '_' + a.subjectId;
+        if (seen.has(k)) return;
+        const sub = db.subjects.find(s => s.id === a.subjectId);
+        if (!sub) return;
+        seen.add(k);
+        out.push({ key: k, label: `${c.name} – ${sub.name}`, classId: c.id, subjectId: a.subjectId });
+    }));
+    return out;
+}
+
+function letnaLoad() {
+    const p = (db.annualPlans || {})[letnaState.key];
+    let rows = p ? (Array.isArray(p) ? p.slice() : Object.values(p)) : [];
+    if (rows.length === 0) rows = Array(30).fill('');
+    letnaState.rows = rows;
+}
+
+function renderLetna() {
+    const cont = document.getElementById('letna-content');
+    if (!cont || !currentState.user) return;
+    const opts = letnaOptions();
+    if (opts.length === 0) {
+        cont.innerHTML = '<p style="padding:10px;">Nimate dodeljenih razredov in predmetov. Dodelitve nastavi administrator.</p>';
+        return;
+    }
+    if (!opts.some(o => o.key === letnaState.key)) { letnaState.key = opts[0].key; letnaLoad(); }
+    const cur = opts.find(o => o.key === letnaState.key);
+    const held = db.lessons.filter(l => l.classId === cur.classId && l.subjectId === cur.subjectId).length;
+
+    const sel = opts.map(o => `<option value="${o.key}" ${o.key === letnaState.key ? 'selected' : ''}>${esc(o.label)}</option>`).join('');
+    const rows = letnaState.rows.map((t, i) => `
+        <tr style="${i < held ? 'background:#e6ffe6;' : ''}">
+            <td width="60" style="text-align:center;"><b>${i + 1}.</b></td>
+            <td><input type="text" class="lp-inp" value="${esc(t)}" style="width:98%; padding:3px;"></td>
+        </tr>`).join('');
+
+    cont.innerHTML = `
+        <div class="top-toolbar" style="flex-wrap:wrap; gap:8px;">
+            <div>
+                <b>Razred – predmet:</b>
+                <select onchange="letnaChange(this.value)" style="padding:3px; min-width:200px;">${sel}</select>
+            </div>
+            <div>
+                Število ur: <input type="number" id="lp-count" value="${letnaState.rows.length}" min="1" style="width:70px; padding:3px;">
+                <button class="win-btn" onclick="letnaSetCount()">Nastavi</button>
+                <button class="win-btn" onclick="letnaAddRows(1)">+ Dodaj uro</button>
+                <button class="win-btn bold" onclick="letnaSave()">SHRANI PRIPRAVO</button>
+            </div>
+        </div>
+        <p style="font-size:12px;">Že izvedenih ur (vpisanih v dnevnik): <b>${held}</b> (označene zeleno). Pri vpisu ure se prikaže vsebina, ki ustreza zaporedni številki ure.</p>
+        <table class="lf-table"><tbody>${rows}</tbody></table>`;
+}
+
+function letnaCollect() {
+    const inputs = document.querySelectorAll('#letna-content .lp-inp');
+    if (inputs.length) letnaState.rows = Array.from(inputs).map(i => i.value);
+}
+function letnaChange(key) { letnaState.key = key; letnaLoad(); renderLetna(); }
+function letnaAddRows(n) { letnaCollect(); for (let i = 0; i < n; i++) letnaState.rows.push(''); renderLetna(); }
+function letnaSetCount() {
+    letnaCollect();
+    const n = Math.max(1, parseInt(document.getElementById('lp-count').value) || 1);
+    while (letnaState.rows.length < n) letnaState.rows.push('');
+    letnaState.rows.length = n;
+    renderLetna();
+}
+function letnaSave() {
+    letnaCollect();
+    if (!db.annualPlans) db.annualPlans = {};
+    db.annualPlans[letnaState.key] = letnaState.rows.slice();
+    saveDB();
+    customAlert("Letna priprava je shranjena.");
+}
 
 init();
 </script>
