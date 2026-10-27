@@ -62,7 +62,7 @@ body.is-student .t-only{display:none!important}
 .grade-cell{cursor:pointer;min-width:35px;position:relative}
 .disabled-sector{background:repeating-linear-gradient(45deg,#f1f2f7,#f1f2f7 6px,#e9ebf3 6px,#e9ebf3 12px)!important;pointer-events:none;opacity:.55}
 .single-view{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;height:100%;width:100%;padding:5px;position:relative}
-.grade-span{margin:2px;display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 5px;border-radius:8px;background:rgba(120,130,170,.13);font-size:14px;cursor:pointer;font-weight:800}
+.grade-span{margin:0 4px;display:inline-block;background:none;border:0;padding:0;font-size:15px;cursor:pointer;font-weight:800}
 .grade-pisno{color:#dc2626}.grade-ustno{color:#000}.grade-izdelek{color:#2563eb}
 .grade-correction{font-size:.7em;vertical-align:sub;margin-right:3px}
 .grade-highlight{background:#bbf7d0!important}
@@ -235,6 +235,11 @@ body.is-student .t-only{display:none!important}
                         <div id="list-timetable-classes" class="class-btn-grid" style="margin-top:0;"></div>
                     </div>
                     
+                    <div class="card" style="margin-bottom:14px">
+                        <h4>LETNA PRIPRAVA IN OCENJEVANJE BOTOV</h4>
+                        <p style="font-size:12px; margin:0 0 5px 0;">Za vsak predmet, ki ga vodi bot, določi vsebino po urah ter uro, v kateri bot ocenjuje: vrsto ocene, število učencev in sektor.</p>
+                        <div id="list-bot-plans" class="class-btn-grid" style="margin-top:0;"></div>
+                    </div>
                     <button class="win-btn" style="background: #ffcccc;" onclick="resetAllData()">PONASTAVI VSE (Reset)</button>
                 </div>
             </div>
@@ -267,6 +272,7 @@ let db = {
     lessons: [],
     absences: [],
     annualPlans: {},
+    botAssess: {},
     schoolDay: {}
 };
 
@@ -394,6 +400,7 @@ function init() {
             if(!db.absences) db.absences = [];
             if(!db.annualPlans) db.annualPlans = {};
             if(!db.schoolDay) db.schoolDay = {};
+            if(!db.botAssess) db.botAssess = {};
         } else {
             saveDB();
         }
@@ -2746,18 +2753,21 @@ function stAbsences(sid) {
 // --- BOTI: naravni vpisi, sprotne ocene, samodejno zaključevanje ---
 const BOT_NOTES = ['', '', '', '', 'Učenci so bili aktivni.', 'Nekaj učencev je motilo pouk.'];
 function botGrades(e, t, cls, sd) {
-    const st = cls.students || [];
-    if (!st.length || Math.random() > 0.35) return;
-    const n = db.lessons.filter(l => l.classId === e.classId && l.subjectId === e.subjectId).length;
-    const secs = ['A', 'B', 'C', 'D'].filter(x => !isSectorDisabled(e.classId, e.subjectId, x));
-    if (!secs.length) return;
-    const sec = secs[Math.min(secs.length - 1, Math.floor(n / 8))];
-    const pick = a => a[Math.floor(Math.random() * a.length)];
+    const les = findLesson(e.classId, sd.date, e.hour);
+    if (!les) return;
+    const ord = lessonOrdinal(e.classId, e.subjectId, sd.date, e.hour, les.id);
+    const a = ((db.botAssess || {})[e.classId + '_' + e.subjectId] || {})[ord];
+    if (!a || !a.type) return;
+    const absent = (les.absent || []).map(x => x.studentId);
+    let pool = (cls.students || []).filter(s => !absent.includes(s.id));
+    if (a.type !== 'PISNO') {
+        pool = pool.sort(() => Math.random() - 0.5).slice(0, Math.max(1, parseInt(a.count) || 1));
+    }
     const vals = ['5', '5', '4', '4', '4', '3', '3', '3', '2', '2', '1'];
-    [...st].sort(() => Math.random() - 0.5).slice(0, 1 + Math.floor(Math.random() * 3)).forEach(s => {
-        if (db.grades.filter(g => g.studentId === s.id && g.subjectId === e.subjectId && g.period === sec && !g.isFinal).length >= 5) return;
-        db.grades.push({ id: uid(), studentId: s.id, subjectId: e.subjectId, period: sec, type: pick(['USTNO', 'USTNO', 'USTNO', 'PISNO', 'PISNO', 'IZDELEK']),
-            value: pick(vals), correction: null, isFinal: false, authorId: t.id, authorName: t.name, date: fmtDate(sd.date), komentar: '' });
+    pool.forEach(s => {
+        db.grades.push({ id: uid(), studentId: s.id, subjectId: e.subjectId, period: a.sector || 'A', type: a.type,
+            value: vals[Math.floor(Math.random() * vals.length)], correction: null, isFinal: false,
+            authorId: t.id, authorName: t.name, date: fmtDate(sd.date), komentar: '' });
     });
 }
 function botFinalSync() {
@@ -2784,6 +2794,75 @@ function botFinalSync() {
 const _sv = saveDB;
 saveDB = function () { try { botFinalSync(); } catch (e) { console.error(e); } _sv(); };
 
+// --- ADMIN: letna priprava in ocenjevanje botov ---
+const _ral = renderAdminLists;
+renderAdminLists = function () { _ral(); renderBotPlans(); };
+function renderBotPlans() {
+    const el = document.getElementById('list-bot-plans');
+    if (!el) return;
+    const out = [];
+    db.classes.forEach(c => (c.assignments || []).forEach(a => {
+        const t = db.users.find(u => u.id === a.teacherId);
+        if (t && t.isBot) out.push(`<button class="win-btn" onclick="openBotPlan(${c.id}, ${a.subjectId})">${esc(c.name)} – ${esc(subjName(a.subjectId))} (${esc(t.name)})</button>`);
+    }));
+    el.innerHTML = out.length ? out.join('') : '<i>Ni dodelitev, ki bi jih vodil bot (označi učitelja kot BOT in ga dodeli razredu).</i>';
+}
+let bpState = null;
+function openBotPlan(cId, sId) {
+    const key = cId + '_' + sId;
+    const topics = getPlanArray(cId, sId).slice();
+    const as = (db.botAssess || {})[key] || {};
+    const n = Math.max(30, topics.length);
+    const rows = [];
+    for (let i = 0; i < n; i++) {
+        const a = as[i + 1] || {};
+        rows.push({ topic: topics[i] || '', type: a.type || '', count: a.count || 1, sector: a.sector || 'A' });
+    }
+    bpState = { key, cId, sId, rows };
+    bpShow();
+}
+function bpCollect() {
+    const tr = document.querySelectorAll('#bp-table tbody tr');
+    tr.forEach((r, i) => {
+        bpState.rows[i] = {
+            topic: r.querySelector('.bp-t').value,
+            type: r.querySelector('.bp-ty').value,
+            count: parseInt(r.querySelector('.bp-n').value) || 1,
+            sector: r.querySelector('.bp-s').value
+        };
+    });
+}
+function bpToggle(sel) {
+    const r = sel.closest('tr'), n = r.querySelector('.bp-n');
+    n.disabled = sel.value === 'PISNO' || !sel.value;
+    r.style.background = sel.value ? '#eef0ff' : '';
+}
+function bpShow() {
+    const st = bpState, cls = db.classes.find(c => c.id === st.cId);
+    const tOpt = (v, cur) => `<option value="${v}" ${cur === v ? 'selected' : ''}>${{ '': '—', PISNO: 'Pisno', USTNO: 'Ustno', IZDELEK: 'Izdelek' }[v]}</option>`;
+    const rows = st.rows.map((r, i) => `<tr style="${r.type ? 'background:#eef0ff;' : ''}">
+        <td style="text-align:center"><b>${i + 1}.</b></td>
+        <td><input type="text" class="bp-t" value="${esc(r.topic)}" style="width:96%"></td>
+        <td><select class="bp-ty" onchange="bpToggle(this)">${['', 'PISNO', 'USTNO', 'IZDELEK'].map(v => tOpt(v, r.type)).join('')}</select></td>
+        <td><input type="number" class="bp-n" min="1" value="${r.count}" style="width:60px" ${(!r.type || r.type === 'PISNO') ? 'disabled' : ''}></td>
+        <td><select class="bp-s">${['A', 'B', 'C', 'D'].map(v => `<option ${r.sector === v ? 'selected' : ''}>${v}</option>`).join('')}</select></td></tr>`).join('');
+    const html = `<p style="margin-top:0;font-size:12px;">Razred <b>${esc(cls.name)}</b>, predmet <b>${esc(subjName(st.sId))}</b>. Uro z oceno označiš z izbiro vrste. <b>Pisno</b>: bot oceni vse prisotne učence. <b>Ustno</b> ali <b>izdelek</b>: bot oceni določeno število naključnih prisotnih učencev. Ocene vpiše bot sam, ko vpiše to uro, v izbrani sektor.</p>
+        <div style="max-height:52vh;overflow:auto"><table class="gradebook-table" id="bp-table"><thead><tr><th width="6%">Ura</th><th>Vsebina</th><th width="16%">Ocenjevanje</th><th width="12%">Št. učencev</th><th width="10%">Sektor</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    showWideModal('Letna priprava bota', html, [
+        { label: 'Shrani', onClick: () => {
+            bpCollect();
+            const topics = bpState.rows.map(r => r.topic), assess = {};
+            bpState.rows.forEach((r, i) => { if (r.type) assess[i + 1] = { type: r.type, count: r.type === 'PISNO' ? 0 : r.count, sector: r.sector }; });
+            if (!db.annualPlans) db.annualPlans = {};
+            if (!db.botAssess) db.botAssess = {};
+            db.annualPlans[bpState.key] = topics;
+            db.botAssess[bpState.key] = assess;
+            saveDB(); closeModal(); customAlert('Letna priprava bota je shranjena.');
+        }, shouldClose: false },
+        { label: '+ Dodaj uro', onClick: () => { bpCollect(); bpState.rows.push({ topic: '', type: '', count: 1, sector: 'A' }); bpShow(); }, shouldClose: false },
+        { label: 'Prekliči', onClick: closeModal }
+    ], 880);
+}
 init();
 </script>
 
